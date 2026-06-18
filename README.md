@@ -1,3 +1,4 @@
+
 # SAP Guru Assistant - Pilot Version
 
 This is the first proper pilot version of the Digital SAP Guru assistant.
@@ -71,4 +72,5 @@ It should:
 3. Think like a senior SAP architect
 4. Generate leads naturally only when relevant
 5. Never fake confidence
+
 
