@@ -34,6 +34,7 @@ def verify_webhook(
 
 @app.post("/webhook")
 async def receive_webhook(request: Request):
-    body = await request.json()
-    print("Instagram webhook received:", body, flush=True)
+    body = await request.body()
+    print("WEBHOOK HIT", flush=True)
+    print(body.decode(), flush=True)
     return {"status": "received"}
