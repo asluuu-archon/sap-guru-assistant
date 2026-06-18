@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from .assistant import suggest_reply
+from fastapi import Query
 
 
 app = FastAPI(title="SAP Guru Assistant", version="pilot_1")
@@ -22,9 +23,9 @@ VERIFY_TOKEN = "sap_guru_2026"
 
 @app.get("/webhook")
 def verify_webhook(
-    hub_mode: str = None,
-    hub_challenge: str = None,
-    hub_verify_token: str = None
+    hub_mode: str = Query(None, alias="hub.mode"),
+    hub_challenge: str = Query(None, alias="hub.challenge"),
+    hub_verify_token: str = Query(None, alias="hub.verify_token")
 ):
     if hub_mode == "subscribe" and hub_verify_token == VERIFY_TOKEN:
         return int(hub_challenge)
@@ -34,5 +35,5 @@ def verify_webhook(
 @app.post("/webhook")
 async def receive_webhook(request: Request):
     body = await request.json()
-    print("Instagram webhook received:", body)
+    print("Instagram webhook received:", body, flush=True)
     return {"status": "received"}
