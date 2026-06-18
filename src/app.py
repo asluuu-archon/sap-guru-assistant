@@ -34,11 +34,10 @@ def verify_webhook(
 
 @app.post("/webhook")
 async def receive_webhook(request: Request):
-    body = await request.body()
+    data = await request.json()
 
-    with open("/tmp/webhook.log", "a") as f:
-        f.write(body.decode() + "\n")
-
-    print("WEBHOOK HIT", flush=True)
+    print("========== WEBHOOK ==========", flush=True)
+    print(data, flush=True)
+    print("=============================", flush=True)
 
     return {"status": "received"}
