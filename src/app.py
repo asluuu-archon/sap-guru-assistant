@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from .assistant import suggest_reply
 from fastapi import Query
+import json
 
 
 app = FastAPI(title="SAP Guru Assistant", version="pilot_1")
@@ -31,13 +32,27 @@ def verify_webhook(
         return int(hub_challenge)
     return {"error": "Verification failed"}
 
-
 @app.post("/webhook")
 async def receive_webhook(request: Request):
     data = await request.json()
 
     print("========== WEBHOOK ==========", flush=True)
     print(data, flush=True)
-    print("=============================", flush=True)
+
+    try:
+        messaging = data["entry"][0]["messaging"][0]
+
+        sender_id = messaging["sender"]["id"]
+        message_text = messaging["message"]["text"]
+
+        print(f"SENDER: {sender_id}", flush=True)
+        print(f"MESSAGE: {message_text}", flush=True)
+
+        reply = suggest_reply(message_text, "instagram", "")
+
+        print(f"REPLY: {reply}", flush=True)
+
+    except Exception as e:
+        print(f"ERROR: {e}", flush=True)
 
     return {"status": "received"}
