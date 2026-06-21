@@ -59,7 +59,6 @@ def save_conversation(
     category: str = "",
 ):
     conversation = get_conversation(sender_id)
-
     history = conversation.get("history") or []
 
     history.append({
@@ -79,7 +78,7 @@ def save_conversation(
     payload = {
         "sender_id": sender_id,
         "summary": summary,
-        "last_question": assistant_reply if assistant_reply.endswith("?") else conversation.get("last_question", ""),
+        "last_question": get_last_question(conversation, assistant_reply),
         "last_reply": assistant_reply,
         "history": history,
         "updated_at": datetime.utcnow().isoformat(),
@@ -88,32 +87,92 @@ def save_conversation(
     supabase.table("conversations").upsert(payload).execute()
 
 
+def get_last_question(conversation: dict, assistant_reply: str) -> str:
+    lower_reply = assistant_reply.lower().strip()
+
+    casual_questions = [
+        "how are you",
+        "how about you",
+        "where are you",
+    ]
+
+    if assistant_reply.endswith("?") and not any(q in lower_reply for q in casual_questions):
+        return assistant_reply
+
+    return conversation.get("last_question", "")
+
+
 def update_simple_summary(existing_summary: str, message: str) -> str:
     text = message.lower()
     facts = []
 
     if "bcom" in text or "b.com" in text:
         facts.append("User has BCom background")
+
+    if "mcom" in text or "m.com" in text:
+        facts.append("User has MCom background")
+
     if "mba" in text:
         facts.append("User has MBA background")
-    if "fico" in text or "fi" in text:
+
+    if "btech" in text or "b.tech" in text or "b tech" in text:
+        facts.append("User has BTech background")
+
+    if ("btech" in text or "b.tech" in text or "b tech" in text) and "it" in text:
+        facts.append("User has BTech IT background")
+
+    if "computer science" in text or "cse" in text:
+        facts.append("User has computer science background")
+
+    if "hr" in text or "hrbp" in text or "human resource" in text:
+        facts.append("User has HR background")
+
+    if "supply chain" in text or "logistics" in text or "procurement" in text:
+        facts.append("User has supply chain/logistics background")
+
+    if "fico" in text or "sap fi" in text or "finance" in text or "accounting" in text:
         facts.append("Interested in SAP FICO")
+
+    if "abap" in text:
+        facts.append("Interested in SAP ABAP")
+
+    if "rap" in text:
+        facts.append("Interested in SAP RAP")
+
+    if "cap" in text:
+        facts.append("Interested in SAP CAP")
+
+    if "btp" in text:
+        facts.append("Interested in SAP BTP")
+
     if "mm" in text:
         facts.append("Interested in SAP MM")
+
     if "sd" in text:
         facts.append("Interested in SAP SD")
+
     if "ewm" in text:
         facts.append("Interested in SAP EWM")
+
+    if "successfactors" in text or "success factors" in text or "sf" in text:
+        facts.append("Interested in SAP SuccessFactors")
+
+    if "hcm" in text:
+        facts.append("Interested in SAP HCM")
+
     if "non coding" in text or "non-coding" in text:
         facts.append("Prefers non-coding")
-    if "coding" in text:
-        facts.append("Mentioned coding preference")
+
+    if "coding" in text or "programming" in text or "developer" in text:
+        facts.append("Interested in coding/development")
+
     if "fresher" in text:
         facts.append("User may be fresher")
-    if "experience" in text:
+
+    if "experience" in text or "years" in text:
         facts.append("User mentioned experience")
 
-    combined = existing_summary
+    combined = existing_summary or ""
 
     for fact in facts:
         if fact not in combined:
