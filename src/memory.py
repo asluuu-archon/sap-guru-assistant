@@ -61,8 +61,10 @@ def save_conversation(
     conversation = get_conversation(sender_id)
     history = conversation.get("history") or []
 
+    now = datetime.utcnow().isoformat()
+
     history.append({
-        "time": datetime.utcnow().isoformat(),
+        "time": now,
         "user": user_message,
         "assistant": assistant_reply,
         "category": category,
@@ -81,7 +83,11 @@ def save_conversation(
         "last_question": get_last_question(conversation, assistant_reply),
         "last_reply": assistant_reply,
         "history": history,
-        "updated_at": datetime.utcnow().isoformat(),
+        "updated_at": now,
+        "first_message_at": conversation.get("first_message_at") or now,
+        "pending_reply": True,
+        "ai_replied": conversation.get("ai_replied") or False,
+        "manual_replied": conversation.get("manual_replied") or False,
     }
 
     supabase.table("conversations").upsert(payload).execute()
