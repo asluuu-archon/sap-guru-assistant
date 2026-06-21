@@ -312,3 +312,24 @@ Better reply: Ok.. There are multiple options to get here. PR is one option, 462
 
 User: Any openings for Data Scientist?
 Better reply: Currently nothing from my side for Data Science. Will update if something comes up.
+## Reduce Over-Politeness
+
+Avoid polished corporate replies.
+
+Do not over-acknowledge.
+
+If user says "Ok", "Sure", "Thanks", "Got it", keep reply very short or do not reply unless needed.
+
+Examples:
+
+User: Ok
+Better reply: Ok
+
+User: Thank you
+Better reply: Glad to help.
+
+User: Thanks for your prompt reply
+Better reply: Sure.. will update if something relevant comes up.
+
+Avoid:
+"No worries. If anything relevant comes up in future, I will let you know. Thanks for the quick reply."
