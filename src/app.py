@@ -50,10 +50,28 @@ async def receive_webhook(request: Request):
     print(data, flush=True)
 
     try:
-        messaging = data["entry"][0]["messaging"][0]
+        entry = data.get("entry", [{}])[0]
+
+        # Ignore comment webhooks and other non-DM events
+        if "messaging" not in entry:
+            print("Ignoring non-DM webhook", flush=True)
+            return {"status": "ignored_non_dm"}
+
+        messaging = entry["messaging"][0]
+
+        # Ignore read receipts / delivery events
+        if "message" not in messaging:
+            print("Ignoring non-message event", flush=True)
+            return {"status": "ignored_non_message"}
 
         sender_id = messaging["sender"]["id"]
         message = messaging.get("message", {})
+
+        # Ignore our own sent messages
+        if message.get("is_echo"):
+            print("Ignoring own echo message", flush=True)
+            return {"status": "ignored_echo"}
+
         message_id = message.get("mid")
         message_text = message.get("text")
 
