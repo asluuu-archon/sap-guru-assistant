@@ -3,6 +3,7 @@ import json
 import re
 from pathlib import Path
 from dotenv import load_dotenv
+from .reply_bank import find_similar_replies
 
 load_dotenv()
 
@@ -75,16 +76,22 @@ def _simple_fallback(message: str, context: str = "") -> dict:
 
 def _build_user_prompt(message: str, channel: str, context: str) -> str:
     detected_name = _extract_name(message)
+    similar_replies = find_similar_replies(message, limit=5)
 
     payload = {
         "current_user_message": message,
         "detected_name_from_current_message": detected_name,
         "previous_conversation_context": context,
         "knowledge_base": KB,
+        "similar_sap_guru_replies": similar_replies,
         "instruction": """
 Reply as Mohamed Aslam / The SAP Guru in Instagram DM.
 
 Use intelligence, not fixed scripts.
+
+First check similar_sap_guru_replies. If there are relevant previous Mohamed Aslam replies, follow that style and reasoning.
+
+Do not copy blindly. Use it as style and guidance.
 
 Read the current message carefully. If the user already gave name, education, role, experience or interest, use it. Do not ask again.
 
@@ -112,7 +119,6 @@ Return only valid JSON.
     }
 
     return json.dumps(payload, ensure_ascii=False)
-
 
 def _normalize_output(data: dict, message: str, context: str) -> dict:
     reply = str(data.get("suggested_reply", "")).strip()
