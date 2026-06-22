@@ -23,24 +23,49 @@ def find_similar_replies(question: str, limit: int = 5):
     try:
         result = (
             supabase
-            .table('sap_guru_reply_bank')
-            .select('*')
+            .table("sap_guru_reply_bank")
+            .select("*")
             .execute()
         )
 
         rows = result.data or []
-        question_words = set(question.lower().split())
+
+        question = question.lower()
+
         scored = []
 
         for row in rows:
-            q = (row.get('user_question') or '').lower()
-            score = len(question_words.intersection(set(q.split())))
+
+            score = 0
+
+            q = (row.get("user_question") or "").lower()
+            tags = (row.get("tags") or "").lower()
+            category = (row.get("category") or "").lower()
+
+            for word in question.split():
+
+                if word in q:
+                    score += 3
+
+                if word in tags:
+                    score += 5
+
+                if word in category:
+                    score += 2
+
             scored.append((score, row))
 
-        scored.sort(key=lambda x: x[0], reverse=True)
+        scored.sort(
+            key=lambda x: x[0],
+            reverse=True
+        )
 
-        return [x[1] for x in scored[:limit]]
+        return [
+            row
+            for score, row in scored[:limit]
+            if score > 0
+        ]
 
     except Exception as e:
-        print(f'REPLY BANK SEARCH ERROR: {e}')
+        print(f"REPLY BANK SEARCH ERROR: {e}")
         return []
