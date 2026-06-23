@@ -30,12 +30,16 @@ def _extract_name(message: str) -> str:
         match = re.search(pattern, message, re.IGNORECASE)
         if match:
             name = match.group(1).strip()
-            stop_words = ["bcom", "b tech", "btech", "mba", "sap", "from", "pursuing", "working"]
+            stop_words = [
+                "bcom", "b", "btech", "b.tech", "mba", "sap",
+                "from", "pursuing", "working", "completed"
+            ]
+
             words = name.split()
             clean_words = []
 
             for word in words:
-                if word.lower() in stop_words:
+                if word.lower().strip(".,") in stop_words:
                     break
                 clean_words.append(word)
 
@@ -43,6 +47,92 @@ def _extract_name(message: str) -> str:
                 return " ".join(clean_words).title()
 
     return ""
+
+
+def _is_clear_learning_lead(message: str) -> bool:
+    lower = message.lower()
+
+    lead_phrases = [
+        "want to learn",
+        "i want to learn",
+        "interested in learning",
+        "i am interested in learning",
+        "i'm interested in learning",
+        "need to learn",
+        "learn sap",
+        "sap course",
+        "course details",
+        "fees",
+        "fee details",
+        "join",
+        "want to join",
+        "offline class",
+        "online class",
+        "classes",
+        "mentorship",
+        "internship",
+        "career guidance",
+        "placement support",
+    ]
+
+    if any(phrase in lower for phrase in lead_phrases):
+        return True
+
+    module_words = [
+        "sap mm", "sap fico", "sap sd", "sap abap", "sap hcm",
+        "successfactors", "sap ewm", "sap btp", "sap sac",
+        "sap datasphere", "sap basis", "sap security"
+    ]
+
+    return any(module in lower for module in module_words) and any(
+        word in lower for word in ["learn", "interested", "join", "course"]
+    )
+
+
+def _learning_lead_reply(message: str) -> dict:
+    lower = message.lower()
+
+    module_name = ""
+    module_map = {
+        "sap mm": "MM",
+        "sap fico": "FICO",
+        "sap sd": "SD",
+        "sap abap": "ABAP",
+        "sap hcm": "HCM",
+        "successfactors": "SuccessFactors",
+        "sap ewm": "EWM",
+        "sap btp": "BTP",
+        "sap sac": "SAC",
+        "sap datasphere": "Datasphere",
+        "sap basis": "Basis",
+        "sap security": "Security",
+    }
+
+    for key, value in module_map.items():
+        if key in lower:
+            module_name = value
+            break
+
+    if module_name:
+        reply = (
+            f"{module_name} is a good choice.. please share your name, contact number, "
+            "location and whether you prefer online or offline. My office will contact you."
+        )
+    else:
+        reply = (
+            "Sure.. please share your name, contact number, location and whether you prefer "
+            "online or offline. My office will contact you."
+        )
+
+    return {
+        "category": "learning_lead",
+        "lead_score": 90,
+        "priority": "high",
+        "approval_status": "safe_to_send",
+        "should_capture_contact": True,
+        "reason": "Clear learning enquiry.",
+        "suggested_reply": reply,
+    }
 
 
 def _simple_fallback(message: str, context: str = "") -> dict:
@@ -56,12 +146,12 @@ def _simple_fallback(message: str, context: str = "") -> dict:
         reply = "I'm good.. how are you?"
     elif "bcom" in text or "b.com" in text or "commerce" in text:
         reply = prefix + "SAP FICO will suit your commerce background. Are you looking for consultant level or end user level?"
-    elif "btech" in text or "b.tech" in text or "it" in text:
+    elif "btech" in text or "b.tech" in text:
         reply = prefix + "Since you are from IT background, SAP ABAP, RAP, CAP or BTP can be good options. Do you prefer coding side?"
     elif "job" in text or "opening" in text or "vacancy" in text:
         reply = "What is your current profile and experience?"
-    elif "internship" in text or "training" in text or "course" in text:
-        reply = "Please share your contact number, email and location. My office will get in touch with you."
+    elif _is_clear_learning_lead(message):
+        return _learning_lead_reply(message)
     else:
         reply = "Can you explain a little more?"
 
@@ -101,7 +191,7 @@ If user gives name, naturally address them by name once.
 
 If user asks multiple things in one message, answer briefly instead of asking profile again.
 
-If user is clearly a learning/training lead, collect contact number, email and location naturally.
+If user clearly says they want to learn SAP, join, get course details, fees, online/offline sessions, mentorship, internship, or learning support, treat it as a learning lead. Ask for name, contact number, location and preferred mode. Do not use the word training.
 
 If user asks about career/module, guide based on available information.
 
@@ -161,6 +251,9 @@ def _normalize_output(data: dict, message: str, context: str) -> dict:
 
 
 def suggest_reply(message: str, channel: str = "instagram", context: str = "") -> dict:
+    if _is_clear_learning_lead(message):
+        return _learning_lead_reply(message)
+
     api_key = os.getenv("OPENAI_API_KEY")
     model = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
 
