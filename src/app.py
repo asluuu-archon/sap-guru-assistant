@@ -8,6 +8,7 @@ from .instagram import send_instagram_reply
 from .memory import get_conversation, build_context, save_conversation, supabase
 from .reply_bank import save_manual_reply_to_bank
 from .leads import save_lead
+from .delay_processor import process_pending_replies
 
 app = FastAPI(title="SAP Guru Assistant", version="pilot_3")
 
@@ -26,6 +27,9 @@ class SuggestRequest(BaseModel):
 @app.get("/health")
 def health():
     return {"status": "ok", "auto_reply": AUTO_REPLY}
+@app.get("/run-delayed-replies")
+def run_delayed_replies():
+    return process_pending_replies()
 
 
 @app.post("/suggest")

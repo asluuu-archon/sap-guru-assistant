@@ -1,11 +1,76 @@
-Every 15 mins:
-    find pending conversations
-    check age > 15 mins
-    ai_replied = false
-    manual_replied = false
+from datetime import datetime, timedelta
+from .memory import supabase, build_context
+from .assistant import suggest_reply
+from .instagram import send_instagram_reply
 
-    generate reply
-    send reply
 
-    ai_replied = true
-    pending_reply = false
+def process_pending_replies():
+    try:
+        cutoff = datetime.utcnow() - timedelta(minutes=15)
+
+        result = (
+            supabase.table("conversations")
+            .select("*")
+            .eq("pending_reply", True)
+            .eq("ai_replied", False)
+            .eq("manual_replied", False)
+            .execute()
+        )
+
+        rows = result.data or []
+        sent_count = 0
+
+        for conversation in rows:
+            updated_at = conversation.get("updated_at")
+
+            if not updated_at:
+                continue
+
+            updated_dt = datetime.fromisoformat(updated_at.replace("Z", ""))
+
+            if updated_dt > cutoff:
+                continue
+
+            sender_id = conversation.get("sender_id")
+            history = conversation.get("history") or []
+
+            last_user_message = ""
+            for item in reversed(history):
+                if item.get("user"):
+                    last_user_message = item.get("user")
+                    break
+
+            if not sender_id or not last_user_message:
+                continue
+
+            context = build_context(conversation)
+            reply = suggest_reply(last_user_message, "instagram", context)
+            reply_text = reply.get("suggested_reply", "I will check and update.")
+
+            send_instagram_reply(sender_id, reply_text)
+
+            history.append({
+                "time": datetime.utcnow().isoformat(),
+                "user": "",
+                "assistant": reply_text,
+                "category": reply.get("category", "general"),
+            })
+
+            history = history[-30:]
+
+            supabase.table("conversations").update({
+                "history": history,
+                "last_reply": reply_text,
+                "ai_replied": True,
+                "pending_reply": False,
+                "updated_at": datetime.utcnow().isoformat(),
+            }).eq("sender_id", sender_id).execute()
+
+            sent_count += 1
+            print(f"DELAYED AUTO REPLY SENT TO {sender_id}", flush=True)
+
+        return {"sent_count": sent_count}
+
+    except Exception as e:
+        print(f"DELAYED PROCESSOR ERROR: {e}", flush=True)
+        return {"error": str(e)}
