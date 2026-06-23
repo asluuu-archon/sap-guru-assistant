@@ -62,48 +62,67 @@ def extract_email(text: str) -> str:
 
 
 def detect_lead_intent(text: str, reply: dict) -> bool:
-    lower = (text or "").lower()
+    lower = (text or "").lower().strip()
 
-    lead_words = [
-        "learn",
-        "course",
-        "program",
-        "join",
-        "interested",
-        "mentorship",
-        "guidance",
-        "internship",
-        "classes",
-        "online",
-        "offline",
+    weak_messages = {
+        "hi",
+        "hii",
+        "hello",
+        "hey",
+        "ok",
+        "okay",
+        "yes",
+        "no",
+        "thanks",
+        "thank you",
+        "sure",
+        "fine",
+        "good",
+        "great",
+        "noted",
+        "done",
+        "welcome",
+        "oh its ok",
+        "oh it's ok",
+    }
+
+    if lower in weak_messages:
+        return False
+
+    if extract_phone(text) or extract_email(text):
+        return True
+
+    strong_lead_phrases = [
+        "want to learn",
+        "interested in learning",
+        "learn sap",
+        "how to learn sap",
+        "want to join",
+        "course details",
+        "fee details",
         "fees",
-        "fee",
-        "contact",
-        "call",
-        "sap mm",
-        "sap fico",
-        "sap sd",
-        "sap abap",
-        "sap hcm",
-        "successfactors",
-        "sap ewm",
-        "sap btp",
+        "online class",
+        "offline class",
+        "contact me",
+        "call me",
+        "internship",
+        "mentorship",
+        "career guidance",
+        "placement support",
     ]
 
-    return (
-        reply.get("should_capture_contact") is True
-        or any(word in lower for word in lead_words)
-        or bool(extract_phone(text))
-        or bool(extract_email(text))
-    )
+    if any(phrase in lower for phrase in strong_lead_phrases):
+        return True
+
+    return reply.get("should_capture_contact") is True
 
 
 def save_possible_lead(sender_id: str, message_text: str, reply: dict, category: str):
-    phone = extract_phone(message_text)
-    email = extract_email(message_text)
-
     if not detect_lead_intent(message_text, reply):
         return
+
+    phone = extract_phone(message_text)
+    email = extract_email(message_text)
 
     save_lead(
         sender_id=sender_id,
@@ -145,14 +164,12 @@ async def receive_webhook(request: Request):
     try:
         entry = data.get("entry", [{}])[0]
 
-        # Ignore comment webhooks and other non-DM events for now
         if "messaging" not in entry:
             print("Ignoring non-DM webhook", flush=True)
             return {"status": "ignored_non_dm"}
 
         messaging = entry["messaging"][0]
 
-        # Ignore read receipts / delivery events
         if "message" not in messaging:
             print("Ignoring non-message event", flush=True)
             return {"status": "ignored_non_message"}
@@ -161,7 +178,6 @@ async def receive_webhook(request: Request):
         recipient_id = messaging["recipient"]["id"]
         message = messaging.get("message", {})
 
-        # Manual replies sent by Mohamed from Instagram arrive as echo messages
         if message.get("is_echo"):
             manual_reply_text = message.get("text", "")
             target_user_id = recipient_id
