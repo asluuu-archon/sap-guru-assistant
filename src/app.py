@@ -27,6 +27,8 @@ class SuggestRequest(BaseModel):
 @app.get("/health")
 def health():
     return {"status": "ok", "auto_reply": AUTO_REPLY}
+
+
 @app.get("/run-delayed-replies")
 def run_delayed_replies():
     return process_pending_replies()
@@ -112,6 +114,27 @@ def save_possible_lead(sender_id: str, message_text: str, reply: dict, category:
     )
 
 
+def should_ignore_manual_reply(manual_reply_text: str) -> bool:
+    text = (manual_reply_text or "").lower().strip()
+
+    junk_replies = [
+        "please send your question as text",
+        "i can reply properly",
+    ]
+
+    short_replies = {
+        "",
+        "ok",
+        "okay",
+        "thanks",
+        "thank you",
+        "sure",
+        "noted",
+    }
+
+    return text in short_replies or any(junk in text for junk in junk_replies)
+
+
 @app.post("/webhook")
 async def receive_webhook(request: Request):
     data = await request.json()
@@ -142,6 +165,10 @@ async def receive_webhook(request: Request):
         if message.get("is_echo"):
             manual_reply_text = message.get("text", "")
             target_user_id = recipient_id
+
+            if should_ignore_manual_reply(manual_reply_text):
+                print("Manual echo ignored. Not useful for learning.", flush=True)
+                return {"status": "manual_reply_ignored"}
 
             conversation = get_conversation(target_user_id)
             history = conversation.get("history") or []
@@ -188,13 +215,8 @@ async def receive_webhook(request: Request):
         processed_message_ids.add(message_id)
 
         if not message_text:
-            reply_text = "Please send your question as text so I can reply properly."
-            save_conversation(sender_id, "[non-text message]", reply_text, "non_text")
-
-            if AUTO_REPLY:
-                send_instagram_reply(sender_id, reply_text)
-
-            return {"status": "non_text_handled"}
+            print("Non-text message received. Staying silent.", flush=True)
+            return {"status": "non_text_ignored"}
 
         conversation = get_conversation(sender_id)
         context = build_context(conversation)
