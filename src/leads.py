@@ -28,7 +28,7 @@ def save_lead(
 
         payload = {
             "sender_id": sender_id,
-            "name": name or old.get("name", ""),
+            "name": name or old.get("name", "") or f"insta_{sender_id}",
             "phone": phone or old.get("phone", ""),
             "email": email or old.get("email", ""),
             "location": location or old.get("location", ""),
