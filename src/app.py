@@ -1,11 +1,13 @@
 from fastapi import FastAPI, Request, Query
 from pydantic import BaseModel
 import os
+import re
 
 from .assistant import suggest_reply
 from .instagram import send_instagram_reply
 from .memory import get_conversation, build_context, save_conversation, supabase
 from .reply_bank import save_manual_reply_to_bank
+from .leads import save_lead
 
 app = FastAPI(title="SAP Guru Assistant", version="pilot_3")
 
@@ -41,6 +43,69 @@ def verify_webhook(
         return int(hub_challenge)
 
     return {"error": "Verification failed"}
+
+
+def extract_phone(text: str) -> str:
+    match = re.search(r"(\+?\d[\d\s\-]{8,}\d)", text or "")
+    return match.group(1).strip() if match else ""
+
+
+def extract_email(text: str) -> str:
+    match = re.search(r"[\w\.-]+@[\w\.-]+\.\w+", text or "")
+    return match.group(0).strip() if match else ""
+
+
+def detect_lead_intent(text: str, reply: dict) -> bool:
+    lower = (text or "").lower()
+
+    lead_words = [
+        "learn",
+        "course",
+        "program",
+        "join",
+        "interested",
+        "mentorship",
+        "guidance",
+        "internship",
+        "classes",
+        "online",
+        "offline",
+        "fees",
+        "fee",
+        "contact",
+        "call",
+        "sap mm",
+        "sap fico",
+        "sap sd",
+        "sap abap",
+        "sap hcm",
+        "successfactors",
+        "sap ewm",
+        "sap btp",
+    ]
+
+    return (
+        reply.get("should_capture_contact") is True
+        or any(word in lower for word in lead_words)
+        or bool(extract_phone(text))
+        or bool(extract_email(text))
+    )
+
+
+def save_possible_lead(sender_id: str, message_text: str, reply: dict, category: str):
+    phone = extract_phone(message_text)
+    email = extract_email(message_text)
+
+    if not detect_lead_intent(message_text, reply):
+        return
+
+    save_lead(
+        sender_id=sender_id,
+        phone=phone,
+        email=email,
+        interested_module=category,
+        notes=message_text,
+    )
 
 
 @app.post("/webhook")
@@ -88,7 +153,7 @@ async def receive_webhook(request: Request):
                     user_question=last_user_message,
                     sap_guru_reply=manual_reply_text,
                     category="manual",
-                    tags="manual_reply"
+                    tags="manual_reply",
                 )
 
                 supabase_payload = {
@@ -140,6 +205,13 @@ async def receive_webhook(request: Request):
         print(f"REPLY: {reply_text}", flush=True)
 
         save_conversation(sender_id, message_text, reply_text, category)
+
+        save_possible_lead(
+            sender_id=sender_id,
+            message_text=message_text,
+            reply=reply,
+            category=category,
+        )
 
         if AUTO_REPLY:
             send_instagram_reply(sender_id, reply_text)
