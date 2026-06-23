@@ -2,6 +2,26 @@ from datetime import datetime
 from .memory import supabase
 
 
+def has_real_lead_data(
+    name: str = "",
+    phone: str = "",
+    email: str = "",
+    location: str = "",
+    mode: str = "",
+    education: str = "",
+    experience: str = "",
+):
+    return any([
+        name.strip(),
+        phone.strip(),
+        email.strip(),
+        location.strip(),
+        mode.strip(),
+        education.strip(),
+        experience.strip(),
+    ])
+
+
 def save_lead(
     sender_id: str,
     name: str = "",
@@ -15,6 +35,18 @@ def save_lead(
     notes: str = "",
 ):
     try:
+        if not has_real_lead_data(
+            name=name,
+            phone=phone,
+            email=email,
+            location=location,
+            mode=mode,
+            education=education,
+            experience=experience,
+        ):
+            print("LEAD NOT SAVED: no real lead data", flush=True)
+            return
+
         existing = (
             supabase.table("leads")
             .select("*")
@@ -28,7 +60,7 @@ def save_lead(
 
         payload = {
             "sender_id": sender_id,
-            "name": name or old.get("name", "") or f"insta_{sender_id}",
+            "name": name or old.get("name", ""),
             "phone": phone or old.get("phone", ""),
             "email": email or old.get("email", ""),
             "location": location or old.get("location", ""),
