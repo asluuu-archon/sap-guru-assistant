@@ -1,14 +1,35 @@
-from datetime import datetime
+from .memory import supabase
 
-def save_lead(sender_id, message_text, reply_text):
-    line = (
-        f"{datetime.utcnow().isoformat()} | "
-        f"sender_id={sender_id} | "
-        f"message={message_text} | "
-        f"reply={reply_text}\n"
-    )
 
-    with open("/tmp/leads.txt", "a", encoding="utf-8") as f:
-        f.write(line)
+def save_lead(
+    sender_id: str,
+    name: str = "",
+    phone: str = "",
+    email: str = "",
+    location: str = "",
+    mode: str = "",
+    education: str = "",
+    experience: str = "",
+    interested_module: str = "",
+    notes: str = "",
+):
+    try:
+        payload = {
+            "sender_id": sender_id,
+            "name": name,
+            "phone": phone,
+            "email": email,
+            "location": location,
+            "mode": mode,
+            "education": education,
+            "experience": experience,
+            "interested_module": interested_module,
+            "notes": notes,
+            "status": "new",
+        }
 
-    print("LEAD SAVED", flush=True)
+        supabase.table("leads").insert(payload).execute()
+        print("LEAD SAVED", flush=True)
+
+    except Exception as e:
+        print(f"LEAD SAVE ERROR: {e}", flush=True)
