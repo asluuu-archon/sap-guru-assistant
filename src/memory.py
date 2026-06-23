@@ -94,10 +94,6 @@ def save_conversation(
         "history": history,
         "updated_at": now,
         "first_message_at": conversation.get("first_message_at") or now,
-
-        # Important:
-        # Every new user message should reopen the pending reply cycle.
-        # Do not preserve old ai_replied/manual_replied flags here.
         "pending_reply": True,
         "ai_replied": False,
         "manual_replied": False,
