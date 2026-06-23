@@ -25,6 +25,9 @@ def get_conversation(sender_id: str) -> dict:
         "last_question": "",
         "last_reply": "",
         "history": [],
+        "pending_reply": False,
+        "ai_replied": False,
+        "manual_replied": False,
     }
 
 
@@ -46,8 +49,14 @@ def build_context(conversation: dict) -> str:
     if recent:
         lines.append("Recent conversation:")
         for item in recent:
-            lines.append(f"User: {item.get('user')}")
-            lines.append(f"Assistant: {item.get('assistant')}")
+            user_text = item.get("user")
+            assistant_text = item.get("assistant")
+
+            if user_text:
+                lines.append(f"User: {user_text}")
+
+            if assistant_text:
+                lines.append(f"Assistant: {assistant_text}")
 
     return "\n".join(lines)
 
@@ -85,12 +94,45 @@ def save_conversation(
         "history": history,
         "updated_at": now,
         "first_message_at": conversation.get("first_message_at") or now,
+
+        # Important:
+        # Every new user message should reopen the pending reply cycle.
+        # Do not preserve old ai_replied/manual_replied flags here.
         "pending_reply": True,
-        "ai_replied": conversation.get("ai_replied") or False,
-        "manual_replied": conversation.get("manual_replied") or False,
+        "ai_replied": False,
+        "manual_replied": False,
     }
 
     supabase.table("conversations").upsert(payload).execute()
+
+
+def mark_manual_replied(sender_id: str, manual_reply: str = ""):
+    payload = {
+        "manual_replied": True,
+        "pending_reply": False,
+        "updated_at": datetime.utcnow().isoformat(),
+    }
+
+    if manual_reply:
+        payload["last_reply"] = manual_reply
+
+    supabase.table("conversations").update(payload).eq("sender_id", sender_id).execute()
+
+
+def mark_ai_replied(sender_id: str, ai_reply: str = "", history=None):
+    payload = {
+        "ai_replied": True,
+        "pending_reply": False,
+        "updated_at": datetime.utcnow().isoformat(),
+    }
+
+    if ai_reply:
+        payload["last_reply"] = ai_reply
+
+    if history is not None:
+        payload["history"] = history
+
+    supabase.table("conversations").update(payload).eq("sender_id", sender_id).execute()
 
 
 def get_last_question(conversation: dict, assistant_reply: str) -> str:
@@ -121,11 +163,17 @@ def update_simple_summary(existing_summary: str, message: str) -> str:
     if "mba" in text:
         facts.append("User has MBA background")
 
-    if "btech" in text or "b.tech" in text or "b tech" in text:
+    if "btech" in text or "b.tech" in text or "b tech" in text or "betch" in text:
         facts.append("User has BTech background")
 
-    if ("btech" in text or "b.tech" in text or "b tech" in text) and "it" in text:
+    if ("btech" in text or "b.tech" in text or "b tech" in text or "betch" in text) and "it" in text:
         facts.append("User has BTech IT background")
+
+    if "mechanical" in text:
+        facts.append("User has mechanical background")
+
+    if "civil" in text:
+        facts.append("User has civil background")
 
     if "computer science" in text or "cse" in text:
         facts.append("User has computer science background")
@@ -172,11 +220,14 @@ def update_simple_summary(existing_summary: str, message: str) -> str:
     if "coding" in text or "programming" in text or "developer" in text:
         facts.append("Interested in coding/development")
 
-    if "fresher" in text:
+    if "fresher" in text or "freshers" in text:
         facts.append("User may be fresher")
 
     if "experience" in text or "years" in text:
         facts.append("User mentioned experience")
+
+    if "career gap" in text or "carrier gap" in text or "gap" in text:
+        facts.append("User mentioned career gap")
 
     combined = existing_summary or ""
 
