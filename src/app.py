@@ -4,7 +4,8 @@ import os
 
 from .assistant import suggest_reply
 from .instagram import send_instagram_reply
-from .memory import get_conversation, build_context, save_conversation
+from .memory import get_conversation, build_context, save_conversation, supabase
+from .reply_bank import save_manual_reply_to_bank
 
 app = FastAPI(title="SAP Guru Assistant", version="pilot_3")
 
@@ -52,7 +53,7 @@ async def receive_webhook(request: Request):
     try:
         entry = data.get("entry", [{}])[0]
 
-        # Ignore comment webhooks and other non-DM events
+        # Ignore comment webhooks and other non-DM events for now
         if "messaging" not in entry:
             print("Ignoring non-DM webhook", flush=True)
             return {"status": "ignored_non_dm"}
@@ -65,12 +66,44 @@ async def receive_webhook(request: Request):
             return {"status": "ignored_non_message"}
 
         sender_id = messaging["sender"]["id"]
+        recipient_id = messaging["recipient"]["id"]
         message = messaging.get("message", {})
 
-        # Ignore our own sent messages
+        # Manual replies sent by Mohamed from Instagram arrive as echo messages
         if message.get("is_echo"):
-            print("Ignoring own echo message", flush=True)
-            return {"status": "ignored_echo"}
+            manual_reply_text = message.get("text", "")
+            target_user_id = recipient_id
+
+            conversation = get_conversation(target_user_id)
+            history = conversation.get("history") or []
+
+            last_user_message = ""
+            for item in reversed(history):
+                if item.get("user"):
+                    last_user_message = item.get("user")
+                    break
+
+            if last_user_message and manual_reply_text:
+                save_manual_reply_to_bank(
+                    user_question=last_user_message,
+                    sap_guru_reply=manual_reply_text,
+                    category="manual",
+                    tags="manual_reply"
+                )
+
+                supabase_payload = {
+                    "sender_id": target_user_id,
+                    "manual_replied": True,
+                    "pending_reply": False,
+                    "last_reply": manual_reply_text,
+                }
+
+                supabase.table("conversations").upsert(supabase_payload).execute()
+                print("MANUAL REPLY LEARNED", flush=True)
+            else:
+                print("Manual echo found but no matching user message", flush=True)
+
+            return {"status": "manual_reply_learned"}
 
         message_id = message.get("mid")
         message_text = message.get("text")
