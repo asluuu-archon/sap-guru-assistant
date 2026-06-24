@@ -49,6 +49,37 @@ def _extract_name(message: str) -> str:
     return ""
 
 
+def _should_stay_silent(message: str) -> bool:
+    text = message.lower().strip()
+
+    very_short_unclear = {
+        "athe", "athe sathyam", "sathyam", "correct", "true",
+        "yes true", "yeah true", "same", "exactly", "👍", "🙏"
+    }
+
+    if text in very_short_unclear:
+        return True
+
+    if len(text.split()) <= 2 and not any(x in text for x in ["sap", "job", "learn", "course", "number", "email"]):
+        return True
+
+    return False
+
+
+def _human_review(reason: str = "Low confidence or unclear message") -> dict:
+    return {
+        "category": "needs_human",
+        "lead_score": 0,
+        "priority": "normal",
+        "approval_status": "needs_human",
+        "should_capture_contact": False,
+        "should_reply": False,
+        "human_reason": reason,
+        "reason": reason,
+        "suggested_reply": "",
+    }
+
+
 def _is_clear_learning_lead(message: str) -> bool:
     lower = message.lower()
 
@@ -130,6 +161,8 @@ def _learning_lead_reply(message: str) -> dict:
         "priority": "high",
         "approval_status": "safe_to_send",
         "should_capture_contact": True,
+        "should_reply": True,
+        "human_reason": "",
         "reason": "Clear learning enquiry.",
         "suggested_reply": reply,
     }
@@ -139,6 +172,9 @@ def _simple_fallback(message: str, context: str = "") -> dict:
     text = message.lower().strip()
     name = _extract_name(message)
     prefix = f"Hi {name}, " if name else ""
+
+    if _should_stay_silent(message):
+        return _human_review("Short or unclear message. Better for Mohamed to review.")
 
     if text in {"hi", "hello", "hey", "hello sir", "good morning", "good evening", "good afternoon"}:
         reply = "Hi, how are you doing? How can I help you?"
@@ -153,15 +189,17 @@ def _simple_fallback(message: str, context: str = "") -> dict:
     elif _is_clear_learning_lead(message):
         return _learning_lead_reply(message)
     else:
-        reply = "I will check and update."
+        return _human_review("Fallback could not understand the message confidently.")
 
     return {
         "category": "fallback",
         "lead_score": 20,
         "priority": "normal",
-        "approval_status": "needs_review",
+        "approval_status": "safe_to_send",
         "should_capture_contact": False,
-        "reason": "Fallback used because OpenAI failed or was unavailable.",
+        "should_reply": True,
+        "human_reason": "",
+        "reason": "Fallback reply used.",
         "suggested_reply": reply,
     }
 
@@ -181,15 +219,22 @@ Reply as Mohamed Aslam / The SAP Guru in Instagram DM.
 
 Use intelligence, not fixed scripts.
 
-First check similar_sap_guru_replies. If there are relevant previous Mohamed Aslam replies, follow that style and reasoning.
+If the message is unclear, too short, regional-language slang you are not sure about, or you are not confident about the intent, do not reply.
 
-Do not copy blindly. Use it as style and guidance.
+In such cases return:
+{
+  "should_reply": false,
+  "human_reason": "Unclear message or low confidence"
+}
 
-Read the current message carefully. If the user already gave name, education, role, experience or interest, use it. Do not ask again.
+Never force a reply.
 
-If user gives name, naturally address them by name once.
+Never ask vague questions like:
+- Can you share a bit more detail?
+- Can you explain a little more?
+- Can you share more context?
 
-If user asks multiple things in one message, answer briefly instead of asking profile again.
+Do not use "I will check and update" as a filler unless the user is asking about a job or opportunity that genuinely needs checking.
 
 If user clearly says they want to learn SAP, join, get course details, fees, online/offline sessions, mentorship, internship, or learning support, treat it as a learning lead. Ask for name, contact number, location and preferred mode. Do not use the word training.
 
@@ -197,24 +242,14 @@ If user asks about career/module, guide based on available information.
 
 If user asks something casual like "how are you", reply casually.
 
-Do not force a question in every reply.
-
-Avoid repeated questions.
-
-Never ask vague questions like:
-- Can you share a bit more detail?
-- Can you explain a little more?
-- Can you share more context?
-
-If unsure, reply:
-"I will check and update."
-
 Return only valid JSON.
 """,
         "required_json_format": {
-            "category": "career_guidance | learning_lead | job_inquiry | greeting | personal | certification | general",
+            "category": "career_guidance | learning_lead | job_inquiry | greeting | personal | certification | general | needs_human",
             "should_capture_contact": "true or false",
-            "suggested_reply": "short natural Instagram DM reply",
+            "should_reply": "true or false",
+            "human_reason": "reason if should_reply is false",
+            "suggested_reply": "short natural Instagram DM reply or empty string",
         },
     }
 
@@ -222,14 +257,16 @@ Return only valid JSON.
 
 
 def _normalize_output(data: dict, message: str, context: str) -> dict:
+    should_reply = data.get("should_reply", True)
+
+    if should_reply is False:
+        return _human_review(data.get("human_reason", "OpenAI marked this as low confidence."))
+
     reply = str(data.get("suggested_reply", "")).strip()
 
     last_reply = ""
     if "Last reply sent:" in context:
         last_reply = context.split("Last reply sent:", 1)[1].split("\n", 1)[0].strip()
-
-    if last_reply and reply.lower().strip() == last_reply.lower().strip():
-        reply = "I will check and update."
 
     bad_replies = [
         "can you tell me your educational background and current role",
@@ -239,10 +276,18 @@ def _normalize_output(data: dict, message: str, context: str) -> dict:
         "can you explain a little more",
         "can you share more details",
         "can you share more context",
+        "hello sathyam",
+        "hi sathyam",
     ]
 
-    if not reply or any(bad in reply.lower() for bad in bad_replies):
-        reply = "I will check and update."
+    if not reply:
+        return _human_review("Empty reply from OpenAI.")
+
+    if any(bad in reply.lower() for bad in bad_replies):
+        return _human_review("Bad or vague reply detected.")
+
+    if last_reply and reply.lower().strip() == last_reply.lower().strip():
+        return _human_review("Duplicate reply detected.")
 
     if len(reply) > 500:
         reply = reply[:480].rsplit(" ", 1)[0] + "..."
@@ -255,12 +300,17 @@ def _normalize_output(data: dict, message: str, context: str) -> dict:
         "priority": "normal",
         "approval_status": "safe_to_send",
         "should_capture_contact": should_capture,
-        "reason": "Generated by OpenAI using Mohamed Aslam persona, memory and knowledge base.",
+        "should_reply": True,
+        "human_reason": "",
+        "reason": "Generated by OpenAI using persona, memory and knowledge base.",
         "suggested_reply": reply,
     }
 
 
 def suggest_reply(message: str, channel: str = "instagram", context: str = "") -> dict:
+    if _should_stay_silent(message):
+        return _human_review("Short or unclear message. Better for manual reply.")
+
     if _is_clear_learning_lead(message):
         return _learning_lead_reply(message)
 
@@ -275,7 +325,7 @@ def suggest_reply(message: str, channel: str = "instagram", context: str = "") -
     try:
         response = client.chat.completions.create(
             model=model,
-            temperature=0.8,
+            temperature=0.4,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": _build_user_prompt(message, channel, context)},

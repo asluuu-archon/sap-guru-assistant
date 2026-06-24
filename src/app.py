@@ -126,6 +126,7 @@ def should_ignore_manual_reply(manual_reply_text: str) -> bool:
     junk_replies = [
         "please send your question as text",
         "i can reply properly",
+        "i will check and update",
     ]
 
     short_replies = {
@@ -139,6 +140,16 @@ def should_ignore_manual_reply(manual_reply_text: str) -> bool:
     }
 
     return text in short_replies or any(junk in text for junk in junk_replies)
+
+
+def mark_needs_human(sender_id: str, reason: str):
+    supabase.table("conversations").update({
+        "pending_reply": False,
+        "ai_replied": False,
+        "manual_replied": False,
+        "needs_human": True,
+        "human_reason": reason,
+    }).eq("sender_id", sender_id).execute()
 
 
 @app.post("/webhook")
@@ -165,7 +176,6 @@ async def receive_webhook(request: Request):
         recipient_id = messaging["recipient"]["id"]
         message = messaging.get("message", {})
 
-        # Echo messages are replies sent from your Instagram account
         if message.get("is_echo"):
             manual_reply_text = message.get("text", "")
             target_user_id = recipient_id
@@ -195,6 +205,8 @@ async def receive_webhook(request: Request):
                     "manual_replied": True,
                     "ai_replied": False,
                     "pending_reply": False,
+                    "needs_human": False,
+                    "human_reason": "",
                     "last_reply": manual_reply_text,
                 }).eq("sender_id", target_user_id).execute()
 
@@ -219,7 +231,8 @@ async def receive_webhook(request: Request):
 
         if not message_text:
             print("Non-text message received. Staying silent.", flush=True)
-            return {"status": "non_text_ignored"}
+            mark_needs_human(sender_id, "Non-text message received.")
+            return {"status": "non_text_needs_human"}
 
         if is_closing_message(message_text):
             print("Closing message received. Staying silent.", flush=True)
@@ -228,6 +241,8 @@ async def receive_webhook(request: Request):
                 "pending_reply": False,
                 "ai_replied": False,
                 "manual_replied": False,
+                "needs_human": False,
+                "human_reason": "",
             }).eq("sender_id", sender_id).execute()
 
             return {"status": "closing_message_ignored"}
@@ -236,13 +251,28 @@ async def receive_webhook(request: Request):
         context = build_context(conversation)
 
         reply = suggest_reply(message_text, "instagram", context)
-        reply_text = reply.get("suggested_reply", "I will check and update.")
+        reply_text = reply.get("suggested_reply", "")
         category = reply.get("category", "general")
+        should_reply = reply.get("should_reply", True)
 
         print(f"SENDER: {sender_id}", flush=True)
         print(f"CONTEXT: {context}", flush=True)
         print(f"MESSAGE: {message_text}", flush=True)
         print(f"REPLY: {reply_text}", flush=True)
+        print(f"SHOULD_REPLY: {should_reply}", flush=True)
+
+        if should_reply is False or not reply_text:
+            reason = reply.get("human_reason", "Low confidence or unclear message.")
+            print(f"NEEDS HUMAN: {reason}", flush=True)
+
+            save_conversation(sender_id, message_text, "", category)
+            mark_needs_human(sender_id, reason)
+
+            return {
+                "status": "needs_human",
+                "reason": reason,
+                "auto_reply": False,
+            }
 
         save_conversation(sender_id, message_text, reply_text, category)
 
