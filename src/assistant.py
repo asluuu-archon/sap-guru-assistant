@@ -153,7 +153,7 @@ def _simple_fallback(message: str, context: str = "") -> dict:
     elif _is_clear_learning_lead(message):
         return _learning_lead_reply(message)
     else:
-        reply = "Can you explain a little more?"
+        reply = "I will check and update."
 
     return {
         "category": "fallback",
@@ -201,7 +201,13 @@ Do not force a question in every reply.
 
 Avoid repeated questions.
 
-Never reply with "Can you tell me your educational background and current role?" if education/current role is already available.
+Never ask vague questions like:
+- Can you share a bit more detail?
+- Can you explain a little more?
+- Can you share more context?
+
+If unsure, reply:
+"I will check and update."
 
 Return only valid JSON.
 """,
@@ -223,16 +229,20 @@ def _normalize_output(data: dict, message: str, context: str) -> dict:
         last_reply = context.split("Last reply sent:", 1)[1].split("\n", 1)[0].strip()
 
     if last_reply and reply.lower().strip() == last_reply.lower().strip():
-        reply = "Can you share a bit more detail?"
+        reply = "I will check and update."
 
     bad_replies = [
         "can you tell me your educational background and current role",
         "can you explain what exactly you are looking for",
         "can you share a little more context",
+        "can you share a bit more detail",
+        "can you explain a little more",
+        "can you share more details",
+        "can you share more context",
     ]
 
     if not reply or any(bad in reply.lower() for bad in bad_replies):
-        return _simple_fallback(message, context)
+        reply = "I will check and update."
 
     if len(reply) > 500:
         reply = reply[:480].rsplit(" ", 1)[0] + "..."
