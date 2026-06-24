@@ -22,6 +22,31 @@ def has_real_lead_data(
     ])
 
 
+def determine_lead_stage(
+    name: str = "",
+    phone: str = "",
+    email: str = "",
+    location: str = "",
+    mode: str = "",
+):
+    if phone and email:
+        return "qualified"
+
+    if not phone:
+        return "phone_pending"
+
+    if not name:
+        return "name_pending"
+
+    if not location:
+        return "location_pending"
+
+    if not mode:
+        return "mode_pending"
+
+    return "email_pending"
+
+
 def save_lead(
     sender_id: str,
     name: str = "",
@@ -73,6 +98,14 @@ def save_lead(
         if is_qualified and not qualified_at:
             qualified_at = datetime.utcnow().isoformat()
 
+        lead_stage = determine_lead_stage(
+            name=final_name,
+            phone=final_phone,
+            email=final_email,
+            location=final_location,
+            mode=final_mode,
+        )
+
         status = "qualified" if is_qualified else old.get("status", "new")
 
         payload = {
@@ -87,6 +120,7 @@ def save_lead(
             "interested_module": final_module,
             "notes": ((old.get("notes") or "") + "\n" + notes).strip(),
             "status": status,
+            "lead_stage": lead_stage,
             "is_qualified": is_qualified,
             "qualified_at": qualified_at,
             "updated_at": datetime.utcnow().isoformat(),
