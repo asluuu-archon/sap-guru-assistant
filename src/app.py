@@ -61,29 +61,30 @@ def extract_email(text: str) -> str:
     return match.group(0).strip() if match else ""
 
 
+def is_closing_message(text: str) -> bool:
+    lower = (text or "").lower().strip()
+
+    closing_messages = {
+        "ok", "okay", "oh ok", "oh okay", "okk",
+        "ok bro", "ok brother", "ok sir", "okay sir",
+        "sure", "fine", "good", "great",
+        "thanks", "thank you", "thankyou", "thank u",
+        "tq", "ty", "got it", "understood", "noted",
+        "no problem", "np", "👍", "🙏",
+    }
+
+    cleaned = lower.replace(".", "").replace("!", "").strip()
+    return lower in closing_messages or cleaned in closing_messages
+
+
 def detect_lead_intent(text: str, reply: dict) -> bool:
     lower = (text or "").lower().strip()
 
     weak_messages = {
-        "hi",
-        "hii",
-        "hello",
-        "hey",
-        "ok",
-        "okay",
-        "yes",
-        "no",
-        "thanks",
-        "thank you",
-        "sure",
-        "fine",
-        "good",
-        "great",
-        "noted",
-        "done",
-        "welcome",
-        "oh its ok",
-        "oh it's ok",
+        "hi", "hii", "hello", "hey", "ok", "okay",
+        "yes", "no", "thanks", "thank you", "sure",
+        "fine", "good", "great", "noted", "done",
+        "welcome", "oh its ok", "oh it's ok",
     }
 
     if lower in weak_messages:
@@ -93,22 +94,11 @@ def detect_lead_intent(text: str, reply: dict) -> bool:
         return True
 
     strong_lead_phrases = [
-        "want to learn",
-        "interested in learning",
-        "learn sap",
-        "how to learn sap",
-        "want to join",
-        "course details",
-        "fee details",
-        "fees",
-        "online class",
-        "offline class",
-        "contact me",
-        "call me",
-        "internship",
-        "mentorship",
-        "career guidance",
-        "placement support",
+        "want to learn", "interested in learning", "learn sap",
+        "how to learn sap", "want to join", "course details",
+        "fee details", "fees", "online class", "offline class",
+        "contact me", "call me", "internship", "mentorship",
+        "career guidance", "placement support",
     ]
 
     if any(phrase in lower for phrase in strong_lead_phrases):
@@ -121,13 +111,10 @@ def save_possible_lead(sender_id: str, message_text: str, reply: dict, category:
     if not detect_lead_intent(message_text, reply):
         return
 
-    phone = extract_phone(message_text)
-    email = extract_email(message_text)
-
     save_lead(
         sender_id=sender_id,
-        phone=phone,
-        email=email,
+        phone=extract_phone(message_text),
+        email=extract_email(message_text),
         interested_module=category,
         notes=message_text,
     )
@@ -155,47 +142,6 @@ def should_ignore_manual_reply(manual_reply_text: str) -> bool:
 
 
 @app.post("/webhook")
-
-def is_closing_message(text: str) -> bool:
-    lower = (text or "").lower().strip()
-
-    closing_messages = {
-        "ok",
-        "okay",
-        "oh ok",
-        "oh okay",
-        "okk",
-        "ok bro",
-        "ok brother",
-        "ok sir",
-        "okay sir",
-        "sure",
-        "fine",
-        "good",
-        "great",
-        "thanks",
-        "thank you",
-        "thankyou",
-        "thank u",
-        "tq",
-        "ty",
-        "got it",
-        "understood",
-        "noted",
-        "no problem",
-        "np",
-        "👍",
-        "🙏",
-    }
-
-    if lower in closing_messages:
-        return True
-
-    if lower.replace(".", "").replace("!", "") in closing_messages:
-        return True
-
-    return False
-
 async def receive_webhook(request: Request):
     data = await request.json()
 
@@ -219,6 +165,7 @@ async def receive_webhook(request: Request):
         recipient_id = messaging["recipient"]["id"]
         message = messaging.get("message", {})
 
+        # Echo messages are replies sent from your Instagram account
         if message.get("is_echo"):
             manual_reply_text = message.get("text", "")
             target_user_id = recipient_id
@@ -244,14 +191,13 @@ async def receive_webhook(request: Request):
                     tags="manual_reply",
                 )
 
-                supabase_payload = {
-                    "sender_id": target_user_id,
+                supabase.table("conversations").update({
                     "manual_replied": True,
+                    "ai_replied": False,
                     "pending_reply": False,
                     "last_reply": manual_reply_text,
-                }
+                }).eq("sender_id", target_user_id).execute()
 
-                supabase.table("conversations").upsert(supabase_payload).execute()
                 print("MANUAL REPLY LEARNED", flush=True)
             else:
                 print("Manual echo found but no matching user message", flush=True)
