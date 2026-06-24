@@ -155,6 +155,47 @@ def should_ignore_manual_reply(manual_reply_text: str) -> bool:
 
 
 @app.post("/webhook")
+
+def is_closing_message(text: str) -> bool:
+    lower = (text or "").lower().strip()
+
+    closing_messages = {
+        "ok",
+        "okay",
+        "oh ok",
+        "oh okay",
+        "okk",
+        "ok bro",
+        "ok brother",
+        "ok sir",
+        "okay sir",
+        "sure",
+        "fine",
+        "good",
+        "great",
+        "thanks",
+        "thank you",
+        "thankyou",
+        "thank u",
+        "tq",
+        "ty",
+        "got it",
+        "understood",
+        "noted",
+        "no problem",
+        "np",
+        "👍",
+        "🙏",
+    }
+
+    if lower in closing_messages:
+        return True
+
+    if lower.replace(".", "").replace("!", "") in closing_messages:
+        return True
+
+    return False
+
 async def receive_webhook(request: Request):
     data = await request.json()
 
@@ -233,6 +274,17 @@ async def receive_webhook(request: Request):
         if not message_text:
             print("Non-text message received. Staying silent.", flush=True)
             return {"status": "non_text_ignored"}
+
+        if is_closing_message(message_text):
+            print("Closing message received. Staying silent.", flush=True)
+
+            supabase.table("conversations").update({
+                "pending_reply": False,
+                "ai_replied": False,
+                "manual_replied": False,
+            }).eq("sender_id", sender_id).execute()
+
+            return {"status": "closing_message_ignored"}
 
         conversation = get_conversation(sender_id)
         context = build_context(conversation)
