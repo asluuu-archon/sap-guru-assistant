@@ -5,7 +5,15 @@ import re
 
 from .assistant import suggest_reply
 from .instagram import send_instagram_reply
-from .memory import get_conversation, build_context, save_conversation, supabase
+from .memory import (
+    get_conversation,
+    build_context,
+    save_conversation,
+    mark_manual_replied,
+    mark_needs_human,
+    mark_closed,
+    supabase,
+)
 from .reply_bank import save_manual_reply_to_bank
 from .leads import save_lead
 from .delay_processor import process_pending_replies
@@ -142,16 +150,6 @@ def should_ignore_manual_reply(manual_reply_text: str) -> bool:
     return text in short_replies or any(junk in text for junk in junk_replies)
 
 
-def mark_needs_human(sender_id: str, reason: str):
-    supabase.table("conversations").update({
-        "pending_reply": False,
-        "ai_replied": False,
-        "manual_replied": False,
-        "needs_human": True,
-        "human_reason": reason,
-    }).eq("sender_id", sender_id).execute()
-
-
 @app.post("/webhook")
 async def receive_webhook(request: Request):
     data = await request.json()
@@ -201,15 +199,7 @@ async def receive_webhook(request: Request):
                     tags="manual_reply",
                 )
 
-                supabase.table("conversations").update({
-                    "manual_replied": True,
-                    "ai_replied": False,
-                    "pending_reply": False,
-                    "needs_human": False,
-                    "human_reason": "",
-                    "last_reply": manual_reply_text,
-                }).eq("sender_id", target_user_id).execute()
-
+                mark_manual_replied(target_user_id, manual_reply_text)
                 print("MANUAL REPLY LEARNED", flush=True)
             else:
                 print("Manual echo found but no matching user message", flush=True)
@@ -236,15 +226,7 @@ async def receive_webhook(request: Request):
 
         if is_closing_message(message_text):
             print("Closing message received. Staying silent.", flush=True)
-
-            supabase.table("conversations").update({
-                "pending_reply": False,
-                "ai_replied": False,
-                "manual_replied": False,
-                "needs_human": False,
-                "human_reason": "",
-            }).eq("sender_id", sender_id).execute()
-
+            mark_closed(sender_id, "Closing message received.")
             return {"status": "closing_message_ignored"}
 
         conversation = get_conversation(sender_id)
@@ -265,7 +247,7 @@ async def receive_webhook(request: Request):
             reason = reply.get("human_reason", "Low confidence or unclear message.")
             print(f"NEEDS HUMAN: {reason}", flush=True)
 
-            save_conversation(sender_id, message_text, "", category)
+            save_conversation(sender_id, message_text, "", "needs_human")
             mark_needs_human(sender_id, reason)
 
             return {
