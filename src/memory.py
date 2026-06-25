@@ -28,6 +28,10 @@ def get_conversation(sender_id: str) -> dict:
         "pending_reply": False,
         "ai_replied": False,
         "manual_replied": False,
+        "needs_human": False,
+        "human_reason": "",
+        "conversation_state": "new",
+        "state_reason": "",
     }
 
 
@@ -36,6 +40,9 @@ def build_context(conversation: dict) -> str:
     recent = history[-10:]
 
     lines = []
+
+    if conversation.get("conversation_state"):
+        lines.append(f"Conversation state: {conversation['conversation_state']}")
 
     if conversation.get("summary"):
         lines.append(f"Known summary: {conversation['summary']}")
@@ -86,6 +93,17 @@ def save_conversation(
     if user_message:
         summary = update_simple_summary(summary, user_message)
 
+    state = "active"
+    state_reason = "New user message received"
+
+    if category == "learning_lead":
+        state = "lead_collection"
+        state_reason = "Learning enquiry detected"
+
+    if category == "needs_human":
+        state = "needs_human"
+        state_reason = "Needs human review"
+
     payload = {
         "sender_id": sender_id,
         "summary": summary,
@@ -94,9 +112,17 @@ def save_conversation(
         "history": history,
         "updated_at": now,
         "first_message_at": conversation.get("first_message_at") or now,
+
         "pending_reply": True,
         "ai_replied": False,
         "manual_replied": False,
+
+        "needs_human": category == "needs_human",
+        "human_reason": state_reason if category == "needs_human" else "",
+
+        "conversation_state": state,
+        "state_reason": state_reason,
+        "closed_at": None,
     }
 
     supabase.table("conversations").upsert(payload).execute()
@@ -105,7 +131,12 @@ def save_conversation(
 def mark_manual_replied(sender_id: str, manual_reply: str = ""):
     payload = {
         "manual_replied": True,
+        "ai_replied": False,
         "pending_reply": False,
+        "needs_human": False,
+        "human_reason": "",
+        "conversation_state": "active",
+        "state_reason": "Manual reply sent",
         "updated_at": datetime.utcnow().isoformat(),
     }
 
@@ -118,7 +149,12 @@ def mark_manual_replied(sender_id: str, manual_reply: str = ""):
 def mark_ai_replied(sender_id: str, ai_reply: str = "", history=None):
     payload = {
         "ai_replied": True,
+        "manual_replied": False,
         "pending_reply": False,
+        "needs_human": False,
+        "human_reason": "",
+        "conversation_state": "active",
+        "state_reason": "AI reply sent",
         "updated_at": datetime.utcnow().isoformat(),
     }
 
@@ -129,6 +165,35 @@ def mark_ai_replied(sender_id: str, ai_reply: str = "", history=None):
         payload["history"] = history
 
     supabase.table("conversations").update(payload).eq("sender_id", sender_id).execute()
+
+
+def mark_needs_human(sender_id: str, reason: str = "Needs human review"):
+    supabase.table("conversations").update({
+        "pending_reply": False,
+        "ai_replied": False,
+        "manual_replied": False,
+        "needs_human": True,
+        "human_reason": reason,
+        "conversation_state": "needs_human",
+        "state_reason": reason,
+        "updated_at": datetime.utcnow().isoformat(),
+    }).eq("sender_id", sender_id).execute()
+
+
+def mark_closed(sender_id: str, reason: str = "Conversation closed"):
+    now = datetime.utcnow().isoformat()
+
+    supabase.table("conversations").update({
+        "pending_reply": False,
+        "ai_replied": False,
+        "manual_replied": False,
+        "needs_human": False,
+        "human_reason": "",
+        "conversation_state": "closed",
+        "state_reason": reason,
+        "closed_at": now,
+        "updated_at": now,
+    }).eq("sender_id", sender_id).execute()
 
 
 def get_last_question(conversation: dict, assistant_reply: str) -> str:
