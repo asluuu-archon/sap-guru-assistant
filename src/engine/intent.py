@@ -11,6 +11,10 @@ GREETING_MESSAGES = {
     "good morning",
     "good afternoon",
     "good evening",
+    "goodmorning",
+    "goodafternoon",
+    "goodevening",
+    "gm",
 }
 
 CLOSING_MESSAGES = {
@@ -167,6 +171,7 @@ def detect_intent(message: str) -> dict:
             "should_reply": True,
             "reason": "Clear learning enquiry",
         }
+    
 
     if any(module in text for module in SAP_MODULES) and any(
         word in text for word in ["learn", "interested", "join", "course", "details"]
