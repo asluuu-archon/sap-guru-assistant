@@ -310,6 +310,12 @@ def _normalize_output(data: dict, message: str, context: str) -> dict:
 
 def suggest_reply(message: str, channel: str = "instagram", context: str = "") -> dict:
     intent = detect_intent(message)
+    print(f"INTENT: {intent.get('intent')}", flush=True)
+    print(f"INTENT_CONFIDENCE: {intent.get('confidence')}", flush=True)
+    print(f"INTENT_REASON: {intent.get('reason')}", flush=True)
+
+
+
 
     if intent.get("intent") == "greeting":
         return {
