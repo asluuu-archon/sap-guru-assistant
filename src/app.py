@@ -41,6 +41,24 @@ def health():
 def run_delayed_replies():
     return process_pending_replies()
 
+@app.get("/conversation/{sender_id}")
+def get_conversation_detail(sender_id: str):
+    try:
+        conversation = get_conversation(sender_id)
+
+        return {
+            "status": "success",
+            "sender_id": sender_id,
+            "conversation": conversation,
+        }
+
+    except Exception as e:
+        print(f"CONVERSATION DETAIL ERROR: {e}", flush=True)
+        return {
+            "status": "error",
+            "message": str(e),
+        }
+
 
 @app.get("/dashboard-data")
 def dashboard_data():
