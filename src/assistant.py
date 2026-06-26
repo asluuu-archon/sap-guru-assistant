@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 from dotenv import load_dotenv
 from .reply_bank import find_similar_replies
+from .engine.intent import detect_intent
 
 load_dotenv()
 
@@ -308,8 +309,25 @@ def _normalize_output(data: dict, message: str, context: str) -> dict:
 
 
 def suggest_reply(message: str, channel: str = "instagram", context: str = "") -> dict:
+    intent = detect_intent(message)
+
+    if intent.get("intent") == "greeting":
+        return {
+            "category": "greeting",
+            "lead_score": 0,
+            "priority": "normal",
+            "approval_status": "safe_to_send",
+            "should_capture_contact": False,
+            "should_reply": True,
+            "human_reason": "",
+            "reason": intent.get("reason", "Greeting detected"),
+            "suggested_reply": "Hi, how are you doing? How can I help you?",
+        }
+
     if _should_stay_silent(message):
         return _human_review("Short or unclear message. Better for manual reply.")
+
+    
 
     if _is_clear_learning_lead(message):
         return _learning_lead_reply(message)
