@@ -31,6 +31,10 @@ class SuggestRequest(BaseModel):
     channel: str = "instagram"
     context: str = ""
 
+class ManualReplyRequest(BaseModel):
+    sender_id: str
+    message: str
+
 
 @app.get("/health")
 def health():
@@ -54,6 +58,30 @@ def get_conversation_detail(sender_id: str):
 
     except Exception as e:
         print(f"CONVERSATION DETAIL ERROR: {e}", flush=True)
+        return {
+            "status": "error",
+            "message": str(e),
+        }
+
+@app.post("/conversation/send-reply")
+def send_manual_reply_from_dashboard(req: ManualReplyRequest):
+    try:
+        if not req.sender_id or not req.message.strip():
+            return {
+                "status": "error",
+                "message": "sender_id and message are required",
+            }
+
+        send_instagram_reply(req.sender_id, req.message.strip())
+        mark_manual_replied(req.sender_id, req.message.strip())
+
+        return {
+            "status": "success",
+            "message": "Reply sent successfully",
+        }
+
+    except Exception as e:
+        print(f"DASHBOARD SEND REPLY ERROR: {e}", flush=True)
         return {
             "status": "error",
             "message": str(e),
