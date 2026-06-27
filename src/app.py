@@ -4,7 +4,7 @@ import os
 import re
 
 from .assistant import suggest_reply
-from .instagram import send_instagram_reply
+from .channels.sender import send_channel_reply
 from .memory import (
     get_conversation,
     build_context,
@@ -72,12 +72,20 @@ def send_manual_reply_from_dashboard(req: ManualReplyRequest):
                 "message": "sender_id and message are required",
             }
 
-        send_instagram_reply(req.sender_id, req.message.strip())
+        result = send_channel_reply(
+            channel="instagram",
+            recipient_id=req.sender_id,
+            message=req.message.strip(),
+        )
+
+        print(f"DASHBOARD SEND RESULT: {result}", flush=True)
+
         mark_manual_replied(req.sender_id, req.message.strip())
 
         return {
             "status": "success",
             "message": "Reply sent successfully",
+            "result": result,
         }
 
     except Exception as e:
@@ -369,8 +377,13 @@ async def receive_webhook(request: Request):
         )
 
         if AUTO_REPLY:
-            send_instagram_reply(sender_id, reply_text)
-            print("AUTO REPLY SENT", flush=True)
+            result = send_channel_reply(
+                channel="instagram",
+                recipient_id=sender_id,
+                message=reply_text,
+            )
+
+            print(f"AUTO REPLY SENT: {result}", flush=True)
         else:
             print("AUTO REPLY DISABLED", flush=True)
             print(f"WOULD HAVE SENT: {reply_text}", flush=True)
