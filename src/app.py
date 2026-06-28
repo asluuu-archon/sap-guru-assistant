@@ -1,5 +1,7 @@
 from fastapi import FastAPI, Request, Query
 from pydantic import BaseModel
+from .crm.customer_engine import get_or_create_customer
+
 import os
 import re
 
@@ -282,6 +284,14 @@ async def receive_webhook(request: Request):
             return {"status": "ignored_non_message"}
 
         sender_id = messaging["sender"]["id"]
+        customer = get_or_create_customer(
+            channel_user_id=sender_id,
+            primary_channel="instagram",
+            organization_id=1,
+        )
+
+        print(f"CUSTOMER_ID: {customer.get('id')}", flush=True)
+
         recipient_id = messaging["recipient"]["id"]
         message = messaging.get("message", {})
 
