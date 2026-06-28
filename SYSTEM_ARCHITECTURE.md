@@ -450,3 +450,201 @@ Current default organization:
 
 10\. Future onboarding should be configuration-driven.
 
+
+
+\## Documentation Standards
+
+
+
+The project maintains five permanent documents:
+
+
+
+\### PROJECT\_PROGRESS.md
+
+
+
+Tracks implementation progress.
+
+
+
+\### SYSTEM\_ARCHITECTURE.md
+
+
+
+Defines technical architecture.
+
+
+
+\### PRODUCT\_ROADMAP.md
+
+
+
+Defines product evolution.
+
+
+
+\### IDEAS\_BACKLOG.md
+
+
+
+Stores future enhancements and ideas.
+
+
+
+\### DECISIONS.md
+
+
+
+Stores important design decisions.
+
+
+
+\---
+
+
+
+\## Campaign Context Engine
+
+
+
+Status:
+
+Planned
+
+
+
+Purpose:
+
+
+
+Allow each organization to describe current campaigns, offers, stories, reels, announcements, or job openings using natural language.
+
+
+
+Examples:
+
+
+
+\* Product launch
+
+\* Discount offer
+
+\* Recruitment campaign
+
+\* Holiday announcement
+
+\* Training batch
+
+\* Marketing campaign
+
+
+
+The AI should automatically include active campaign context while generating replies.
+
+
+
+Campaigns should support:
+
+
+
+\* Valid From
+
+\* Valid Until
+
+\* Active / Paused / Expired
+
+\* Priority
+
+\* Related Channels
+
+
+
+\---
+
+
+
+\## Customer Intelligence Philosophy
+
+
+
+The platform should not rely only on conversation history.
+
+
+
+Instead, every customer should gradually build a Customer Intelligence Profile.
+
+
+
+This profile should evolve over time and become the primary source of information for telecallers and sales teams.
+
+
+
+The profile should remain generic and work across industries.
+
+
+
+Examples of customer attributes:
+
+
+
+\* Interests
+
+\* Requirements
+
+\* Preferences
+
+\* Previous interactions
+
+\* AI summary
+
+\* Lead score
+
+\* Lead temperature
+
+\* AI confidence
+
+\* Recommended next action
+
+
+
+Industry-specific information should be stored as configurable customer attributes rather than hardcoded database columns.
+
+
+
+\---
+
+
+
+\## Multi-Tenant Philosophy
+
+
+
+The platform should always be designed with multiple organizations in mind.
+
+
+
+Every organization should have:
+
+
+
+\* Independent users
+
+\* Independent customers
+
+\* Independent conversations
+
+\* Independent leads
+
+\* Independent AI knowledge
+
+\* Independent channels
+
+\* Independent analytics
+
+
+
+The Platform Console should manage organizations, while each organization should only access its own Command Center.
+
+
+
