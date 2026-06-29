@@ -1,34 +1,11 @@
 """
 Message Pipeline
 
-This module will become the central orchestrator for incoming messages.
-
-Current goal:
-- Keep app.py clean.
-- Avoid duplicating logic when adding WhatsApp, Facebook, Email, Website Chat, etc.
-- Route all incoming messages through one reusable business flow.
-
-Future flow:
-Channel
-↓
-Identity Engine
-↓
-Customer Engine
-↓
-Customer Intelligence Engine
-↓
-Conversation Memory
-↓
-Business Brain
-↓
-Intent Engine
-↓
-Reply Engine
-↓
-Lead Engine
-↓
-Channel Engine
+Central orchestrator for incoming messages.
+Phase 1: Customer Engine only.
 """
+
+from ..crm.customer_engine import get_or_create_customer
 
 
 def process_incoming_message(
@@ -38,13 +15,6 @@ def process_incoming_message(
     message_text: str,
     raw_payload: dict | None = None,
 ) -> dict:
-    """
-    Skeleton only.
-
-    This function will later replace most of the message processing logic inside app.py.
-    For now, it only validates and returns a safe structure.
-    """
-
     if not organization_id:
         organization_id = 1
 
@@ -57,12 +27,19 @@ def process_incoming_message(
             "message": "sender_id is required",
         }
 
+    customer = get_or_create_customer(
+        channel_user_id=sender_id,
+        primary_channel=channel,
+        organization_id=organization_id,
+    )
+
     return {
         "status": "success",
         "organization_id": organization_id,
         "channel": channel,
         "sender_id": sender_id,
         "message_text": message_text or "",
+        "customer": customer,
+        "customer_id": customer.get("id") if customer else None,
         "raw_payload_available": raw_payload is not None,
-        "note": "Message Pipeline skeleton is ready but not connected yet.",
     }
