@@ -1,13 +1,13 @@
 from fastapi import FastAPI, Request, Query
 from pydantic import BaseModel
-from .crm.customer_engine import get_or_create_customer
-from .identity.identity_engine import build_basic_identity, update_customer_identity
-
 import os
 import re
 
 from .assistant import suggest_reply
 from .channels.sender import send_channel_reply
+from .crm.customer_engine import get_or_create_customer
+from .crm.customer_intelligence import update_customer_from_message
+from .identity.identity_engine import build_basic_identity, update_customer_identity
 from .memory import (
     get_conversation,
     build_context,
@@ -34,6 +34,7 @@ class SuggestRequest(BaseModel):
     channel: str = "instagram"
     context: str = ""
 
+
 class ManualReplyRequest(BaseModel):
     sender_id: str
     message: str
@@ -47,6 +48,7 @@ def health():
 @app.get("/run-delayed-replies")
 def run_delayed_replies():
     return process_pending_replies()
+
 
 @app.get("/conversation/{sender_id}")
 def get_conversation_detail(sender_id: str):
@@ -65,6 +67,7 @@ def get_conversation_detail(sender_id: str):
             "status": "error",
             "message": str(e),
         }
+
 
 @app.post("/conversation/send-reply")
 def send_manual_reply_from_dashboard(req: ManualReplyRequest):
@@ -285,6 +288,7 @@ async def receive_webhook(request: Request):
             return {"status": "ignored_non_message"}
 
         sender_id = messaging["sender"]["id"]
+
         customer = get_or_create_customer(
             channel_user_id=sender_id,
             primary_channel="instagram",
@@ -358,6 +362,13 @@ async def receive_webhook(request: Request):
             print("Non-text message received. Staying silent.", flush=True)
             mark_needs_human(sender_id, "Non-text message received.")
             return {"status": "non_text_needs_human"}
+
+        facts = update_customer_from_message(
+            customer_id=customer.get("id"),
+            message=message_text,
+        )
+
+        print(f"CUSTOMER_FACTS: {facts}", flush=True)
 
         if is_closing_message(message_text):
             print("Closing message received. Staying silent.", flush=True)
