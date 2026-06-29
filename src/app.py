@@ -5,6 +5,7 @@ import re
 
 from .assistant import suggest_reply
 from .channels.sender import send_channel_reply
+from .crm.business_context import get_active_business_context
 from .crm.customer_engine import get_or_create_customer
 from .crm.customer_intelligence import update_customer_from_message
 from .identity.identity_engine import build_basic_identity, update_customer_identity
@@ -54,29 +55,17 @@ def run_delayed_replies():
 def get_conversation_detail(sender_id: str):
     try:
         conversation = get_conversation(sender_id)
-
-        return {
-            "status": "success",
-            "sender_id": sender_id,
-            "conversation": conversation,
-        }
-
+        return {"status": "success", "sender_id": sender_id, "conversation": conversation}
     except Exception as e:
         print(f"CONVERSATION DETAIL ERROR: {e}", flush=True)
-        return {
-            "status": "error",
-            "message": str(e),
-        }
+        return {"status": "error", "message": str(e)}
 
 
 @app.post("/conversation/send-reply")
 def send_manual_reply_from_dashboard(req: ManualReplyRequest):
     try:
         if not req.sender_id or not req.message.strip():
-            return {
-                "status": "error",
-                "message": "sender_id and message are required",
-            }
+            return {"status": "error", "message": "sender_id and message are required"}
 
         result = send_channel_reply(
             channel="instagram",
@@ -85,21 +74,13 @@ def send_manual_reply_from_dashboard(req: ManualReplyRequest):
         )
 
         print(f"DASHBOARD SEND RESULT: {result}", flush=True)
-
         mark_manual_replied(req.sender_id, req.message.strip())
 
-        return {
-            "status": "success",
-            "message": "Reply sent successfully",
-            "result": result,
-        }
+        return {"status": "success", "message": "Reply sent successfully", "result": result}
 
     except Exception as e:
         print(f"DASHBOARD SEND REPLY ERROR: {e}", flush=True)
-        return {
-            "status": "error",
-            "message": str(e),
-        }
+        return {"status": "error", "message": str(e)}
 
 
 @app.get("/dashboard-data")
@@ -377,6 +358,12 @@ async def receive_webhook(request: Request):
 
         conversation = get_conversation(sender_id)
         context = build_context(conversation)
+
+        business_context = get_active_business_context(organization_id=1)
+
+        if business_context:
+            context = context + "\n\nActive Business Context:\n" + business_context
+            print(f"BUSINESS_CONTEXT_USED: {business_context}", flush=True)
 
         reply = suggest_reply(message_text, "instagram", context)
         reply_text = reply.get("suggested_reply", "")
