@@ -252,3 +252,89 @@ Every new idea discussed during development should be added here before implemen
 
 
 
+\---
+
+
+
+\## Conversation-Driven Lead Qualification
+
+
+
+Priority: High
+
+
+
+When a new conversation starts:
+
+
+
+1\. Check whether this customer already exists.
+
+
+
+2\. If existing customer:
+
+&#x20;  Continue conversation using previous context.
+
+
+
+3\. If new customer:
+
+&#x20;  Detect intent before replying.
+
+
+
+4\. If AI detects probable lead:
+
+&#x20;  Guide conversation naturally to collect missing lead details.
+
+
+
+Goal:
+
+
+
+Avoid asking unnecessary questions while progressively enriching the customer profile across multiple conversations.
+
+
+
+\---
+
+
+
+\## Identity Engine - Channel Profile Fetch
+
+
+
+Priority: High
+
+
+
+The system should fetch or extract customer identity from each channel.
+
+
+
+Examples:
+
+\- Instagram username
+
+\- Instagram display name if available
+
+\- WhatsApp contact name
+
+\- Facebook profile name
+
+\- Email sender name
+
+
+
+Goal:
+
+Avoid showing only sender\_id in the Command Center and CRM.
+
+
+
+This should be built as a reusable Identity Engine, not hardcoded only for Instagram.
+
+
+

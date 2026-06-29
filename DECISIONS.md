@@ -184,3 +184,61 @@ Every significant architectural or product decision should be recorded here befo
 
 
 
+\---
+
+
+
+\## Decision 009
+
+
+
+Decision
+
+
+
+The Customer becomes the central entity of the platform.
+
+
+
+Reason
+
+
+
+Conversations, leads, campaigns and future CRM functionality all belong to customers rather than existing independently.
+
+
+
+Outcome
+
+
+
+Future modules should reference customer records instead of sender IDs whenever possible.
+
+
+
+\---
+
+
+
+\## Decision 010
+
+
+
+Decision:
+
+Customer identity is a first-class concept in the platform.
+
+
+
+Reason:
+
+The platform should show human-friendly customer identity such as name, username, phone, email and channel identity instead of only internal sender IDs.
+
+
+
+Outcome:
+
+Every channel should provide the richest identity information available. Instagram, WhatsApp, Facebook, Email and Website Chat will each have their own identity extraction logic through the Identity Engine.
+
+
+
