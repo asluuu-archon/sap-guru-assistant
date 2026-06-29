@@ -2,10 +2,10 @@
 Message Pipeline
 
 Central orchestrator for incoming messages.
-Phase 1: Customer Engine only.
+Phase 2: Uses Customer Stage.
 """
 
-from ..crm.customer_engine import get_or_create_customer
+from .stages.customer_stage import run_customer_stage
 
 
 def process_incoming_message(
@@ -27,10 +27,10 @@ def process_incoming_message(
             "message": "sender_id is required",
         }
 
-    customer = get_or_create_customer(
-        channel_user_id=sender_id,
-        primary_channel=channel,
+    customer_result = run_customer_stage(
         organization_id=organization_id,
+        channel=channel,
+        sender_id=sender_id,
     )
 
     return {
@@ -39,7 +39,7 @@ def process_incoming_message(
         "channel": channel,
         "sender_id": sender_id,
         "message_text": message_text or "",
-        "customer": customer,
-        "customer_id": customer.get("id") if customer else None,
+        "customer": customer_result.get("customer"),
+        "customer_id": customer_result.get("customer_id"),
         "raw_payload_available": raw_payload is not None,
     }
