@@ -2,27 +2,241 @@
 
 
 
-\## Product Direction
+> Last Updated: 2026-06-29
 
 
 
-AI Command Center is a SaaS-based AI Customer Engagement Platform.
+\---
 
 
 
-The platform will support multiple organizations. Each organization can connect its own social channels, knowledge base, users, leads, customers, workflows, and AI settings.
+\# Product Direction
 
 
 
-The SAP Guru is the first organization/workspace.
+AI Command Center is a reusable SaaS-based AI Customer Engagement Platform.
 
 
 
-\## Core Principle
+Every organization should be able to connect its own:
 
 
 
-Every major business record must eventually belong to an organization.
+\- Social channels
+
+\- AI knowledge
+
+\- Business Brain
+
+\- Customers
+
+\- Leads
+
+\- Sales users
+
+\- Analytics
+
+\- Workflows
+
+
+
+without changing application code.
+
+
+
+The SAP Guru is the first organization (workspace).
+
+
+
+\---
+
+
+
+\# Architecture Philosophy
+
+
+
+The platform is built around one principle:
+
+
+
+> AI should behave like a knowledgeable employee rather than a chatbot.
+
+
+
+Every AI decision should be based on multiple intelligence sources instead of only the latest customer message.
+
+
+
+\---
+
+
+
+\# High-Level Architecture
+
+
+
+```
+
+Customer
+
+
+
+&#x20;       │
+
+
+
+&#x20;       ▼
+
+
+
+Channel Engine
+
+
+
+&#x20;       │
+
+
+
+&#x20;       ▼
+
+
+
+Identity Engine
+
+
+
+&#x20;       │
+
+
+
+&#x20;       ▼
+
+
+
+Customer Engine
+
+
+
+&#x20;       │
+
+
+
+&#x20;       ▼
+
+
+
+Customer Intelligence Engine
+
+
+
+&#x20;       │
+
+
+
+&#x20;       ▼
+
+
+
+Conversation Memory
+
+
+
+&#x20;       │
+
+
+
+&#x20;       ▼
+
+
+
+Business Brain
+
+
+
+&#x20;       │
+
+
+
+&#x20;       ▼
+
+
+
+Knowledge Engine
+
+
+
+&#x20;       │
+
+
+
+&#x20;       ▼
+
+
+
+Intent Engine
+
+
+
+&#x20;       │
+
+
+
+&#x20;       ▼
+
+
+
+Confidence Engine
+
+
+
+&#x20;       │
+
+
+
+&#x20;       ▼
+
+
+
+OpenAI
+
+
+
+&#x20;       │
+
+
+
+&#x20;       ▼
+
+
+
+Reply
+
+```
+
+
+
+OpenAI is intentionally placed near the end of the pipeline.
+
+
+
+Business rules and platform intelligence should make as many decisions as possible before using the LLM.
+
+
+
+\---
+
+
+
+\# Multi-Tenant Architecture
+
+
+
+The platform supports multiple organizations.
+
+
+
+Every business entity ultimately belongs to an organization.
 
 
 
@@ -30,371 +244,671 @@ Standard key:
 
 
 
+```
+
 organization\_id
 
-
-
-\## SaaS Model
-
-
-
-There will be two levels:
+```
 
 
 
-\### Platform Console
+No future feature should assume a single organization.
 
 
 
-Used by platform owner/admin.
+\---
 
 
 
-Purpose:
+\# SaaS Structure
+
+
+
+\## Platform Console
+
+
+
+Used by platform administrators.
+
+
+
+Responsibilities
+
+
 
 \- Manage organizations
 
 \- Manage subscriptions
 
-\- Monitor usage
+\- Manage billing
 
-\- Manage deployments
+\- AI usage monitoring
 
-\- Manage templates
+\- Deployment management
 
-\- Monitor system logs
+\- Template management
 
-\- Control OpenAI usage
+\- Global analytics
 
+\- Platform health
 
 
-\### Organization Command Center
 
+\---
 
 
-Used by each client/company.
 
+\## Organization Command Center
 
 
-Purpose:
 
-\- Manage inbox
+Used by client organizations.
 
-\- Manage leads
 
-\- Manage customers
 
-\- Manage channels
+Responsibilities
 
-\- Manage knowledge
 
-\- View analytics
 
-\- Reply to customers
+\- Unified Inbox
 
-\- Configure AI behavior
+\- Customer Management
 
+\- Lead Management
 
+\- Business Brain
 
-\## Main Entities
+\- Knowledge Base
 
+\- Analytics
 
+\- AI Settings
 
-\### organizations
+\- Team Management
 
+\- Reply Management
 
 
-Fields planned:
 
-\- id
+\---
 
-\- name
 
-\- industry
 
-\- status
+\# Core Business Entities
 
-\- timezone
 
-\- branding
 
-\- subscription\_plan
+\## organizations
 
-\- created\_at
 
-\- updated\_at
 
+Represents one customer of the SaaS platform.
 
 
-\### organization\_users
 
+\---
 
 
-Fields planned:
 
-\- id
+\## organization\_users
 
-\- organization\_id
 
-\- name
 
-\- email
+Users belonging to one organization.
 
-\- role
 
-\- status
 
-\- created\_at
+Examples
 
-\- updated\_at
 
 
+\- Sales
 
-\### channels
+\- Marketing
 
+\- Support
 
+\- Administrator
 
-Fields planned:
 
-\- id
 
-\- organization\_id
+\---
 
-\- channel\_type
 
-\- channel\_name
 
-\- credentials
+\## channels
 
-\- status
 
-\- created\_at
 
-\- updated\_at
+Connected communication channels.
 
 
 
-\### customers
+Examples
 
 
 
-Fields planned:
+\- Instagram
 
-\- id
+\- WhatsApp
 
-\- organization\_id
+\- Facebook
 
-\- name
+\- Website Chat
 
-\- phone
+\- Email
 
-\- email
 
-\- location
 
-\- attributes JSON
+\---
 
-\- lead\_score
 
-\- lead\_temperature
 
-\- status
+\## customers
 
-\- created\_at
 
-\- updated\_at
 
+Master customer record.
 
 
-\### customer\_channels
 
+One customer may communicate through multiple channels.
 
 
-Fields planned:
 
-\- id
+\---
 
-\- organization\_id
 
-\- customer\_id
 
-\- channel\_type
+\## customer\_channels
 
-\- channel\_user\_id
 
-\- username
 
-\- display\_name
+Maps one customer to multiple communication identities.
 
-\- phone
 
-\- email
 
-\- created\_at
+Examples
 
-\- updated\_at
 
 
+Instagram ID
 
-\### conversations
 
 
+WhatsApp Number
 
-Fields planned:
 
-\- id
 
-\- organization\_id
+Facebook Messenger ID
 
-\- customer\_id
 
-\- channel\_type
 
-\- channel\_user\_id
+Website Visitor ID
 
-\- summary
 
-\- state
 
-\- last\_message
+\---
 
-\- last\_reply
 
-\- needs\_human
 
-\- human\_reason
+\## conversations
 
-\- history JSON
 
-\- created\_at
 
-\- updated\_at
+Stores channel-specific conversations.
 
 
 
-\### leads
+Conversation history should remain channel-specific.
 
 
 
-Fields planned:
+Customer intelligence should remain customer-specific.
 
-\- id
 
-\- organization\_id
 
-\- customer\_id
+\---
 
-\- source\_channel
 
-\- status
 
-\- lead\_score
+\## leads
 
-\- lead\_temperature
 
-\- requirement\_summary
 
-\- sales\_brief
+Represents sales opportunities.
 
-\- next\_best\_action
 
-\- assigned\_to
 
-\- follow\_up\_at
+Leads should never depend only on conversation history.
 
-\- created\_at
 
-\- updated\_at
 
+They should reference the customer.
 
 
-\## Engines
 
+\---
 
 
-\### Intent Engine
 
+\## business\_contexts
 
 
-Detects message intent before using OpenAI.
 
+Temporary operational knowledge.
 
 
-\### Conversation Engine
 
+Examples
 
 
-Orchestrates incoming messages.
 
+\- Current campaigns
 
+\- Offers
 
-\### Channel Engine
+\- Job openings
 
+\- Events
 
+\- Announcements
 
-Sends and receives messages across Instagram, WhatsApp, Facebook, website chat, and email.
+\- Office closures
 
 
 
-\### Customer Intelligence Engine
+Business Context is temporary.
 
 
 
-Extracts customer profile, interest, needs, and lead information.
+Knowledge Base is permanent.
 
 
 
-\### Lead Engine
+\---
 
 
 
-Creates, qualifies, and updates leads.
+\# AI Engines
 
 
 
-\### Knowledge Engine
+\## Channel Engine
 
 
 
-Loads organization-specific knowledge.
+Handles communication with all supported channels.
 
 
 
-\### Confidence Engine
+\---
 
 
 
-Decides whether AI should reply or move to Human Queue.
+\## Identity Engine
 
 
 
-\## Cross-Channel Identity
+Identifies customers across channels.
 
 
 
-Auto-merge customers only when phone number matches.
+Responsible for:
 
 
 
-Manual review required for:
+\- Channel identity
 
-\- email match
+\- Username
 
-\- name match
+\- Display name
 
-\- location match
+\- Cross-channel mapping
 
-\- similar conversation
 
-\- user says they contacted via another channel
 
+\---
 
 
-\## Current Implementation
 
+\## Customer Engine
 
 
-Backend:
+
+Creates and maintains customer records.
+
+
+
+Responsible for customer lifecycle.
+
+
+
+\---
+
+
+
+\## Customer Intelligence Engine
+
+
+
+Continuously extracts structured customer knowledge.
+
+
+
+Examples
+
+
+
+\- Interests
+
+\- Requirements
+
+\- Education
+
+\- Experience
+
+\- Preferences
+
+\- Location
+
+\- Contact details
+
+
+
+\---
+
+
+
+\## Conversation Engine
+
+
+
+Maintains conversation history and context.
+
+
+
+\---
+
+
+
+\## Business Brain
+
+
+
+Stores temporary business intelligence.
+
+
+
+Examples
+
+
+
+Today's offer
+
+
+
+Today's recruitment
+
+
+
+Today's campaign
+
+
+
+Today's announcement
+
+
+
+Current business priorities
+
+
+
+Business Brain should influence every AI reply.
+
+
+
+\---
+
+
+
+\## Knowledge Engine
+
+
+
+Provides long-term organizational knowledge.
+
+
+
+Examples
+
+
+
+Products
+
+
+
+Services
+
+
+
+FAQs
+
+
+
+Policies
+
+
+
+Training material
+
+
+
+Knowledge remains relatively permanent.
+
+
+
+\---
+
+
+
+\## Intent Engine
+
+
+
+Determines customer intent before LLM processing.
+
+
+
+\---
+
+
+
+\## Confidence Engine
+
+
+
+Determines whether AI should reply automatically or move to Human Queue.
+
+
+
+\---
+
+
+
+\## Lead Engine
+
+
+
+Creates, qualifies and enriches sales leads.
+
+
+
+\---
+
+
+
+\## Sales Intelligence Engine (Future)
+
+
+
+Creates sales-ready summaries.
+
+
+
+Outputs
+
+
+
+\- Lead Brief
+
+\- Next Best Action
+
+\- Lead Temperature
+
+\- Sales Pitch
+
+\- AI Confidence
+
+
+
+\---
+
+
+
+\# Customer Intelligence Philosophy
+
+
+
+Conversation history alone is not enough.
+
+
+
+Every interaction should continuously improve the Customer Profile.
+
+
+
+Customer Profile becomes the primary source of truth.
+
+
+
+Eventually it will contain
+
+
+
+\- Identity
+
+\- Interests
+
+\- Requirements
+
+\- Contact information
+
+\- Preferences
+
+\- AI Summary
+
+\- Lead Score
+
+\- Lead Temperature
+
+\- Sales Brief
+
+\- Recommended Next Action
+
+
+
+\---
+
+
+
+\# Business Brain Philosophy
+
+
+
+Business Brain represents the organization's current operational memory.
+
+
+
+Unlike Knowledge Base, Business Brain changes frequently.
+
+
+
+Examples
+
+
+
+Today we launched SAP MM Weekend Batch.
+
+
+
+Offer ends Friday.
+
+
+
+Office closed tomorrow.
+
+
+
+Recruiting SAP HCM Freshers.
+
+
+
+The AI should automatically consider Business Brain before generating replies.
+
+
+
+Business owners should maintain Business Brain using natural language.
+
+
+
+\---
+
+
+
+\# Cross-Channel Identity
+
+
+
+Customer merge rules
+
+
+
+Automatic
+
+
+
+\- Phone number match
+
+
+
+Manual Review
+
+
+
+\- Email
+
+\- Name
+
+\- Similar profile
+
+\- Similar location
+
+\- Customer explicitly mentions another channel
+
+
+
+\---
+
+
+
+\# Current Technology Stack
+
+
+
+Backend
+
+
 
 \- FastAPI
 
@@ -402,161 +916,87 @@ Backend:
 
 \- OpenAI
 
-\- Instagram webhook
+\- Render
 
-\- Render deployment
+\- Instagram Graph API
 
 
 
-Frontend:
+Frontend
+
+
 
 \- Next.js
 
 \- Tailwind CSS
 
-\- AI Command Center
-
-\- Unified Inbox
-
-
-
-Current default organization:
-
-\- The SAP Guru
-
-
-
-\## Important Design Rules
-
-
-
-1\. Core platform must not be SAP-specific.
-
-2\. SAP-specific logic belongs in organization knowledge/configuration.
-
-3\. Every future table should support organization\_id.
-
-4\. Every future channel should go through Channel Engine.
-
-5\. Every customer should eventually map to customer\_id.
-
-6\. AI should not reply when confidence is low.
-
-7\. Sales users should get lead briefs, not raw chat only.
-
-8\. Platform owner should have a separate Platform Console.
-
-9\. Client users should only access their own Organization Command Center.
-
-10\. Future onboarding should be configuration-driven.
-
-
-
-\## Documentation Standards
-
-
-
-The project maintains five permanent documents:
-
-
-
-\### PROJECT\_PROGRESS.md
-
-
-
-Tracks implementation progress.
-
-
-
-\### SYSTEM\_ARCHITECTURE.md
-
-
-
-Defines technical architecture.
-
-
-
-\### PRODUCT\_ROADMAP.md
-
-
-
-Defines product evolution.
-
-
-
-\### IDEAS\_BACKLOG.md
-
-
-
-Stores future enhancements and ideas.
-
-
-
-\### DECISIONS.md
-
-
-
-Stores important design decisions.
-
 
 
 \---
 
 
 
-\## Campaign Context Engine
+\# Current Implementation Status
 
 
 
-Status:
+Implemented
+
+
+
+\- Instagram Webhook
+
+\- Conversation Memory
+
+\- Intent Engine
+
+\- Reply Bank
+
+\- Customer Engine
+
+\- Identity Engine
+
+\- Customer Intelligence Engine
+
+\- Business Context Engine
+
+\- Business Context API
+
+\- Unified Inbox
+
+\- Manual Reply
+
+
+
+In Progress
+
+
+
+\- Business Brain UI
+
+\- Customer Intelligence UI
+
+\- Sales CRM
+
+
 
 Planned
 
 
 
-Purpose:
+\- Organization Management
 
+\- Multi-tenant Platform
 
+\- WhatsApp
 
-Allow each organization to describe current campaigns, offers, stories, reels, announcements, or job openings using natural language.
+\- Facebook
 
+\- Website Chat
 
+\- Analytics
 
-Examples:
-
-
-
-\* Product launch
-
-\* Discount offer
-
-\* Recruitment campaign
-
-\* Holiday announcement
-
-\* Training batch
-
-\* Marketing campaign
-
-
-
-The AI should automatically include active campaign context while generating replies.
-
-
-
-Campaigns should support:
-
-
-
-\* Valid From
-
-\* Valid Until
-
-\* Active / Paused / Expired
-
-\* Priority
-
-\* Related Channels
+\- Billing
 
 
 
@@ -564,51 +1004,47 @@ Campaigns should support:
 
 
 
-\## Customer Intelligence Philosophy
+\# Design Principles
 
 
 
-The platform should not rely only on conversation history.
+1\. Platform must remain industry independent.
 
 
 
-Instead, every customer should gradually build a Customer Intelligence Profile.
+2\. Industry knowledge belongs in organization configuration.
 
 
 
-This profile should evolve over time and become the primary source of information for telecallers and sales teams.
+3\. Business Brain stores temporary operational information.
 
 
 
-The profile should remain generic and work across industries.
+4\. Knowledge Base stores permanent business knowledge.
 
 
 
-Examples of customer attributes:
+5\. Customers remain the central business entity.
 
 
 
-\* Interests
-
-\* Requirements
-
-\* Preferences
-
-\* Previous interactions
-
-\* AI summary
-
-\* Lead score
-
-\* Lead temperature
-
-\* AI confidence
-
-\* Recommended next action
+6\. Conversations belong to customers.
 
 
 
-Industry-specific information should be stored as configurable customer attributes rather than hardcoded database columns.
+7\. Leads belong to customers.
+
+
+
+8\. Every organization remains isolated.
+
+
+
+9\. AI should reply only when sufficiently confident.
+
+
+
+10\. Human users should receive structured business intelligence rather than raw conversations.
 
 
 
@@ -616,35 +1052,57 @@ Industry-specific information should be stored as configurable customer attribut
 
 
 
-\## Multi-Tenant Philosophy
+\# Documentation
 
 
 
-The platform should always be designed with multiple organizations in mind.
+The project maintains the following permanent documents.
 
 
 
-Every organization should have:
+PROJECT\_PROGRESS.md
 
 
 
-\* Independent users
-
-\* Independent customers
-
-\* Independent conversations
-
-\* Independent leads
-
-\* Independent AI knowledge
-
-\* Independent channels
-
-\* Independent analytics
+Current implementation status.
 
 
 
-The Platform Console should manage organizations, while each organization should only access its own Command Center.
+SYSTEM\_ARCHITECTURE.md
 
 
+
+Long-term technical architecture.
+
+
+
+PRODUCT\_ROADMAP.md
+
+
+
+Future product roadmap.
+
+
+
+DECISIONS.md
+
+
+
+Important architectural decisions.
+
+
+
+IDEAS\_BACKLOG.md
+
+
+
+Future ideas.
+
+
+
+CHANGELOG.md (planned)
+
+
+
+Chronological development history.
 

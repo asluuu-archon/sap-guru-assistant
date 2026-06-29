@@ -242,3 +242,31 @@ Every channel should provide the richest identity information available. Instagr
 
 
 
+\## 2026-06-29
+
+
+
+Decision:
+
+Business Context will evolve into AI Business Brain.
+
+
+
+Reason:
+
+Business owners think in terms of business activities, not AI prompts.
+
+
+
+Decision:
+
+Keep title and priority internally for flexibility, but eventually hide these technical concepts from end users.
+
+
+
+Decision:
+
+Business Brain will become dynamic operational memory, while Knowledge Base remains permanent reference knowledge.
+
+
+

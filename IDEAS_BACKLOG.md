@@ -338,3 +338,25 @@ This should be built as a reusable Identity Engine, not hardcoded only for Insta
 
 
 
+\- AI Business Brain redesign
+
+\- Campaign Manager
+
+\- Offer Manager
+
+\- Recruitment Manager
+
+\- Announcement Manager
+
+\- Holiday Calendar
+
+\- Dynamic reply delay per organization
+
+\- Organization-specific AI settings
+
+\- Automatic Instagram username retrieval (when Graph API permissions allow)
+
+\- Better customer identity matching across channels
+
+
+
