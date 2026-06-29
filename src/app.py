@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, Query
 from pydantic import BaseModel
 from .crm.customer_engine import get_or_create_customer
+from .identity.identity_engine import build_basic_identity, update_customer_identity
 
 import os
 import re
@@ -291,6 +292,19 @@ async def receive_webhook(request: Request):
         )
 
         print(f"CUSTOMER_ID: {customer.get('id')}", flush=True)
+
+        identity = build_basic_identity(
+            channel="instagram",
+            channel_user_id=sender_id,
+            raw_payload=messaging,
+        )
+
+        update_customer_identity(
+            customer_id=customer.get("id"),
+            identity=identity,
+        )
+
+        print("CUSTOMER_IDENTITY_UPDATED", flush=True)
 
         recipient_id = messaging["recipient"]["id"]
         message = messaging.get("message", {})

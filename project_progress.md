@@ -431,3 +431,49 @@ Examples:
 Administrators should be able to explain campaign context using natural language.
 
 AI should automatically use this information while replying to customer enquiries.
+
+## Latest Development Session
+
+Date:
+2026-06-28
+
+Completed
+
+- Introduced Customer Engine.
+- Created customers table in Supabase.
+- Created src/crm/customer_engine.py.
+- Every incoming Instagram message now creates or updates a customer record.
+- Customer Engine successfully integrated into webhook.
+- Project documentation expanded.
+- Product Roadmap, Ideas Backlog and Decisions documents created.
+
+Architecture Direction
+
+The platform is no longer conversation-centric.
+
+The Customer becomes the central business entity.
+
+Future flow:
+
+Incoming Message
+↓
+
+Customer
+↓
+
+Conversation
+↓
+
+Lead
+↓
+
+Sales CRM
+↓
+
+Analytics
+
+Next Session
+
+- Verify Customer Engine after Render deployment.
+- Begin Customer Intelligence Engine.
+- Start automatic customer attribute extraction.
