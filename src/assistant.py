@@ -330,6 +330,19 @@ def suggest_reply(message: str, channel: str = "instagram", context: str = "") -
             "suggested_reply": "Hi, how are you doing? How can I help you?",
         }
 
+    if intent.get("intent") == "lead_information":
+        return {
+            "category": "lead_information",
+            "lead_score": 90,
+            "priority": "high",
+            "approval_status": "safe_to_send",
+            "should_capture_contact": True,
+            "should_reply": True,
+            "human_reason": "",
+            "reason": intent.get("reason", "Lead contact information detected"),
+            "suggested_reply": "Thank you. My office will contact you soon.",
+        }
+
     if _should_stay_silent(message):
         return _human_review("Short or unclear message. Better for manual reply.")
 
