@@ -6,7 +6,6 @@ import re
 from .assistant import suggest_reply
 from .channels.sender import send_channel_reply
 from .crm.business_context import get_active_business_context
-from .crm.customer_engine import get_or_create_customer
 from .crm.customer_intelligence import update_customer_from_message
 from .identity.identity_engine import build_basic_identity, update_customer_identity
 from .memory import (
@@ -21,6 +20,7 @@ from .memory import (
 from .reply_bank import save_manual_reply_to_bank
 from .leads import save_lead
 from .delay_processor import process_pending_replies
+from .pipeline.message_pipeline import process_incoming_message
 
 app = FastAPI(title="SAP Guru Assistant", version="pilot_3")
 
@@ -39,6 +39,7 @@ class SuggestRequest(BaseModel):
 class ManualReplyRequest(BaseModel):
     sender_id: str
     message: str
+
 
 class BusinessContextRequest(BaseModel):
     title: str
@@ -145,6 +146,7 @@ def dashboard_data():
         "recent_conversations": recent_conversations,
     }
 
+
 @app.get("/business-contexts")
 def list_business_contexts():
     try:
@@ -157,17 +159,11 @@ def list_business_contexts():
             .execute()
         )
 
-        return {
-            "status": "success",
-            "contexts": result.data or [],
-        }
+        return {"status": "success", "contexts": result.data or []}
 
     except Exception as e:
         print(f"BUSINESS CONTEXT LIST ERROR: {e}", flush=True)
-        return {
-            "status": "error",
-            "message": str(e),
-        }
+        return {"status": "error", "message": str(e)}
 
 
 @app.post("/business-contexts")
@@ -182,10 +178,7 @@ def create_business_context(req: BusinessContextRequest):
         }
 
         if not payload["title"] or not payload["context_text"]:
-            return {
-                "status": "error",
-                "message": "title and context_text are required",
-            }
+            return {"status": "error", "message": "title and context_text are required"}
 
         result = supabase.table("business_contexts").insert(payload).execute()
 
@@ -196,10 +189,8 @@ def create_business_context(req: BusinessContextRequest):
 
     except Exception as e:
         print(f"BUSINESS CONTEXT CREATE ERROR: {e}", flush=True)
-        return {
-            "status": "error",
-            "message": str(e),
-        }
+        return {"status": "error", "message": str(e)}
+
 
 @app.post("/suggest")
 def suggest(req: SuggestRequest):
@@ -331,11 +322,15 @@ async def receive_webhook(request: Request):
 
         sender_id = messaging["sender"]["id"]
 
-        customer = get_or_create_customer(
-            channel_user_id=sender_id,
-            primary_channel="instagram",
+        pipeline_result = process_incoming_message(
             organization_id=1,
+            channel="instagram",
+            sender_id=sender_id,
+            message_text="",
+            raw_payload=messaging,
         )
+
+        customer = pipeline_result.get("customer") or {}
 
         print(f"CUSTOMER_ID: {customer.get('id')}", flush=True)
 
