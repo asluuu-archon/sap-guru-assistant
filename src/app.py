@@ -7,7 +7,6 @@ from .assistant import suggest_reply
 from .channels.sender import send_channel_reply
 from .crm.business_context import get_active_business_context
 from .crm.customer_intelligence import update_customer_from_message
-from .identity.identity_engine import build_basic_identity, update_customer_identity
 from .memory import (
     get_conversation,
     build_context,
@@ -333,19 +332,7 @@ async def receive_webhook(request: Request):
         customer = pipeline_result.get("customer") or {}
 
         print(f"CUSTOMER_ID: {customer.get('id')}", flush=True)
-
-        identity = build_basic_identity(
-            channel="instagram",
-            channel_user_id=sender_id,
-            raw_payload=messaging,
-        )
-
-        update_customer_identity(
-            customer_id=customer.get("id"),
-            identity=identity,
-        )
-
-        print("CUSTOMER_IDENTITY_UPDATED", flush=True)
+        print(f"PIPELINE_LOGS: {pipeline_result.get('logs')}", flush=True)
 
         recipient_id = messaging["recipient"]["id"]
         message = messaging.get("message", {})
