@@ -2,7 +2,7 @@
 
 
 
-> Last Updated: 2026-06-29
+> Last Updated: 2026-06-30
 
 
 
@@ -44,7 +44,7 @@ without changing application code.
 
 
 
-The SAP Guru is the first organization (workspace).
+The SAP Guru is the first organization/workspace.
 
 
 
@@ -64,7 +64,11 @@ The platform is built around one principle:
 
 
 
-Every AI decision should be based on multiple intelligence sources instead of only the latest customer message.
+The platform's primary purpose is to build and maintain a Customer Brain.
+
+
+
+Replying is only one capability that uses the accumulated understanding.
 
 
 
@@ -76,159 +80,175 @@ Every AI decision should be based on multiple intelligence sources instead of on
 
 
 
-```
+```text
 
-Customer
+Incoming Business Event
 
+&#x20;       ↓
 
+Channel Engine
 
-&#x20;       │
+&#x20;       ↓
 
+Message Pipeline
 
+&#x20;       ↓
 
-&#x20;       ▼
+MessageContext
 
+&#x20;       ↓
 
+Customer Stage
+
+&#x20;       ↓
+
+Identity Stage
+
+&#x20;       ↓
+
+Conversation Stage
+
+&#x20;       ↓
+
+Customer Brain Stage
+
+&#x20;       ↓
+
+Business Brain Stage
+
+&#x20;       ↓
+
+Knowledge Engine
+
+&#x20;       ↓
+
+Intent Stage
+
+&#x20;       ↓
+
+Confidence / Reply Decision Stage
+
+&#x20;       ↓
+
+Reply Generation Stage
+
+&#x20;       ↓
+
+Lead Stage
+
+&#x20;       ↓
 
 Channel Engine
 
 
 
-&#x20;       │
 
 
 
-&#x20;       ▼
 
 
 
-Identity Engine
+Message Pipeline
 
 
 
-&#x20;       │
+The Message Pipeline is the central orchestrator for incoming business events.
 
 
 
-&#x20;       ▼
+Current connected stages:
 
 
 
-Customer Engine
+Customer Stage
 
+Identity Stage
 
 
-&#x20;       │
 
+Next stage:
 
 
-&#x20;       ▼
 
+Conversation Stage
 
 
-Customer Intelligence Engine
 
+Future stages:
 
 
-&#x20;       │
 
+Customer Brain Stage
 
+Business Brain Stage
 
-&#x20;       ▼
+Intent Stage
 
+Reply Decision Stage
 
+Reply Generation Stage
 
-Conversation Memory
+Lead Stage
 
+MessageContext
 
 
-&#x20;       │
 
+MessageContext is the shared object passed through all pipeline stages.
 
 
-&#x20;       ▼
 
+Each stage reads from and enriches the same context object.
 
 
-Business Brain
 
+Purpose:
 
 
-&#x20;       │
 
+Keep app.py small
 
+Avoid duplicate logic across channels
 
-&#x20;       ▼
+Make future channels easier to add
 
+Allow every stage to contribute intelligence
 
+Conversation Stage
 
-Knowledge Engine
 
 
+Purpose:
 
-&#x20;       │
 
 
+Load previous customer conversation and enrich MessageContext.
 
-&#x20;       ▼
 
 
+Responsibilities:
 
-Intent Engine
 
 
+Load previous conversation history
 
-&#x20;       │
+Detect first-time versus returning customer
 
+Provide previous context to downstream stages
 
 
-&#x20;       ▼
 
+Does not:
 
 
-Confidence Engine
 
+Generate replies
 
+Detect intent
 
-&#x20;       │
+Capture leads
 
-
-
-&#x20;       ▼
-
-
-
-OpenAI
-
-
-
-&#x20;       │
-
-
-
-&#x20;       ▼
-
-
-
-Reply
-
-```
-
-
-
-OpenAI is intentionally placed near the end of the pipeline.
-
-
-
-Business rules and platform intelligence should make as many decisions as possible before using the LLM.
-
-
-
-\---
-
-
-
-\# Multi-Tenant Architecture
+Multi-Tenant Architecture
 
 
 
@@ -244,11 +264,7 @@ Standard key:
 
 
 
-```
-
 organization\_id
-
-```
 
 
 
@@ -256,15 +272,9 @@ No future feature should assume a single organization.
 
 
 
-\---
+SaaS Structure
 
-
-
-\# SaaS Structure
-
-
-
-\## Platform Console
+Platform Console
 
 
 
@@ -272,33 +282,27 @@ Used by platform administrators.
 
 
 
-Responsibilities
+Responsibilities:
 
 
 
-\- Manage organizations
+Manage organizations
 
-\- Manage subscriptions
+Manage subscriptions
 
-\- Manage billing
+Manage billing
 
-\- AI usage monitoring
+AI usage monitoring
 
-\- Deployment management
+Deployment management
 
-\- Template management
+Template management
 
-\- Global analytics
+Global analytics
 
-\- Platform health
+Platform health
 
-
-
-\---
-
-
-
-\## Organization Command Center
+Organization Command Center
 
 
 
@@ -306,39 +310,31 @@ Used by client organizations.
 
 
 
-Responsibilities
+Responsibilities:
 
 
 
-\- Unified Inbox
+Unified Inbox
 
-\- Customer Management
+Customer Management
 
-\- Lead Management
+Lead Management
 
-\- Business Brain
+Business Brain
 
-\- Knowledge Base
+Knowledge Base
 
-\- Analytics
+Analytics
 
-\- AI Settings
+AI Settings
 
-\- Team Management
+Team Management
 
-\- Reply Management
+Reply Management
 
+Core Business Entities
 
-
-\---
-
-
-
-\# Core Business Entities
-
-
-
-\## organizations
+organizations
 
 
 
@@ -346,11 +342,7 @@ Represents one customer of the SaaS platform.
 
 
 
-\---
-
-
-
-\## organization\_users
+organization\_users
 
 
 
@@ -358,25 +350,19 @@ Users belonging to one organization.
 
 
 
-Examples
+Examples:
 
 
 
-\- Sales
+Sales
 
-\- Marketing
+Marketing
 
-\- Support
+Support
 
-\- Administrator
+Administrator
 
-
-
-\---
-
-
-
-\## channels
+channels
 
 
 
@@ -384,27 +370,21 @@ Connected communication channels.
 
 
 
-Examples
+Examples:
 
 
 
-\- Instagram
+Instagram
 
-\- WhatsApp
+WhatsApp
 
-\- Facebook
+Facebook
 
-\- Website Chat
+Website Chat
 
-\- Email
+Email
 
-
-
-\---
-
-
-
-\## customers
+customers
 
 
 
@@ -416,11 +396,7 @@ One customer may communicate through multiple channels.
 
 
 
-\---
-
-
-
-\## customer\_channels
+customer\_channels
 
 
 
@@ -428,31 +404,19 @@ Maps one customer to multiple communication identities.
 
 
 
-Examples
+Examples:
 
 
 
 Instagram ID
 
-
-
 WhatsApp Number
-
-
 
 Facebook Messenger ID
 
-
-
 Website Visitor ID
 
-
-
-\---
-
-
-
-\## conversations
+conversations
 
 
 
@@ -468,11 +432,7 @@ Customer intelligence should remain customer-specific.
 
 
 
-\---
-
-
-
-\## leads
+leads
 
 
 
@@ -480,19 +440,11 @@ Represents sales opportunities.
 
 
 
-Leads should never depend only on conversation history.
+Leads should reference the customer.
 
 
 
-They should reference the customer.
-
-
-
-\---
-
-
-
-\## business\_contexts
+business\_contexts
 
 
 
@@ -500,21 +452,21 @@ Temporary operational knowledge.
 
 
 
-Examples
+Examples:
 
 
 
-\- Current campaigns
+Current campaigns
 
-\- Offers
+Offers
 
-\- Job openings
+Job openings
 
-\- Events
+Events
 
-\- Announcements
+Announcements
 
-\- Office closures
+Office closures
 
 
 
@@ -526,15 +478,9 @@ Knowledge Base is permanent.
 
 
 
-\---
+AI Engines
 
-
-
-\# AI Engines
-
-
-
-\## Channel Engine
+Channel Engine
 
 
 
@@ -542,11 +488,7 @@ Handles communication with all supported channels.
 
 
 
-\---
-
-
-
-\## Identity Engine
+Identity Engine
 
 
 
@@ -558,21 +500,15 @@ Responsible for:
 
 
 
-\- Channel identity
+Channel identity
 
-\- Username
+Username
 
-\- Display name
+Display name
 
-\- Cross-channel mapping
+Cross-channel mapping
 
-
-
-\---
-
-
-
-\## Customer Engine
+Customer Engine
 
 
 
@@ -580,15 +516,7 @@ Creates and maintains customer records.
 
 
 
-Responsible for customer lifecycle.
-
-
-
-\---
-
-
-
-\## Customer Intelligence Engine
+Customer Intelligence Engine / Customer Brain
 
 
 
@@ -596,31 +524,25 @@ Continuously extracts structured customer knowledge.
 
 
 
-Examples
+Examples:
 
 
 
-\- Interests
+Interests
 
-\- Requirements
+Requirements
 
-\- Education
+Education
 
-\- Experience
+Experience
 
-\- Preferences
+Preferences
 
-\- Location
+Location
 
-\- Contact details
+Contact details
 
-
-
-\---
-
-
-
-\## Conversation Engine
+Conversation Engine
 
 
 
@@ -628,11 +550,7 @@ Maintains conversation history and context.
 
 
 
-\---
-
-
-
-\## Business Brain
+Business Brain
 
 
 
@@ -640,25 +558,17 @@ Stores temporary business intelligence.
 
 
 
-Examples
+Examples:
 
 
 
 Today's offer
 
-
-
 Today's recruitment
-
-
 
 Today's campaign
 
-
-
 Today's announcement
-
-
 
 Current business priorities
 
@@ -668,11 +578,7 @@ Business Brain should influence every AI reply.
 
 
 
-\---
-
-
-
-\## Knowledge Engine
+Knowledge Engine
 
 
 
@@ -680,39 +586,21 @@ Provides long-term organizational knowledge.
 
 
 
-Examples
+Examples:
 
 
 
 Products
 
-
-
 Services
-
-
 
 FAQs
 
-
-
 Policies
-
-
 
 Training material
 
-
-
-Knowledge remains relatively permanent.
-
-
-
-\---
-
-
-
-\## Intent Engine
+Intent Engine
 
 
 
@@ -720,11 +608,7 @@ Determines customer intent before LLM processing.
 
 
 
-\---
-
-
-
-\## Confidence Engine
+Confidence Engine
 
 
 
@@ -732,51 +616,37 @@ Determines whether AI should reply automatically or move to Human Queue.
 
 
 
-\---
+Lead Engine
 
 
 
-\## Lead Engine
+Creates, qualifies, and enriches sales leads.
 
 
 
-Creates, qualifies and enriches sales leads.
+Sales Intelligence Engine
 
 
 
-\---
+Future engine for sales-ready summaries.
 
 
 
-\## Sales Intelligence Engine (Future)
+Outputs:
 
 
 
-Creates sales-ready summaries.
+Lead Brief
 
+Next Best Action
 
+Lead Temperature
 
-Outputs
+Sales Pitch
 
+AI Confidence
 
-
-\- Lead Brief
-
-\- Next Best Action
-
-\- Lead Temperature
-
-\- Sales Pitch
-
-\- AI Confidence
-
-
-
-\---
-
-
-
-\# Customer Intelligence Philosophy
+Customer Brain Philosophy
 
 
 
@@ -784,45 +654,39 @@ Conversation history alone is not enough.
 
 
 
-Every interaction should continuously improve the Customer Profile.
+Every interaction should continuously improve the Customer Brain.
 
 
 
-Customer Profile becomes the primary source of truth.
+Customer Brain becomes the primary source of truth.
 
 
 
-Eventually it will contain
+Eventually it will contain:
 
 
 
-\- Identity
+Identity
 
-\- Interests
+Interests
 
-\- Requirements
+Requirements
 
-\- Contact information
+Contact information
 
-\- Preferences
+Preferences
 
-\- AI Summary
+AI Summary
 
-\- Lead Score
+Lead Score
 
-\- Lead Temperature
+Lead Temperature
 
-\- Sales Brief
+Sales Brief
 
-\- Recommended Next Action
+Recommended Next Action
 
-
-
-\---
-
-
-
-\# Business Brain Philosophy
+Business Brain Philosophy
 
 
 
@@ -834,21 +698,15 @@ Unlike Knowledge Base, Business Brain changes frequently.
 
 
 
-Examples
+Examples:
 
 
 
 Today we launched SAP MM Weekend Batch.
 
-
-
 Offer ends Friday.
 
-
-
 Office closed tomorrow.
-
-
 
 Recruiting SAP HCM Freshers.
 
@@ -862,247 +720,201 @@ Business owners should maintain Business Brain using natural language.
 
 
 
-\---
+Cross-Channel Identity
 
 
 
-\# Cross-Channel Identity
+Customer merge rules:
 
 
 
-Customer merge rules
+Automatic:
 
 
 
-Automatic
+Phone number match
 
 
 
-\- Phone number match
+Manual Review:
 
 
 
-Manual Review
+Email
 
+Name
 
+Similar profile
 
-\- Email
+Similar location
 
-\- Name
+Customer explicitly mentions another channel
 
-\- Similar profile
 
-\- Similar location
 
-\- Customer explicitly mentions another channel
+Wrong merges are more dangerous than duplicate customers.
 
 
 
-\---
+Current Technology Stack
 
 
 
-\# Current Technology Stack
+Backend:
 
 
 
-Backend
+FastAPI
 
+Supabase
 
+OpenAI
 
-\- FastAPI
+Render
 
-\- Supabase
+Instagram Graph API
 
-\- OpenAI
 
-\- Render
 
-\- Instagram Graph API
+Frontend:
 
 
 
-Frontend
+Next.js
 
+Tailwind CSS
 
+Current Implementation Status
 
-\- Next.js
 
-\- Tailwind CSS
 
+Implemented:
 
 
-\---
 
+Instagram Webhook
 
+Conversation Memory
 
-\# Current Implementation Status
+Intent Engine
 
+Reply Bank
 
+Customer Engine
 
-Implemented
+Identity Engine
 
+Customer Intelligence Engine
 
+Business Context Engine
 
-\- Instagram Webhook
+Business Context API
 
-\- Conversation Memory
+Message Pipeline
 
-\- Intent Engine
+MessageContext
 
-\- Reply Bank
+Customer Stage
 
-\- Customer Engine
+Identity Stage
 
-\- Identity Engine
+Unified Inbox
 
-\- Customer Intelligence Engine
+Manual Reply
 
-\- Business Context Engine
 
-\- Business Context API
 
-\- Unified Inbox
+In Progress:
 
-\- Manual Reply
 
 
+Conversation Stage
 
-In Progress
+Business Brain UI
 
+Customer Intelligence UI
 
+Sales CRM
 
-\- Business Brain UI
 
-\- Customer Intelligence UI
 
-\- Sales CRM
+Planned:
 
 
 
-Planned
+Business Event Pipeline
 
+Organization Management
 
+Multi-tenant Platform
 
-\- Organization Management
+WhatsApp
 
-\- Multi-tenant Platform
+Facebook
 
-\- WhatsApp
+Website Chat
 
-\- Facebook
+Analytics
 
-\- Website Chat
+Billing
 
-\- Analytics
+Design Principles
 
-\- Billing
+Platform must remain industry independent.
 
+Industry knowledge belongs in organization configuration.
 
+Business Brain stores temporary operational information.
 
-\---
+Knowledge Base stores permanent business knowledge.
 
+Customers remain the central business entity.
 
+Conversations belong to customers.
 
-\# Design Principles
+Leads belong to customers.
 
+Every organization remains isolated.
 
+AI should reply only when sufficiently confident.
 
-1\. Platform must remain industry independent.
+Human users should receive structured business intelligence rather than raw conversations.
 
+app.py should remain thin.
 
+New capabilities should be added through pipeline stages and engines.
 
-2\. Industry knowledge belongs in organization configuration.
+Documentation
 
 
 
-3\. Business Brain stores temporary operational information.
-
-
-
-4\. Knowledge Base stores permanent business knowledge.
-
-
-
-5\. Customers remain the central business entity.
-
-
-
-6\. Conversations belong to customers.
-
-
-
-7\. Leads belong to customers.
-
-
-
-8\. Every organization remains isolated.
-
-
-
-9\. AI should reply only when sufficiently confident.
-
-
-
-10\. Human users should receive structured business intelligence rather than raw conversations.
-
-
-
-\---
-
-
-
-\# Documentation
-
-
-
-The project maintains the following permanent documents.
+The project maintains the following permanent documents:
 
 
 
 PROJECT\_PROGRESS.md
 
-
-
-Current implementation status.
-
-
-
 SYSTEM\_ARCHITECTURE.md
-
-
-
-Long-term technical architecture.
-
-
 
 PRODUCT\_ROADMAP.md
 
-
-
-Future product roadmap.
-
-
-
 DECISIONS.md
-
-
-
-Important architectural decisions.
-
-
 
 IDEAS\_BACKLOG.md
 
 
 
-Future ideas.
+Planned:
 
 
 
-CHANGELOG.md (planned)
+CHANGELOG.md
 
+DATABASE\_SCHEMA.md
 
+API\_REFERENCE.md
 
-Chronological development history.
+DEPLOYMENT.md
+
+FOLDER\_STRUCTURE.md
 
