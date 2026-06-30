@@ -319,26 +319,22 @@ async def receive_webhook(request: Request):
             return {"status": "ignored_non_message"}
 
         sender_id = messaging["sender"]["id"]
-
-        pipeline_result = process_incoming_message(
-            organization_id=1,
-            channel="instagram",
-            sender_id=sender_id,
-            message_text="",
-            raw_payload=messaging,
-        )
-
-        customer = pipeline_result.get("customer") or {}
-
-        print(f"CUSTOMER_ID: {customer.get('id')}", flush=True)
-        print(f"PIPELINE_LOGS: {pipeline_result.get('logs')}", flush=True)
-
         recipient_id = messaging["recipient"]["id"]
         message = messaging.get("message", {})
 
         if message.get("is_echo"):
             manual_reply_text = message.get("text", "")
             target_user_id = recipient_id
+
+            pipeline_result = process_incoming_message(
+                organization_id=1,
+                channel="instagram",
+                sender_id=sender_id,
+                message_text=manual_reply_text,
+                raw_payload=messaging,
+            )
+
+            print(f"PIPELINE_LOGS: {pipeline_result.get('logs')}", flush=True)
 
             if should_ignore_manual_reply(manual_reply_text):
                 print("Manual echo ignored. Not useful for learning.", flush=True)
@@ -369,7 +365,20 @@ async def receive_webhook(request: Request):
             return {"status": "manual_reply_learned"}
 
         message_id = message.get("mid")
-        message_text = message.get("text")
+        message_text = message.get("text") or ""
+
+        pipeline_result = process_incoming_message(
+            organization_id=1,
+            channel="instagram",
+            sender_id=sender_id,
+            message_text=message_text,
+            raw_payload=messaging,
+        )
+
+        customer = pipeline_result.get("customer") or {}
+
+        print(f"CUSTOMER_ID: {customer.get('id')}", flush=True)
+        print(f"PIPELINE_LOGS: {pipeline_result.get('logs')}", flush=True)
 
         if not message_id:
             print("No message ID found. Skipping.", flush=True)
