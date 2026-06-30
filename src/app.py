@@ -5,7 +5,6 @@ import re
 
 from .assistant import suggest_reply
 from .channels.sender import send_channel_reply
-from .crm.customer_intelligence import update_customer_from_message
 from .memory import (
     get_conversation,
     build_context,
@@ -394,13 +393,6 @@ async def receive_webhook(request: Request):
             print("Non-text message received. Staying silent.", flush=True)
             mark_needs_human(sender_id, "Non-text message received.")
             return {"status": "non_text_needs_human"}
-
-        facts = update_customer_from_message(
-            customer_id=customer.get("id"),
-            message=message_text,
-        )
-
-        print(f"CUSTOMER_FACTS: {facts}", flush=True)
 
         if is_closing_message(message_text):
             print("Closing message received. Staying silent.", flush=True)
