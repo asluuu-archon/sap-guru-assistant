@@ -251,6 +251,10 @@ Completed
 - Customer Intelligence improvements
 - Lead information reply improvements
 
+- Conversation Stage created.
+- Stage currently loads previous conversation into the pipeline.
+- Not yet connected to Message Pipeline.
+
 Major Product Decision
 
 Business Context will evolve into
