@@ -2,9 +2,10 @@
 Message Pipeline
 
 Central orchestrator for incoming messages.
-Phase 2: Uses Customer Stage.
+Phase 3: Uses MessageContext + Customer Stage.
 """
 
+from .models.message_context import MessageContext
 from .stages.customer_stage import run_customer_stage
 
 
@@ -15,31 +16,31 @@ def process_incoming_message(
     message_text: str,
     raw_payload: dict | None = None,
 ) -> dict:
-    if not organization_id:
-        organization_id = 1
+    context = MessageContext(
+        organization_id=organization_id or 1,
+        channel=channel or "instagram",
+        sender_id=sender_id or "",
+        message_text=message_text or "",
+        raw_payload=raw_payload or {},
+    )
 
-    if not channel:
-        channel = "instagram"
-
-    if not sender_id:
+    if not context.sender_id:
         return {
             "status": "error",
             "message": "sender_id is required",
         }
 
     customer_result = run_customer_stage(
-        organization_id=organization_id,
-        channel=channel,
-        sender_id=sender_id,
+        organization_id=context.organization_id,
+        channel=context.channel,
+        sender_id=context.sender_id,
     )
 
-    return {
-        "status": "success",
-        "organization_id": organization_id,
-        "channel": channel,
-        "sender_id": sender_id,
-        "message_text": message_text or "",
-        "customer": customer_result.get("customer"),
-        "customer_id": customer_result.get("customer_id"),
-        "raw_payload_available": raw_payload is not None,
-    }
+    context.customer = customer_result.get("customer") or {}
+    context.customer_id = customer_result.get("customer_id")
+    context.add_log("Customer Stage completed")
+
+    result = context.to_dict()
+    result["status"] = "success"
+
+    return result
