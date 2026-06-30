@@ -5,7 +5,6 @@ import re
 
 from .assistant import suggest_reply
 from .channels.sender import send_channel_reply
-from .crm.business_context import get_active_business_context
 from .crm.customer_intelligence import update_customer_from_message
 from .memory import (
     get_conversation,
@@ -399,10 +398,10 @@ async def receive_webhook(request: Request):
             mark_closed(sender_id, "Closing message received.")
             return {"status": "closing_message_ignored"}
 
-        conversation = get_conversation(sender_id)
+        conversation = pipeline_result.get("conversation") or get_conversation(sender_id)
         context = build_context(conversation)
 
-        business_context = get_active_business_context(organization_id=1)
+        business_context = pipeline_result.get("business_context", "")
 
         if business_context:
             context = context + "\n\nActive Business Context:\n" + business_context
