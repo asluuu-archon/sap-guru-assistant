@@ -1,25 +1,23 @@
 from ...memory import get_conversation
 
 
-def run_conversation_stage(
-    sender_id: str,
-) -> dict:
+def run_conversation_stage(sender_id: str) -> dict:
     """
-    Loads previous conversation from memory.
+    Conversation Stage
 
-    This stage does NOT generate replies.
-    It only enriches the MessageContext.
+    Purpose:
+    Load previous conversation memory for this sender.
+
+    This stage does not generate replies.
+    It only prepares conversation context for later stages.
     """
 
     conversation = get_conversation(sender_id)
 
-    if not conversation:
-        return {
-            "conversation": {},
-            "is_new_customer": True,
-        }
+    history = conversation.get("history") or []
 
     return {
         "conversation": conversation,
-        "is_new_customer": False,
+        "history_count": len(history),
+        "is_returning_conversation": len(history) > 0,
     }
