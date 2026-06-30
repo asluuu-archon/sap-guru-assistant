@@ -1,7 +1,7 @@
 """
 Message Pipeline
 
-Central orchestrator for incoming messages.
+Central orchestrator for incoming business events.
 
 Current Flow
 
@@ -15,13 +15,15 @@ Identity Stage
         ↓
 Conversation Stage
         ↓
+Business Brain Stage
+        ↓
 (Return to app.py)
 
 Future stages:
 - Customer Brain
-- Business Brain
 - Intent
-- Reply
+- Reply Decision
+- Reply Generation
 - Lead
 """
 
@@ -29,6 +31,7 @@ from .models.message_context import MessageContext
 from .stages.customer_stage import run_customer_stage
 from .stages.identity_stage import run_identity_stage
 from .stages.conversation_stage import run_conversation_stage
+from .stages.business_brain_stage import run_business_brain_stage
 
 
 def process_incoming_message(
@@ -38,6 +41,10 @@ def process_incoming_message(
     message_text: str,
     raw_payload: dict | None = None,
 ) -> dict:
+    """
+    Main entry point for the Message Pipeline.
+    """
+
     context = MessageContext(
         organization_id=organization_id or 1,
         channel=channel or "instagram",
@@ -52,6 +59,10 @@ def process_incoming_message(
             "message": "sender_id is required",
         }
 
+    # -------------------------------------------------
+    # Customer Stage
+    # -------------------------------------------------
+
     customer_result = run_customer_stage(
         organization_id=context.organization_id,
         channel=context.channel,
@@ -60,7 +71,12 @@ def process_incoming_message(
 
     context.customer = customer_result.get("customer") or {}
     context.customer_id = customer_result.get("customer_id")
+
     context.add_log("Customer Stage completed")
+
+    # -------------------------------------------------
+    # Identity Stage
+    # -------------------------------------------------
 
     identity_result = run_identity_stage(
         customer_id=context.customer_id,
@@ -70,22 +86,57 @@ def process_incoming_message(
     )
 
     context.identity = identity_result.get("identity") or {}
+
     context.add_log("Identity Stage completed")
+
+    # -------------------------------------------------
+    # Conversation Stage
+    # -------------------------------------------------
 
     conversation_result = run_conversation_stage(
         sender_id=context.sender_id,
     )
 
     context.conversation = conversation_result.get("conversation") or {}
+
     context.add_log(
         f"Conversation Stage completed. Returning: {conversation_result.get('is_returning_conversation')}"
     )
 
+    # -------------------------------------------------
+    # Business Brain Stage
+    # -------------------------------------------------
+
+    business_result = run_business_brain_stage(
+        organization_id=context.organization_id,
+    )
+
+    context.business_context = business_result.get("business_context", "")
+
+    context.add_log(
+        f"Business Brain Stage completed. Active: {business_result.get('has_business_context')}"
+    )
+
+    # -------------------------------------------------
+    # Return
+    # -------------------------------------------------
+
     result = context.to_dict()
+
     result["status"] = "success"
-    result["history_count"] = conversation_result.get("history_count", 0)
+
+    result["history_count"] = conversation_result.get(
+        "history_count",
+        0,
+    )
+
     result["is_returning_conversation"] = conversation_result.get(
         "is_returning_conversation",
+        False,
+    )
+
+    result["has_business_context"] = business_result.get(
+        "has_business_context",
         False,
     )
 
