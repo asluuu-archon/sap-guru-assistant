@@ -80,6 +80,15 @@ def run_pipeline(context: MessageContext) -> MessageContext:
 
     intent_result = run_intent_stage(message_text=context.message_text)
     context.intent = intent_result.get("intent") or {}
+    context.remember(
+    "intent",
+    intent_result.get("intent_name"),
+    )
+
+    context.remember(
+       "intent_confidence",
+       intent_result.get("intent_confidence"),
+    )
     context.add_log(
         f"Intent Stage completed. Intent: {intent_result.get('intent_name')}"
     )
@@ -91,6 +100,21 @@ def run_pipeline(context: MessageContext) -> MessageContext:
     )
 
     context.lead = lead_result
+    
+    context.remember(
+    "is_lead",
+    lead_result.get("is_lead"),
+    )
+
+    context.remember(
+       "lead_score",
+       lead_result.get("lead_score"),
+    )
+
+    context.remember(
+        "lead_temperature",
+        lead_result.get("temperature"),
+    )
 
     context.add_log(
         f"Lead Stage completed. Is Lead: {lead_result.get('is_lead')}"
@@ -101,6 +125,13 @@ def run_pipeline(context: MessageContext) -> MessageContext:
     )
 
     decision_result = run_decision_stage(intent_result=context.intent)
+
+    context.decision = decision_result
+
+    context.remember(
+        "decision",
+        decision_result.get("action"),
+    )
 
     context.reply = {
         "decision": decision_result,
@@ -139,6 +170,11 @@ def run_pipeline(context: MessageContext) -> MessageContext:
         context.reply["should_reply"] = reply_result.get("should_reply", True)
 
         context.add_log("Reply Stage completed")
+
+        context.remember(
+        "reply_generated",
+        True,
+        )
 
     return context
 
