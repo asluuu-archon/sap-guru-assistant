@@ -13,6 +13,7 @@ from .stages.customer_brain_stage import run_customer_brain_stage
 from .stages.intent_stage import run_intent_stage
 from .stages.decision_stage import run_decision_stage
 from .stages.reply_stage import run_reply_stage
+from .stages.lead_stage import run_lead_stage
 from ..memory import build_context
 
 
@@ -81,6 +82,22 @@ def run_pipeline(context: MessageContext) -> MessageContext:
     context.intent = intent_result.get("intent") or {}
     context.add_log(
         f"Intent Stage completed. Intent: {intent_result.get('intent_name')}"
+    )
+
+    lead_result = run_lead_stage(
+    customer=context.customer,
+    message_text=context.message_text,
+    reply={},
+    )
+
+    context.lead = lead_result
+
+    context.add_log(
+        f"Lead Stage completed. Is Lead: {lead_result.get('is_lead')}"
+    )
+
+    decision_result = run_decision_stage(
+    intent_result=context.intent
     )
 
     decision_result = run_decision_stage(intent_result=context.intent)
