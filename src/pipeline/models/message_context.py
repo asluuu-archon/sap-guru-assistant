@@ -1,12 +1,12 @@
 from dataclasses import dataclass, field
 from typing import Any
+import time
 
 
 @dataclass
 class MessageContext:
     """
     Shared object passed through the Message Pipeline.
-
     Every pipeline stage can read from this object and add information to it.
     """
 
@@ -31,6 +31,7 @@ class MessageContext:
     ai_memory: dict[str, Any] = field(default_factory=dict)
 
     logs: list[str] = field(default_factory=list)
+    timings: dict[str, float] = field(default_factory=dict)
 
     def add_log(self, message: str) -> None:
         self.logs.append(message)
@@ -38,6 +39,13 @@ class MessageContext:
     def remember(self, key: str, value: Any) -> None:
         if key:
             self.ai_memory[key] = value
+
+    def start_timer(self, stage_name: str) -> float:
+        return time.perf_counter()
+
+    def end_timer(self, stage_name: str, start_time: float) -> None:
+        elapsed_ms = round((time.perf_counter() - start_time) * 1000, 2)
+        self.timings[stage_name] = elapsed_ms
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -56,4 +64,5 @@ class MessageContext:
             "reply": self.reply,
             "ai_memory": self.ai_memory,
             "logs": self.logs,
+            "timings": self.timings,
         }
