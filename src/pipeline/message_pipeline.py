@@ -11,9 +11,9 @@ from .stages.conversation_stage import run_conversation_stage
 from .stages.business_brain_stage import run_business_brain_stage
 from .stages.customer_brain_stage import run_customer_brain_stage
 from .stages.intent_stage import run_intent_stage
+from .stages.lead_stage import run_lead_stage
 from .stages.decision_stage import run_decision_stage
 from .stages.reply_stage import run_reply_stage
-from .stages.lead_stage import run_lead_stage
 from ..memory import build_context
 
 
@@ -36,17 +36,15 @@ def build_message_context(
 def run_pipeline(context: MessageContext) -> MessageContext:
     if not context.sender_id:
         context.add_log("Pipeline stopped: sender_id missing")
-        context.add_log(
-            f"Pipeline Timings: {context.timings}"
-    )
+        context.add_log(f"Pipeline Timings: {context.timings}")
         return context
 
     customer_timer = context.start_timer("Customer Stage")
 
     customer_result = run_customer_stage(
-       organization_id=context.organization_id,
-       channel=context.channel,
-       sender_id=context.sender_id,
+        organization_id=context.organization_id,
+        channel=context.channel,
+        sender_id=context.sender_id,
     )
 
     context.end_timer("Customer Stage", customer_timer)
@@ -87,58 +85,36 @@ def run_pipeline(context: MessageContext) -> MessageContext:
 
     intent_result = run_intent_stage(message_text=context.message_text)
     context.intent = intent_result.get("intent") or {}
-    context.remember(
-    "intent",
-    intent_result.get("intent_name"),
-    )
 
-    context.remember(
-       "intent_confidence",
-       intent_result.get("intent_confidence"),
-    )
+    context.remember("intent", intent_result.get("intent_name"))
+    context.remember("intent_confidence", intent_result.get("intent_confidence"))
+
     context.add_log(
         f"Intent Stage completed. Intent: {intent_result.get('intent_name')}"
     )
 
     lead_result = run_lead_stage(
-    customer=context.customer,
-    message_text=context.message_text,
-    reply={},
+        customer=context.customer,
+        message_text=context.message_text,
+        reply={},
     )
 
     context.lead = lead_result
-    
-    context.remember(
-    "is_lead",
-    lead_result.get("is_lead"),
-    )
 
-    context.remember(
-       "lead_score",
-       lead_result.get("lead_score"),
-    )
-
-    context.remember(
-        "lead_temperature",
-        lead_result.get("temperature"),
-    )
+    context.remember("is_lead", lead_result.get("is_lead"))
+    context.remember("lead_score", lead_result.get("lead_score"))
+    context.remember("lead_temperature", lead_result.get("temperature"))
 
     context.add_log(
         f"Lead Stage completed. Is Lead: {lead_result.get('is_lead')}"
     )
 
     decision_result = run_decision_stage(
-    intent_result=context.intent
+        intent_result=context.intent,
     )
-
-    decision_result = run_decision_stage(intent_result=context.intent)
 
     context.decision = decision_result
-
-    context.remember(
-        "decision",
-        decision_result.get("action"),
-    )
+    context.remember("decision", decision_result.get("action"))
 
     context.reply = {
         "decision": decision_result,
@@ -177,11 +153,9 @@ def run_pipeline(context: MessageContext) -> MessageContext:
         context.reply["should_reply"] = reply_result.get("should_reply", True)
 
         context.add_log("Reply Stage completed")
+        context.remember("reply_generated", True)
 
-        context.remember(
-        "reply_generated",
-        True,
-        )
+    context.add_log(f"Pipeline Timings: {context.timings}")
 
     return context
 
