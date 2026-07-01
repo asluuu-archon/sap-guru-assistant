@@ -7,7 +7,6 @@ from .assistant import suggest_reply
 from .channels.sender import send_channel_reply
 from .memory import (
     get_conversation,
-    build_context,
     save_conversation,
     mark_manual_replied,
     mark_needs_human,
@@ -375,6 +374,13 @@ async def receive_webhook(request: Request):
         )
 
         customer = pipeline_result.get("customer") or {}
+        pipeline_reply = pipeline_result.get("reply") or {}
+        decision = pipeline_reply.get("decision") or {}
+
+        reply_text = pipeline_reply.get("reply_text", "")
+        category = pipeline_reply.get("category", "general")
+        should_reply = pipeline_reply.get("should_reply", False)
+        action = pipeline_reply.get("action", "human")
 
         print(f"CUSTOMER_ID: {customer.get('id')}", flush=True)
         print(f"PIPELINE_LOGS: {pipeline_result.get('logs')}", flush=True)
@@ -399,28 +405,14 @@ async def receive_webhook(request: Request):
             mark_closed(sender_id, "Closing message received.")
             return {"status": "closing_message_ignored"}
 
-        conversation = pipeline_result.get("conversation") or get_conversation(sender_id)
-        context = build_context(conversation)
-
-        business_context = pipeline_result.get("business_context", "")
-
-        if business_context:
-            context = context + "\n\nActive Business Context:\n" + business_context
-            print(f"BUSINESS_CONTEXT_USED: {business_context}", flush=True)
-
-        reply = suggest_reply(message_text, "instagram", context)
-        reply_text = reply.get("suggested_reply", "")
-        category = reply.get("category", "general")
-        should_reply = reply.get("should_reply", True)
-
         print(f"SENDER: {sender_id}", flush=True)
-        print(f"CONTEXT: {context}", flush=True)
         print(f"MESSAGE: {message_text}", flush=True)
+        print(f"ACTION: {action}", flush=True)
         print(f"REPLY: {reply_text}", flush=True)
         print(f"SHOULD_REPLY: {should_reply}", flush=True)
 
-        if should_reply is False or not reply_text:
-            reason = reply.get("human_reason", "Low confidence or unclear message.")
+        if action == "human" or should_reply is False or not reply_text:
+            reason = decision.get("reason", "Low confidence or unclear message.")
             print(f"NEEDS HUMAN: {reason}", flush=True)
 
             save_conversation(sender_id, message_text, "", "needs_human")
@@ -437,7 +429,7 @@ async def receive_webhook(request: Request):
         save_possible_lead(
             sender_id=sender_id,
             message_text=message_text,
-            reply=reply,
+            reply=pipeline_reply.get("generated_reply") or pipeline_reply,
             category=category,
         )
 
