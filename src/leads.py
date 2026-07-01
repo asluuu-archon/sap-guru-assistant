@@ -10,6 +10,8 @@ def has_real_lead_data(
     mode: str = "",
     education: str = "",
     experience: str = "",
+    interested_module: str = "",
+    notes: str = "",
 ):
     return any([
         name.strip(),
@@ -19,6 +21,8 @@ def has_real_lead_data(
         mode.strip(),
         education.strip(),
         experience.strip(),
+        interested_module.strip(),
+        notes.strip(),
     ])
 
 
@@ -79,6 +83,7 @@ def save_lead(
         final_education = education or old.get("education", "")
         final_experience = experience or old.get("experience", "")
         final_module = interested_module or old.get("interested_module", "")
+        final_notes = ((old.get("notes") or "") + "\n" + notes).strip()
 
         if not old.get("id") and not has_real_lead_data(
             name=final_name,
@@ -88,8 +93,10 @@ def save_lead(
             mode=final_mode,
             education=final_education,
             experience=final_experience,
+            interested_module=final_module,
+            notes=final_notes,
         ):
-            print("LEAD NOT SAVED: no real lead data", flush=True)
+            print("LEAD NOT SAVED: no useful lead data", flush=True)
             return
 
         is_qualified = bool(final_phone) and bool(final_email)
@@ -118,7 +125,7 @@ def save_lead(
             "education": final_education,
             "experience": final_experience,
             "interested_module": final_module,
-            "notes": ((old.get("notes") or "") + "\n" + notes).strip(),
+            "notes": final_notes,
             "status": status,
             "lead_stage": lead_stage,
             "is_qualified": is_qualified,
