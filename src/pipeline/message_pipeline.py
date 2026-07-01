@@ -2,25 +2,6 @@
 Message Pipeline
 
 Central orchestrator for incoming business events.
-
-Current Flow:
-Incoming Event
-↓
-MessageContext
-↓
-Customer Stage
-↓
-Identity Stage
-↓
-Conversation Stage
-↓
-Business Brain Stage
-↓
-Customer Brain Stage
-↓
-Intent Stage
-↓
-Decision Stage
 """
 
 from .models.message_context import MessageContext
@@ -31,6 +12,8 @@ from .stages.business_brain_stage import run_business_brain_stage
 from .stages.customer_brain_stage import run_customer_brain_stage
 from .stages.intent_stage import run_intent_stage
 from .stages.decision_stage import run_decision_stage
+from .stages.reply_stage import run_reply_stage
+from ..memory import build_context
 
 
 def build_message_context(
@@ -101,16 +84,44 @@ def run_pipeline(context: MessageContext) -> MessageContext:
     )
 
     decision_result = run_decision_stage(intent_result=context.intent)
+
     context.reply = {
         "decision": decision_result,
         "action": decision_result.get("action"),
         "should_reply": decision_result.get("should_reply"),
         "needs_human": decision_result.get("needs_human"),
         "reason": decision_result.get("reason"),
+        "generated_reply": {},
+        "reply_text": "",
+        "category": "general",
     }
+
     context.add_log(
         f"Decision Stage completed. Action: {decision_result.get('action')}"
     )
+
+    if decision_result.get("action") == "reply":
+        reply_context = build_context(context.conversation)
+
+        if context.business_context:
+            reply_context = (
+                reply_context
+                + "\n\nActive Business Context:\n"
+                + context.business_context
+            )
+
+        reply_result = run_reply_stage(
+            message_text=context.message_text,
+            channel=context.channel,
+            context=reply_context,
+        )
+
+        context.reply["generated_reply"] = reply_result.get("reply") or {}
+        context.reply["reply_text"] = reply_result.get("reply_text", "")
+        context.reply["category"] = reply_result.get("category", "general")
+        context.reply["should_reply"] = reply_result.get("should_reply", True)
+
+        context.add_log("Reply Stage completed")
 
     return context
 
