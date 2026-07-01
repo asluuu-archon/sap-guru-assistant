@@ -4,6 +4,9 @@ from .assistant import suggest_reply
 from .instagram import send_instagram_reply
 
 
+SAFE_FALLBACK_REPLY = "I will check this and update you."
+
+
 def process_pending_replies():
     try:
         cutoff = datetime.utcnow() - timedelta(minutes=15)
@@ -19,11 +22,13 @@ def process_pending_replies():
 
         rows = result.data or []
         sent_count = 0
+        skipped_count = 0
 
         for conversation in rows:
             updated_at = conversation.get("updated_at")
 
             if not updated_at:
+                skipped_count += 1
                 continue
 
             updated_dt = datetime.fromisoformat(updated_at.replace("Z", ""))
@@ -41,13 +46,25 @@ def process_pending_replies():
                     break
 
             if not sender_id or not last_user_message:
+                skipped_count += 1
                 continue
 
             context = build_context(conversation)
             reply = suggest_reply(last_user_message, "instagram", context)
-            reply_text = reply.get("suggested_reply", "I will check and update.")
 
-            send_instagram_reply(sender_id, reply_text)
+            reply_text = (reply.get("suggested_reply") or "").strip()
+
+            if not reply_text:
+                reply_text = SAFE_FALLBACK_REPLY
+
+            if not reply_text.strip():
+                print(f"DELAYED REPLY SKIPPED EMPTY TEXT FOR {sender_id}", flush=True)
+                skipped_count += 1
+                continue
+
+            result = send_instagram_reply(sender_id, reply_text)
+
+            print(f"DELAYED INSTAGRAM SEND RESULT: {result}", flush=True)
 
             history.append({
                 "time": datetime.utcnow().isoformat(),
@@ -69,7 +86,10 @@ def process_pending_replies():
             sent_count += 1
             print(f"DELAYED AUTO REPLY SENT TO {sender_id}", flush=True)
 
-        return {"sent_count": sent_count}
+        return {
+            "sent_count": sent_count,
+            "skipped_count": skipped_count,
+        }
 
     except Exception as e:
         print(f"DELAYED PROCESSOR ERROR: {e}", flush=True)
