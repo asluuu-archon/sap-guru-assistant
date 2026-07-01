@@ -36,13 +36,20 @@ def build_message_context(
 def run_pipeline(context: MessageContext) -> MessageContext:
     if not context.sender_id:
         context.add_log("Pipeline stopped: sender_id missing")
+        context.add_log(
+            f"Pipeline Timings: {context.timings}"
+    )
         return context
 
+    customer_timer = context.start_timer("Customer Stage")
+
     customer_result = run_customer_stage(
-        organization_id=context.organization_id,
-        channel=context.channel,
-        sender_id=context.sender_id,
+       organization_id=context.organization_id,
+       channel=context.channel,
+       sender_id=context.sender_id,
     )
+
+    context.end_timer("Customer Stage", customer_timer)
     context.customer = customer_result.get("customer") or {}
     context.customer_id = customer_result.get("customer_id")
     context.add_log("Customer Stage completed")
