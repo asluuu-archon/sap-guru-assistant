@@ -19,6 +19,8 @@ Business Brain Stage
 Customer Brain Stage
 ↓
 Intent Stage
+↓
+Decision Stage
 """
 
 from .models.message_context import MessageContext
@@ -28,6 +30,7 @@ from .stages.conversation_stage import run_conversation_stage
 from .stages.business_brain_stage import run_business_brain_stage
 from .stages.customer_brain_stage import run_customer_brain_stage
 from .stages.intent_stage import run_intent_stage
+from .stages.decision_stage import run_decision_stage
 
 
 def build_message_context(
@@ -56,7 +59,6 @@ def run_pipeline(context: MessageContext) -> MessageContext:
         channel=context.channel,
         sender_id=context.sender_id,
     )
-
     context.customer = customer_result.get("customer") or {}
     context.customer_id = customer_result.get("customer_id")
     context.add_log("Customer Stage completed")
@@ -67,14 +69,10 @@ def run_pipeline(context: MessageContext) -> MessageContext:
         sender_id=context.sender_id,
         raw_payload=context.raw_payload,
     )
-
     context.identity = identity_result.get("identity") or {}
     context.add_log("Identity Stage completed")
 
-    conversation_result = run_conversation_stage(
-        sender_id=context.sender_id,
-    )
-
+    conversation_result = run_conversation_stage(sender_id=context.sender_id)
     context.conversation = conversation_result.get("conversation") or {}
     context.add_log(
         f"Conversation Stage completed. Returning: {conversation_result.get('is_returning_conversation')}"
@@ -83,7 +81,6 @@ def run_pipeline(context: MessageContext) -> MessageContext:
     business_result = run_business_brain_stage(
         organization_id=context.organization_id,
     )
-
     context.business_context = business_result.get("business_context", "")
     context.add_log(
         f"Business Brain Stage completed. Active: {business_result.get('has_business_context')}"
@@ -93,18 +90,26 @@ def run_pipeline(context: MessageContext) -> MessageContext:
         customer_id=context.customer_id,
         message_text=context.message_text,
     )
-
     context.add_log(
         f"Customer Brain Stage completed. Facts found: {customer_brain_result.get('facts_found')}"
     )
 
-    intent_result = run_intent_stage(
-        message_text=context.message_text,
-    )
-
+    intent_result = run_intent_stage(message_text=context.message_text)
     context.intent = intent_result.get("intent") or {}
     context.add_log(
         f"Intent Stage completed. Intent: {intent_result.get('intent_name')}"
+    )
+
+    decision_result = run_decision_stage(intent_result=context.intent)
+    context.reply = {
+        "decision": decision_result,
+        "action": decision_result.get("action"),
+        "should_reply": decision_result.get("should_reply"),
+        "needs_human": decision_result.get("needs_human"),
+        "reason": decision_result.get("reason"),
+    }
+    context.add_log(
+        f"Decision Stage completed. Action: {decision_result.get('action')}"
     )
 
     return context
