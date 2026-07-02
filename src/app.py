@@ -7,6 +7,7 @@ from .api.dashboard_api import router as dashboard_router
 from .api.business_api import router as business_router
 from .api.conversation_api import router as conversation_router
 from .api.suggest_api import router as suggest_router
+from .services.webhook_service import process_instagram_webhook
 
 
 from .assistant import suggest_reply
@@ -162,6 +163,8 @@ def should_ignore_manual_reply(manual_reply_text: str) -> bool:
 @app.post("/webhook")
 async def receive_webhook(request: Request):
     data = await request.json()
+    service_preview = await process_instagram_webhook(data)
+    print(f"WEBHOOK_SERVICE_PREVIEW: {service_preview.get('status')}", flush=True)
 
     print("========== WEBHOOK ==========", flush=True)
     print(data, flush=True)
