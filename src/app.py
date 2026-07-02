@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, Query
 from pydantic import BaseModel
 import os
 import re
+from .api.playground_api import router as playground_router
 
 from .assistant import suggest_reply
 from .channels.sender import send_channel_reply
@@ -24,6 +25,7 @@ from .playground import (
 
 
 app = FastAPI(title="SAP Guru Assistant", version="pilot_3")
+app.include_router(playground_router)
 
 VERIFY_TOKEN = "sap_guru_2026"
 AUTO_REPLY = os.getenv("AUTO_REPLY", "false").lower() == "true"
@@ -48,10 +50,7 @@ class BusinessContextRequest(BaseModel):
     status: str = "active"
     priority: int = 1
 
-class PlaygroundTestRequest(BaseModel):
-    message: str
-    sender_id: str = "playground_test_user"
-    channel: str = "playground"
+
 
 
 @app.get("/health")
@@ -202,59 +201,8 @@ def create_business_context(req: BusinessContextRequest):
 def suggest(req: SuggestRequest):
     return suggest_reply(req.message, req.channel, req.context)
 
-@app.post("/playground/test-message")
-def playground_test_message(req: PlaygroundTestRequest):
-    try:
-        result = process_incoming_message(
-            organization_id=1,
-            channel=req.channel,
-            sender_id=req.sender_id,
-            message_text=req.message,
-            raw_payload={
-                "source": "ai_playground",
-                "message": req.message,
-            },
-        )
 
-        playground_result = {
-           "message": req.message,
-           "sender_id": req.sender_id,
-           "channel": req.channel,
-           "intent": result.get("intent"),
-           "lead": result.get("lead"),
-           "decision": result.get("decision"),
-           "reply": result.get("reply"),
-           "logs": result.get("logs"),
-           "timings": result.get("timings"),
-        }
 
-        save_playground_result(playground_result)
-
-        return {
-            "status": "success",
-            "message": req.message,
-            "sender_id": req.sender_id,
-            "channel": req.channel,
-            "intent": result.get("intent"),
-            "lead": result.get("lead"),
-            "decision": result.get("decision"),
-            "reply": result.get("reply"),
-            "ai_memory": result.get("ai_memory"),
-            "logs": result.get("logs"),
-            "timings": result.get("timings"),
-        }
-
-    except Exception as e:
-        print(f"PLAYGROUND TEST ERROR: {e}", flush=True)
-        return {
-            "status": "error",
-            "message": str(e),
-        }
-@app.get("/playground/history")
-def playground_history():
-    return {
-        "history": get_playground_history()
-    }
 
 @app.get("/webhook")
 def verify_webhook(
