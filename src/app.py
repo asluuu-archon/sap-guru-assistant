@@ -17,6 +17,11 @@ from .reply_bank import save_manual_reply_to_bank
 from .leads import save_lead
 from .delay_processor import process_pending_replies
 from .pipeline.message_pipeline import process_incoming_message
+from .playground import (
+    save_playground_result,
+    get_playground_history,
+)
+
 
 app = FastAPI(title="SAP Guru Assistant", version="pilot_3")
 
@@ -210,6 +215,20 @@ def playground_test_message(req: PlaygroundTestRequest):
                 "message": req.message,
             },
         )
+
+        playground_result = {
+           "message": req.message,
+           "sender_id": req.sender_id,
+           "channel": req.channel,
+           "intent": result.get("intent"),
+           "lead": result.get("lead"),
+           "decision": result.get("decision"),
+           "reply": result.get("reply"),
+           "logs": result.get("logs"),
+           "timings": result.get("timings"),
+        }
+
+        save_playground_result(playground_result)
 
         return {
             "status": "success",
@@ -486,6 +505,12 @@ async def receive_webhook(request: Request):
             print(f"WOULD HAVE SENT: {reply_text}", flush=True)
 
         return {"status": "received", "auto_reply": AUTO_REPLY}
+
+        @app.get("/playground/history")
+        def playground_history():
+            return {
+                "history": get_playground_history()
+            }
 
     except Exception as e:
         print(f"ERROR: {e}", flush=True)
