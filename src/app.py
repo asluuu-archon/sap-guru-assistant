@@ -5,6 +5,8 @@ import re
 from .api.playground_api import router as playground_router
 from .api.dashboard_api import router as dashboard_router
 from .api.business_api import router as business_router
+from .api.conversation_api import router as conversation_router
+
 
 from .assistant import suggest_reply
 from .channels.sender import send_channel_reply
@@ -30,6 +32,7 @@ app = FastAPI(title="SAP Guru Assistant", version="pilot_3")
 app.include_router(dashboard_router)
 app.include_router(playground_router)
 app.include_router(business_router)
+app.include_router(conversation_router)
 
 VERIFY_TOKEN = "sap_guru_2026"
 AUTO_REPLY = os.getenv("AUTO_REPLY", "false").lower() == "true"
@@ -43,14 +46,6 @@ class SuggestRequest(BaseModel):
     context: str = ""
 
 
-class ManualReplyRequest(BaseModel):
-    sender_id: str
-    message: str
-
-
-
-
-
 
 @app.get("/health")
 def health():
@@ -61,37 +56,6 @@ def health():
 def run_delayed_replies():
     return process_pending_replies()
 
-
-@app.get("/conversation/{sender_id}")
-def get_conversation_detail(sender_id: str):
-    try:
-        conversation = get_conversation(sender_id)
-        return {"status": "success", "sender_id": sender_id, "conversation": conversation}
-    except Exception as e:
-        print(f"CONVERSATION DETAIL ERROR: {e}", flush=True)
-        return {"status": "error", "message": str(e)}
-
-
-@app.post("/conversation/send-reply")
-def send_manual_reply_from_dashboard(req: ManualReplyRequest):
-    try:
-        if not req.sender_id or not req.message.strip():
-            return {"status": "error", "message": "sender_id and message are required"}
-
-        result = send_channel_reply(
-            channel="instagram",
-            recipient_id=req.sender_id,
-            message=req.message.strip(),
-        )
-
-        print(f"DASHBOARD SEND RESULT: {result}", flush=True)
-        mark_manual_replied(req.sender_id, req.message.strip())
-
-        return {"status": "success", "message": "Reply sent successfully", "result": result}
-
-    except Exception as e:
-        print(f"DASHBOARD SEND REPLY ERROR: {e}", flush=True)
-        return {"status": "error", "message": str(e)}
 
 
 
