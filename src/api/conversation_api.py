@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from ..channels.sender import send_channel_reply
+from ..services.reply_service import send_reply
 from ..memory import (
     get_conversation,
     mark_manual_replied,
@@ -41,7 +41,7 @@ def send_manual_reply_from_dashboard(req: ManualReplyRequest):
                 "message": "sender_id and message are required",
             }
 
-        result = send_channel_reply(
+        result = send_reply(
             channel="instagram",
             recipient_id=req.sender_id,
             message=req.message.strip(),
