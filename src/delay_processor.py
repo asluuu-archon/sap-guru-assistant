@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from .memory import supabase, build_context
 from .assistant import suggest_reply
-from .instagram import send_instagram_reply
+from .services.reply_service import send_reply
 
 
 SAFE_FALLBACK_REPLY = "I will check this and update you."
@@ -62,7 +62,11 @@ def process_pending_replies():
                 skipped_count += 1
                 continue
 
-            result = send_instagram_reply(sender_id, reply_text)
+            result = send_reply(
+                               channel="instagram",
+                               recipient_id=sender_id,
+                               message=reply_text,
+                     )
 
             print(f"DELAYED INSTAGRAM SEND RESULT: {result}", flush=True)
 
