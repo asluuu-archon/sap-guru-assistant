@@ -11,7 +11,7 @@ from .services.webhook_service import process_instagram_webhook
 
 
 from .assistant import suggest_reply
-from .channels.sender import send_channel_reply
+from .services.reply_service import send_reply
 from .memory import (
     get_conversation,
     save_conversation,
@@ -300,10 +300,10 @@ async def receive_webhook(request: Request):
         )
 
         if AUTO_REPLY:
-            result = send_channel_reply(
-                channel="instagram",
-                recipient_id=sender_id,
-                message=reply_text,
+            result = send_reply(
+                 channel="instagram",
+                 recipient_id=sender_id,
+                 message=reply_text,
             )
 
             print(f"AUTO REPLY SENT: {result}", flush=True)
