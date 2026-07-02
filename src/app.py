@@ -250,7 +250,11 @@ def playground_test_message(req: PlaygroundTestRequest):
             "status": "error",
             "message": str(e),
         }
-
+   @app.get("/playground/history")
+        def playground_history():
+            return {
+                "history": get_playground_history()
+            }
 
 @app.get("/webhook")
 def verify_webhook(
@@ -506,11 +510,7 @@ async def receive_webhook(request: Request):
 
         return {"status": "received", "auto_reply": AUTO_REPLY}
 
-        @app.get("/playground/history")
-        def playground_history():
-            return {
-                "history": get_playground_history()
-            }
+     
 
     except Exception as e:
         print(f"ERROR: {e}", flush=True)
