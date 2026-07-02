@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import os
 import re
 from .api.playground_api import router as playground_router
+from .api.dashboard_api import router as dashboard_router
 
 from .assistant import suggest_reply
 from .channels.sender import send_channel_reply
@@ -25,6 +26,7 @@ from .playground import (
 
 
 app = FastAPI(title="SAP Guru Assistant", version="pilot_3")
+app.include_router(dashboard_router)
 app.include_router(playground_router)
 
 VERIFY_TOKEN = "sap_guru_2026"
@@ -94,62 +96,6 @@ def send_manual_reply_from_dashboard(req: ManualReplyRequest):
         print(f"DASHBOARD SEND REPLY ERROR: {e}", flush=True)
         return {"status": "error", "message": str(e)}
 
-
-@app.get("/dashboard-data")
-def dashboard_data():
-    conversations_result = (
-        supabase.table("conversations")
-        .select("*")
-        .order("updated_at", desc=True)
-        .limit(100)
-        .execute()
-    )
-
-    leads_result = (
-        supabase.table("leads")
-        .select("*")
-        .order("updated_at", desc=True)
-        .limit(100)
-        .execute()
-    )
-
-    conversations = conversations_result.data or []
-    leads = leads_result.data or []
-
-    needs_human = [
-        row for row in conversations
-        if row.get("needs_human") is True
-        or row.get("conversation_state") == "needs_human"
-    ]
-
-    lead_collection = [
-        row for row in conversations
-        if row.get("conversation_state") == "lead_collection"
-    ]
-
-    qualified_leads = [
-        row for row in leads
-        if row.get("is_qualified") is True
-        or row.get("status") == "qualified"
-        or row.get("lead_stage") == "qualified"
-    ]
-
-    recent_conversations = conversations[:30]
-
-    return {
-        "counts": {
-            "needs_human": len(needs_human),
-            "lead_collection": len(lead_collection),
-            "qualified_leads": len(qualified_leads),
-            "recent_conversations": len(recent_conversations),
-            "total_leads": len(leads),
-            "total_conversations": len(conversations),
-        },
-        "needs_human": needs_human[:30],
-        "lead_collection": lead_collection[:30],
-        "qualified_leads": qualified_leads[:30],
-        "recent_conversations": recent_conversations,
-    }
 
 
 @app.get("/business-contexts")
