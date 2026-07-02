@@ -6,6 +6,7 @@ from .api.playground_api import router as playground_router
 from .api.dashboard_api import router as dashboard_router
 from .api.business_api import router as business_router
 from .api.conversation_api import router as conversation_router
+from .api.suggest_api import router as suggest_router
 
 
 from .assistant import suggest_reply
@@ -33,17 +34,12 @@ app.include_router(dashboard_router)
 app.include_router(playground_router)
 app.include_router(business_router)
 app.include_router(conversation_router)
+app.include_router(suggest_router)
 
 VERIFY_TOKEN = "sap_guru_2026"
 AUTO_REPLY = os.getenv("AUTO_REPLY", "false").lower() == "true"
 
 processed_message_ids = set()
-
-
-class SuggestRequest(BaseModel):
-    message: str
-    channel: str = "instagram"
-    context: str = ""
 
 
 
@@ -56,16 +52,6 @@ def health():
 def run_delayed_replies():
     return process_pending_replies()
 
-
-
-
-
-
-
-
-@app.post("/suggest")
-def suggest(req: SuggestRequest):
-    return suggest_reply(req.message, req.channel, req.context)
 
 
 
