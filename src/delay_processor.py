@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+
 from .memory import supabase, build_context
 from .assistant import suggest_reply
 from .services.reply_service import send_reply
@@ -62,13 +63,18 @@ def process_pending_replies():
                 skipped_count += 1
                 continue
 
-            result = send_reply(
-                               channel="instagram",
-                               recipient_id=sender_id,
-                               message=reply_text,
-                     )
+            send_result = send_reply(
+                channel="instagram",
+                recipient_id=sender_id,
+                message=reply_text,
+            )
 
-            print(f"DELAYED INSTAGRAM SEND RESULT: {result}", flush=True)
+            print(f"DELAYED SEND RESULT: {send_result}", flush=True)
+
+            if send_result.get("status") == "error":
+                skipped_count += 1
+                print(f"DELAYED REPLY FAILED FOR {sender_id}", flush=True)
+                continue
 
             history.append({
                 "time": datetime.utcnow().isoformat(),
