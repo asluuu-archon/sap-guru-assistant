@@ -250,11 +250,11 @@ def playground_test_message(req: PlaygroundTestRequest):
             "status": "error",
             "message": str(e),
         }
-   @app.get("/playground/history")
-        def playground_history():
-            return {
-                "history": get_playground_history()
-            }
+@app.get("/playground/history")
+def playground_history():
+    return {
+        "history": get_playground_history()
+    }
 
 @app.get("/webhook")
 def verify_webhook(
