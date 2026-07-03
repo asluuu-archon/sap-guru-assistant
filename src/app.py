@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
 import re
+import requests
 from .api.playground_api import router as playground_router
 from .api.dashboard_api import router as dashboard_router
 from .api.business_api import router as business_router
@@ -66,7 +67,26 @@ def run_delayed_replies():
 
 
 
+@app.get("/test-instagram-profile/{sender_id}")
+def test_instagram_profile(sender_id: str):
+    token = os.getenv("INSTAGRAM_ACCESS_TOKEN")
 
+    if not token:
+        return {"status": "error", "message": "INSTAGRAM_ACCESS_TOKEN missing"}
+
+    r = requests.get(
+        f"https://graph.instagram.com/v23.0/{sender_id}",
+        params={
+            "fields": "id,username,name,profile_pic",
+            "access_token": token,
+        },
+        timeout=15,
+    )
+
+    return {
+        "status_code": r.status_code,
+        "response": r.json(),
+    }
 
 @app.get("/webhook")
 def verify_webhook(
