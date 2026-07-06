@@ -117,7 +117,6 @@ def is_closing_message(text: str) -> bool:
         "ok", "okay", "oh ok", "oh okay", "okk",
         "ok bro", "ok brother", "ok sir", "okay sir",
         "sure", "fine", "good", "great",
-        "thanks", "thank you", "thankyou", "thank u",
         "tq", "ty", "got it", "understood", "noted",
         "no problem", "np", "👍", "🙏",
     }
