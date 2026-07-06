@@ -5,6 +5,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from .reply_bank import find_similar_replies
 from .engine.intent import detect_intent
+from .ai_brain.greeting_engine import get_greeting_reply
 
 load_dotenv()
 
@@ -309,6 +310,21 @@ def _normalize_output(data: dict, message: str, context: str) -> dict:
 
 
 def suggest_reply(message: str, channel: str = "instagram", context: str = "") -> dict:
+    greeting_reply = get_greeting_reply(message)
+
+    if greeting_reply:
+        return {
+            "category": greeting_reply.get("category", "greeting"),
+            "lead_score": 0,
+            "priority": "normal",
+            "approval_status": "safe_to_send",
+            "should_capture_contact": False,
+            "should_reply": True,
+            "human_reason": "",
+            "reason": greeting_reply.get("reason", "Greeting engine matched"),
+            "suggested_reply": greeting_reply.get("suggested_reply", ""),
+        }
+
     intent = detect_intent(message)
     print(f"INTENT: {intent.get('intent')}", flush=True)
     print(f"INTENT_CONFIDENCE: {intent.get('confidence')}", flush=True)
