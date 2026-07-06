@@ -258,7 +258,14 @@ function Leads({dashboard}) {
   const qualified = dashboard?.qualified_leads || [];
 
   const rows = qualified.map((lead) => [
-    <Name name={lead.name || lead.sender_id || "Unknown"}/>,
+    <Name
+      name={
+           lead.customer_name ||
+           lead.instagram_username ||
+           lead.name ||
+           (lead.sender_id ? `User ${String(lead.sender_id).slice(-4)}` : "Unknown")
+           }
+/>,
     lead.phone || lead.email || "-",
     lead.location || "-",
     lead.interested_module || "-",
