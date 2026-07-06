@@ -13,11 +13,9 @@ def build_customer_lookup():
     )
 
     customers = customers_result.data or []
-
     lookup = {}
 
     for customer in customers:
-
         attributes = customer.get("attributes") or {}
 
         lookup[customer["channel_user_id"]] = {
@@ -32,9 +30,21 @@ def build_customer_lookup():
     return lookup
 
 
+def enrich_with_customer_profile(row: dict, customer_lookup: dict) -> dict:
+    customer = customer_lookup.get(row.get("sender_id"), {})
+
+    row["customer_name"] = customer.get("customer_name", "")
+    row["instagram_username"] = customer.get("instagram_username", "")
+    row["profile_pic"] = customer.get("profile_pic", "")
+    row["customer_status"] = customer.get("customer_status", "")
+    row["customer_lead_score"] = customer.get("lead_score", 0)
+    row["customer_lead_temperature"] = customer.get("lead_temperature", "")
+
+    return row
+
+
 @router.get("/dashboard-data")
 def dashboard_data():
-
     conversations_result = (
         supabase.table("conversations")
         .select("*")
@@ -56,41 +66,15 @@ def dashboard_data():
 
     customer_lookup = build_customer_lookup()
 
-    enriched_conversations = []
+    enriched_conversations = [
+        enrich_with_customer_profile(conversation, customer_lookup)
+        for conversation in conversations
+    ]
 
-    for conversation in conversations:
-
-        customer = customer_lookup.get(
-            conversation.get("sender_id"),
-            {},
-        )
-
-        conversation["customer_name"] = customer.get(
-            "customer_name",
-            "",
-        )
-
-        conversation["instagram_username"] = customer.get(
-            "instagram_username",
-            "",
-        )
-
-        conversation["profile_pic"] = customer.get(
-            "profile_pic",
-            "",
-        )
-
-        conversation["lead_score"] = customer.get(
-            "lead_score",
-            0,
-        )
-
-        conversation["lead_temperature"] = customer.get(
-            "lead_temperature",
-            "",
-        )
-
-        enriched_conversations.append(conversation)
+    enriched_leads = [
+        enrich_with_customer_profile(lead, customer_lookup)
+        for lead in leads
+    ]
 
     needs_human = [
         row
@@ -107,7 +91,7 @@ def dashboard_data():
 
     qualified_leads = [
         row
-        for row in leads
+        for row in enriched_leads
         if row.get("is_qualified") is True
         or row.get("status") == "qualified"
         or row.get("lead_stage") == "qualified"
@@ -121,8 +105,8 @@ def dashboard_data():
             "lead_collection": len(lead_collection),
             "qualified_leads": len(qualified_leads),
             "recent_conversations": len(recent_conversations),
-            "total_leads": len(leads),
-            "total_conversations": len(conversations),
+            "total_leads": len(enriched_leads),
+            "total_conversations": len(enriched_conversations),
         },
         "needs_human": needs_human[:30],
         "lead_collection": lead_collection[:30],

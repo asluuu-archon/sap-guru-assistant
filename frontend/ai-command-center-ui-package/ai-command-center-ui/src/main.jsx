@@ -134,6 +134,11 @@ function Conversations({dashboard}) {
   const rows = dashboard?.recent_conversations || [];
   const [selectedConversation, setSelectedConversation] = useState(null);
 
+  const displayName = (row) =>
+    row.customer_name ||
+    row.instagram_username ||
+    (row.sender_id ? `User ${String(row.sender_id).slice(-4)}` : "Unknown");
+
   const getLastMessage = (row) => {
     const history = row.history || [];
     for (let i = history.length - 1; i >= 0; i--) {
@@ -149,7 +154,7 @@ function Conversations({dashboard}) {
     const updated = row.updated_at ? new Date(row.updated_at).toLocaleString() : "-";
 
     return [
-      <Name name={row.sender_id ? `User ${String(row.sender_id).slice(-4)}` : "Unknown"}/>,
+      <Name name={displayName(row)} />,
       <span className="ig">IG</span>,
       String(lastMessage).slice(0, 80),
       <b className="blue">{row.category || "general"}</b>,
@@ -177,15 +182,7 @@ function Conversations({dashboard}) {
       <div style={{display: "grid", gridTemplateColumns: selectedConversation ? "1.5fr 1fr" : "1fr", gap: "16px", alignItems: "start"}}>
         <Table
           heads={['Customer','Channel','Last Message','Category','Status','Updated','Action']}
-          rows={tableRows.length ? tableRows : [[
-            "Loading...",
-            "-",
-            "Fetching live conversations...",
-            "-",
-            "-",
-            "-",
-            "-"
-          ]]}
+          rows={tableRows.length ? tableRows : [["Loading...", "-", "Fetching live conversations...", "-", "-", "-", "-"]]}
         />
 
         {selectedConversation && (
@@ -198,7 +195,6 @@ function Conversations({dashboard}) {
     </section>
   );
 }
-
 function ConversationPanel({ conversation, onClose }) {
   const history = conversation.history || [];
   const title = conversation.sender_id ? `User ${String(conversation.sender_id).slice(-4)}` : "Unknown User";
