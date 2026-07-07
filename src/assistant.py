@@ -281,6 +281,12 @@ def _normalize_output(data: dict, message: str, context: str) -> dict:
         "can you share more context",
         "hello sathyam",
         "hi sathyam",
+        "i will check and update",
+        "i'll check and update",
+        "i will check and revert",
+        "i'll check and revert",
+        "will check and revert",
+        "will check and update",
     ]
 
     if not reply:
