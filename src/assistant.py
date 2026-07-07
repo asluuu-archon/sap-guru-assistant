@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from .reply_bank import find_similar_replies
 from .engine.intent import detect_intent
 from .ai_brain.greeting_engine import get_greeting_reply
+from .ai_brain.appointment_engine import detect_appointment_request
 
 load_dotenv()
 
@@ -323,6 +324,20 @@ def suggest_reply(message: str, channel: str = "instagram", context: str = "") -
             "human_reason": "",
             "reason": greeting_reply.get("reason", "Greeting engine matched"),
             "suggested_reply": greeting_reply.get("suggested_reply", ""),
+        }
+      appointment_reply = detect_appointment_request(message)
+
+    if appointment_reply:
+        return {
+            "category": appointment_reply.get("category", "appointment_request"),
+            "lead_score": 80,
+            "priority": "high",
+            "approval_status": "safe_to_send",
+            "should_capture_contact": appointment_reply.get("should_capture_contact", True),
+            "should_reply": True,
+            "human_reason": "",
+            "reason": appointment_reply.get("reason", "Appointment request detected"),
+            "suggested_reply": appointment_reply.get("suggested_reply", ""),
         }
 
     intent = detect_intent(message)
