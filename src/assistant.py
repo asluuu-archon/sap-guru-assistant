@@ -325,7 +325,8 @@ def suggest_reply(message: str, channel: str = "instagram", context: str = "") -
             "reason": greeting_reply.get("reason", "Greeting engine matched"),
             "suggested_reply": greeting_reply.get("suggested_reply", ""),
         }
-      appointment_reply = detect_appointment_request(message)
+
+    appointment_reply = detect_appointment_request(message)
 
     if appointment_reply:
         return {
