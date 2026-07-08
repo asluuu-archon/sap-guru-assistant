@@ -10,6 +10,7 @@ from .api.business_api import router as business_router
 from .api.conversation_api import router as conversation_router
 from .api.suggest_api import router as suggest_router
 from .services.webhook_service import process_instagram_webhook
+from .pipeline.conversation_intelligence import detect_conversation_goal
 
 
 from .assistant import suggest_reply
@@ -280,6 +281,13 @@ async def receive_webhook(request: Request):
 
         print(f"CUSTOMER_ID: {customer.get('id')}", flush=True)
         print(f"PIPELINE_LOGS: {pipeline_result.get('logs')}", flush=True)
+        
+        conversation_goal = detect_conversation_goal(
+            conversation=get_conversation(sender_id),
+            latest_message=message_text,
+        )
+
+        print(f"CONVERSATION_GOAL: {conversation_goal}", flush=True)
 
         if not message_id:
             print("No message ID found. Skipping.", flush=True)
