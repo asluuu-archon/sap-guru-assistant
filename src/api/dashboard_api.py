@@ -104,6 +104,7 @@ def dashboard_data():
             "needs_human": len(needs_human),
             "lead_collection": len(lead_collection),
             "qualified_leads": len(qualified_leads),
+            "all_leads": enriched_leads[:100],
             "recent_conversations": len(recent_conversations),
             "total_leads": len(enriched_leads),
             "total_conversations": len(enriched_conversations),
