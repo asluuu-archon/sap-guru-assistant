@@ -7,6 +7,7 @@ from .reply_bank import find_similar_replies
 from .engine.intent import detect_intent
 from .ai_brain.greeting_engine import get_greeting_reply
 from .ai_brain.appointment_engine import detect_appointment_request
+from .business_brain.responder import get_business_reply
 
 load_dotenv()
 
@@ -331,6 +332,17 @@ def suggest_reply(message: str, channel: str = "instagram", context: str = "") -
             "reason": greeting_reply.get("reason", "Greeting engine matched"),
             "suggested_reply": greeting_reply.get("suggested_reply", ""),
         }
+
+    business_reply = get_business_reply(message)
+
+    if business_reply:
+
+        print(
+            f"BUSINESS BRAIN MATCHED: {business_reply.get('reason')}",
+            flush=True,
+        )
+
+        return business_reply
 
     appointment_reply = detect_appointment_request(message)
 
