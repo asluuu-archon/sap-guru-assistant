@@ -97,7 +97,7 @@ def save_lead(
             notes=final_notes,
         ):
             print("LEAD NOT SAVED: no useful lead data", flush=True)
-            return
+            return None
 
         is_qualified = bool(final_phone) and bool(final_email)
         qualified_at = old.get("qualified_at")
@@ -126,6 +126,7 @@ def save_lead(
             "experience": final_experience,
             "interested_module": final_module,
             "notes": final_notes,
+            "source": "instagram_dm",
             "status": status,
             "lead_stage": lead_stage,
             "is_qualified": is_qualified,
@@ -141,18 +142,22 @@ def save_lead(
                 .execute()
             )
 
-            print("UPDATE RESULT:", result, flush=True)
-            print("LEAD UPDATED", flush=True)
+            if result.data:
+                print(f"LEAD UPDATED: {result.data[0].get('id')}", flush=True)
+                return result.data[0]
 
-        else:
-            result = (
-                supabase.table("leads")
-                .insert(payload)
-                .execute()
-            )
+            print("LEAD UPDATE WARNING: no data returned", flush=True)
+            return None
 
-            print("INSERT RESULT:", result, flush=True)
-            print("LEAD SAVED", flush=True)
+        result = supabase.table("leads").insert(payload).execute()
+
+        if result.data:
+            print(f"LEAD SAVED: {result.data[0].get('id')}", flush=True)
+            return result.data[0]
+
+        print("LEAD INSERT WARNING: no data returned", flush=True)
+        return None
 
     except Exception as e:
         print(f"LEAD SAVE ERROR: {e}", flush=True)
+        return None
