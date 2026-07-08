@@ -134,10 +134,24 @@ def save_lead(
         }
 
         if old.get("id"):
-            supabase.table("leads").update(payload).eq("id", old["id"]).execute()
+            result = (
+                supabase.table("leads")
+                .update(payload)
+                .eq("id", old["id"])
+                .execute()
+            )
+
+            print("UPDATE RESULT:", result, flush=True)
             print("LEAD UPDATED", flush=True)
+
         else:
-            supabase.table("leads").insert(payload).execute()
+            result = (
+                supabase.table("leads")
+                .insert(payload)
+                .execute()
+            )
+
+            print("INSERT RESULT:", result, flush=True)
             print("LEAD SAVED", flush=True)
 
     except Exception as e:
