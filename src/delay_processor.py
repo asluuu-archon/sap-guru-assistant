@@ -5,7 +5,7 @@ from .assistant import suggest_reply
 from .services.reply_service import send_reply
 
 
-SAFE_FALLBACK_REPLY = "I will check this and update you."
+SAFE_FALLBACK_REPLY = ""
 
 
 def process_pending_replies():
@@ -56,7 +56,9 @@ def process_pending_replies():
             reply_text = (reply.get("suggested_reply") or "").strip()
 
             if not reply_text:
-                reply_text = SAFE_FALLBACK_REPLY
+                print(f"DELAYED REPLY SKIPPED EMPTY AI REPLY FOR {sender_id}", flush=True)
+                skipped_count += 1
+                continue
 
             if not reply_text.strip():
                 print(f"DELAYED REPLY SKIPPED EMPTY TEXT FOR {sender_id}", flush=True)
