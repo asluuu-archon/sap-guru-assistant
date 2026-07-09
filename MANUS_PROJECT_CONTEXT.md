@@ -139,6 +139,32 @@ Webhook → app.py → process_incoming_message()
 
 ---
 
+## How AUTO_REPLY and Delay Actually Work (confirmed from app.py)
+
+- `AUTO_REPLY = os.getenv("AUTO_REPLY", "false").lower() == "true"` — set in Render env vars
+- When `AUTO_REPLY = false`: webhook processes message, generates reply, saves to DB, but does NOT send. Prints "AUTO REPLY DISABLED".
+- When `AUTO_REPLY = true`: webhook sends reply immediately (no delay).
+- `delay_processor.py` runs on `/run-delayed-replies` endpoint (called by external cron every few minutes). It reads `pending_reply=True` rows and sends them after the configured delay.
+- The delay processor does NOT check `AUTO_REPLY` — it always sends. So the workflow IS correct:
+  - `AUTO_REPLY=false` → no instant reply → delay processor sends after X minutes
+  - `AUTO_REPLY=true` → instant reply sent immediately
+- Aslu's intended workflow: `AUTO_REPLY=false` always. Delay processor handles sending after delay. Manual replies from dashboard OR Instagram direct cancel the pending reply.
+- Echo detection (is_echo=True) already exists in app.py and calls `mark_manual_replied()` correctly.
+- The `CONVERSATION_GOAL` field in logs is new — suggests a newer intent engine may be running in parallel.
+
+## Current Issue: "Hi" from returning customer returns empty reply
+- When returning customer says "Hi", greeting shortcuts are now skipped (our fix works)
+- But then it falls into OpenAI which returns `should_reply: false`
+- This causes `action=human` path → saves as `needs_human` → delay processor will NOT send (no reply_text saved)
+- Fix needed: improve prompt so AI continues the conversation naturally for returning customers
+- Also: `app.py` line 310 — if `should_reply is False or not reply_text` → marks as needs_human and saves empty reply. Delay processor then has nothing to send.
+
+## test-instagram-profile endpoint still has profile_pic bug
+- Line 80 in app.py: `"fields": "id,username,name,profile_pic"` — this test endpoint was not fixed
+- Only the main instagram_profile.py was fixed
+
+---
+
 ## Immediate Fix Priority (agreed with Aslu)
 1. Create Git tag `manus-handover` as rollback point
 2. Fix conversational continuity (Bug 1) — most impactful

@@ -52,7 +52,7 @@ def _extract_name(message: str) -> str:
     return ""
 
 
-def _should_stay_silent(message: str) -> bool:
+def _should_stay_silent(message: str, has_prior_conversation: bool = False) -> bool:
     text = message.lower().strip()
 
     very_short_unclear = {
@@ -62,6 +62,11 @@ def _should_stay_silent(message: str) -> bool:
 
     if text in very_short_unclear:
         return True
+
+    # For returning customers, never stay silent on short messages
+    # The AI should continue the conversation based on history
+    if has_prior_conversation:
+        return False
 
     if len(text.split()) <= 2 and not any(x in text for x in ["sap", "job", "learn", "course", "number", "email"]):
         return True
@@ -222,15 +227,24 @@ Reply as Mohamed Aslam / The SAP Guru in Instagram DM.
 
 Use intelligence, not fixed scripts.
 
-If the message is unclear, too short, regional-language slang you are not sure about, or you are not confident about the intent, do not reply.
+CRITICAL — RETURNING CUSTOMER RULE:
+If previous_conversation_context contains prior messages, this is a RETURNING customer.
+For returning customers, ALWAYS reply — never return should_reply: false.
+Look at what was last discussed and continue naturally.
+Examples:
+- If you last asked for their contact details and they say "Hi" again, gently follow up: remind them you are waiting for their details.
+- If they said "ok" or "sure", acknowledge and guide them to the next step.
+- If they greet again mid-conversation, respond warmly and bring the conversation back on track.
 
-In such cases return:
+For NEW customers (no prior context): If the message is unclear, too short, regional-language slang you are not sure about, or you are not confident about the intent, do not reply.
+
+In such cases (new customers only) return:
 {
   "should_reply": false,
   "human_reason": "Unclear message or low confidence"
 }
 
-Never force a reply.
+Never force a reply for new customers if genuinely unclear.
 
 Never ask vague questions like:
 - Can you share a bit more detail?
@@ -391,7 +405,7 @@ def suggest_reply(message: str, channel: str = "instagram", context: str = "") -
             "suggested_reply": "Thank you. My office will contact you soon.",
         }
 
-    if _should_stay_silent(message):
+    if _should_stay_silent(message, has_prior_conversation=has_prior_conversation):
         return _human_review("Short or unclear message. Better for manual reply.")
 
     

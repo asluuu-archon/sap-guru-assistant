@@ -10,7 +10,6 @@ from .api.business_api import router as business_router
 from .api.conversation_api import router as conversation_router
 from .api.suggest_api import router as suggest_router
 from .services.webhook_service import process_instagram_webhook
-from .pipeline.conversation_intelligence import detect_conversation_goal
 
 
 from .assistant import suggest_reply
@@ -22,7 +21,6 @@ from .memory import (
     mark_needs_human,
     mark_closed,
     supabase,
-    update_conversation_goal
 )
 from .reply_bank import save_manual_reply_to_bank
 from .leads import save_lead
@@ -79,7 +77,7 @@ def test_instagram_profile(sender_id: str):
     r = requests.get(
         f"https://graph.instagram.com/v23.0/{sender_id}",
         params={
-            "fields": "id,username,name,profile_pic",
+            "fields": "id,username,name",
             "access_token": token,
         },
         timeout=15,
@@ -282,18 +280,6 @@ async def receive_webhook(request: Request):
 
         print(f"CUSTOMER_ID: {customer.get('id')}", flush=True)
         print(f"PIPELINE_LOGS: {pipeline_result.get('logs')}", flush=True)
-        
-        conversation_goal = detect_conversation_goal(
-            conversation=get_conversation(sender_id),
-            latest_message=message_text,
-        )
-
-        print(f"CONVERSATION_GOAL: {conversation_goal}", flush=True)
-
-        update_conversation_goal(
-            sender_id=sender_id,
-            goal_result=conversation_goal,
-        )
 
         if not message_id:
             print("No message ID found. Skipping.", flush=True)
@@ -325,6 +311,8 @@ async def receive_webhook(request: Request):
             reason = decision.get("reason", "Low confidence or unclear message.")
             print(f"NEEDS HUMAN: {reason}", flush=True)
 
+            # Save the conversation so the inbox shows this message
+            # Mark as pending_reply=True so the delay processor can attempt a reply later
             save_conversation(sender_id, message_text, "", "needs_human")
             mark_needs_human(sender_id, reason)
 
