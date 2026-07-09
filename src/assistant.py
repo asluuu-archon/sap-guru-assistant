@@ -7,7 +7,6 @@ from .reply_bank import find_similar_replies
 from .engine.intent import detect_intent
 from .ai_brain.greeting_engine import get_greeting_reply
 from .ai_brain.appointment_engine import detect_appointment_request
-from .business_brain.responder import get_business_reply
 
 load_dotenv()
 
@@ -318,7 +317,17 @@ def _normalize_output(data: dict, message: str, context: str) -> dict:
 
 
 def suggest_reply(message: str, channel: str = "instagram", context: str = "") -> dict:
-    greeting_reply = get_greeting_reply(message)
+    # Determine if this is a returning customer based on context
+    # If context has conversation history, we skip greeting shortcuts
+    has_prior_conversation = bool(
+        context and (
+            "Recent conversation:" in context
+            or "Known summary:" in context
+            or "Last reply sent:" in context
+        )
+    )
+
+    greeting_reply = get_greeting_reply(message, has_prior_conversation=has_prior_conversation)
 
     if greeting_reply:
         return {
@@ -332,17 +341,6 @@ def suggest_reply(message: str, channel: str = "instagram", context: str = "") -
             "reason": greeting_reply.get("reason", "Greeting engine matched"),
             "suggested_reply": greeting_reply.get("suggested_reply", ""),
         }
-
-    business_reply = get_business_reply(message)
-
-    if business_reply:
-
-        print(
-            f"BUSINESS BRAIN MATCHED: {business_reply.get('reason')}",
-            flush=True,
-        )
-
-        return business_reply
 
     appointment_reply = detect_appointment_request(message)
 
@@ -367,7 +365,7 @@ def suggest_reply(message: str, channel: str = "instagram", context: str = "") -
 
 
 
-    if intent.get("intent") == "greeting":
+    if intent.get("intent") == "greeting" and not has_prior_conversation:
         return {
             "category": "greeting",
             "lead_score": 0,

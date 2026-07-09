@@ -1,6 +1,6 @@
 # AI Command Center - Project Progress
 
-> Last Updated: 2026-06-29
+> Last Updated: 2026-07-10
 
 ---
 
@@ -32,7 +32,7 @@ Customer Intelligence Platform under active development.
 
 Current focus:
 
-Business Intelligence Layer
+CRM Completion — Leads Page
 
 Recently completed:
 
@@ -48,7 +48,11 @@ Recently completed:
 
 ✅ Business Context UI (v1)
 
-Business Context is now injected into every AI reply.
+✅ Dedicated `/all-leads` backend API endpoint
+
+✅ Frontend Leads CRM page with filters and lead detail panel
+
+Business Context is injected into every AI reply. Leads page now fully operational.
 
 ---
 
@@ -100,6 +104,8 @@ Completed
 - Manual Reply
 - Customer Intelligence Panel
 - Business Context Page
+- Leads CRM Page (with filters: All / Qualified / New / Phone Pending / Name Pending)
+- Lead Detail Panel (contact info, course interest, CRM status, notes)
 
 ---
 
@@ -145,6 +151,8 @@ GET /health
 
 GET /dashboard-data
 
+GET /all-leads
+
 GET /conversation/{sender_id}
 
 POST /conversation/send-reply
@@ -175,13 +183,30 @@ Instead of technical fields, the interface should feel like giving instructions 
 
 # Immediate Next Tasks
 
-Priority 1
+Priority 1 ✅ COMPLETED
 
-- Business Brain redesign
-- Edit Business Context
-- Archive Business Context
-- Active / Inactive Context
-- Business Brain cards
+- ✅ Leads CRM page using all_leads
+- ✅ Lead filters (All / Qualified / New / Phone Pending / Name Pending)
+- ✅ Lead detail panel
+- ✅ Dedicated /all-leads API endpoint
+
+Priority 2 ✅ COMPLETED (Manus Session 1 — 2026-07-10)
+
+- ✅ Fix Instagram profile API error (profile_pic field removed)
+- ✅ Fix Business Brain stage — now reads from business_rules table with keyword matching
+- ✅ Fix conversational continuity — greeting engine now context-aware (skips shortcuts for returning customers)
+- ✅ Fix reply delay — now configurable per org via business_profile.reply_delay_minutes
+- ✅ Remove hardcoded SAFE_FALLBACK_REPLY from delay processor
+- ✅ Add /all-leads backend endpoint
+- ✅ Add Leads CRM frontend page with filters
+
+Priority 3 — CURRENT
+
+- Add reply_delay_minutes column to business_profile table in Supabase
+- Business Brain v2 UI (natural language cards, not technical fields)
+- Edit / Archive / Active-Inactive for Business Rules
+- Customer Profile page
+- Appointment Engine
 
 Priority 2
 
@@ -240,7 +265,7 @@ Business owners should teach AI using natural language instead of technical fiel
 
 Date
 
-2026-06-29
+2026-07-08
 
 Completed
 

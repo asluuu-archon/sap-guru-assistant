@@ -75,6 +75,7 @@ def run_pipeline(context: MessageContext) -> MessageContext:
     timer = context.start_timer("Business Brain Stage")
     business_result = run_business_brain_stage(
         organization_id=context.organization_id,
+        message_text=context.message_text,
     )
     context.end_timer("Business Brain Stage", timer)
 

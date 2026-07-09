@@ -104,7 +104,6 @@ def dashboard_data():
             "needs_human": len(needs_human),
             "lead_collection": len(lead_collection),
             "qualified_leads": len(qualified_leads),
-            "all_leads": enriched_leads[:100],
             "recent_conversations": len(recent_conversations),
             "total_leads": len(enriched_leads),
             "total_conversations": len(enriched_conversations),
@@ -113,4 +112,29 @@ def dashboard_data():
         "lead_collection": lead_collection[:30],
         "qualified_leads": qualified_leads[:30],
         "recent_conversations": recent_conversations,
+    }
+
+
+@router.get("/all-leads")
+def all_leads():
+    leads_result = (
+        supabase.table("leads")
+        .select("*")
+        .order("updated_at", desc=True)
+        .limit(500)
+        .execute()
+    )
+
+    leads = leads_result.data or []
+    customer_lookup = build_customer_lookup()
+
+    enriched = [
+        enrich_with_customer_profile(lead, customer_lookup)
+        for lead in leads
+    ]
+
+    return {
+        "status": "success",
+        "total": len(enriched),
+        "leads": enriched,
     }

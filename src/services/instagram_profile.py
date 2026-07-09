@@ -12,7 +12,7 @@ def get_instagram_profile(sender_id: str) -> dict:
         response = requests.get(
             f"https://graph.instagram.com/v23.0/{sender_id}",
             params={
-                "fields": "id,username,name,profile_pic",
+                "fields": "id,username,name",
                 "access_token": token,
             },
             timeout=15,

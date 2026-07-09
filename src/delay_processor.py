@@ -1,3 +1,13 @@
+"""
+Delay Processor
+
+Processes pending conversations and sends AI replies after a configurable delay.
+
+The delay duration is read from the business_profile table per organisation,
+so each client can configure their own preferred delay from the frontend.
+Default fallback is 15 minutes if not configured.
+"""
+
 from datetime import datetime, timedelta
 
 from .memory import supabase, build_context
@@ -5,13 +15,34 @@ from .assistant import suggest_reply
 from .services.reply_service import send_reply
 
 
-SAFE_FALLBACK_REPLY = ""
+DEFAULT_DELAY_MINUTES = 15
+
+
+def get_reply_delay_minutes(organization_id: int) -> int:
+    """
+    Reads the reply_delay_minutes setting from business_profile for the given org.
+    Falls back to DEFAULT_DELAY_MINUTES if not set.
+    """
+    try:
+        result = (
+            supabase.table("business_profile")
+            .select("reply_delay_minutes")
+            .eq("organization_id", organization_id)
+            .limit(1)
+            .execute()
+        )
+        rows = result.data or []
+        if rows and rows[0].get("reply_delay_minutes") is not None:
+            delay = int(rows[0]["reply_delay_minutes"])
+            return max(1, delay)  # Minimum 1 minute
+    except Exception as e:
+        print(f"DELAY_SETTINGS_ERROR: {e}", flush=True)
+
+    return DEFAULT_DELAY_MINUTES
 
 
 def process_pending_replies():
     try:
-        cutoff = datetime.utcnow() - timedelta(minutes=15)
-
         result = (
             supabase.table("conversations")
             .select("*")
@@ -31,6 +62,13 @@ def process_pending_replies():
             if not updated_at:
                 skipped_count += 1
                 continue
+
+            # Get the organisation ID for this conversation (default to 1)
+            organization_id = conversation.get("organization_id") or 1
+
+            # Read the delay setting for this org from the database
+            delay_minutes = get_reply_delay_minutes(organization_id)
+            cutoff = datetime.utcnow() - timedelta(minutes=delay_minutes)
 
             updated_dt = datetime.fromisoformat(updated_at.replace("Z", ""))
 
@@ -55,13 +93,10 @@ def process_pending_replies():
 
             reply_text = (reply.get("suggested_reply") or "").strip()
 
+            # Do NOT send a fallback "I will check" reply — skip instead
+            # This prevents sending meaningless replies when AI has no good answer
             if not reply_text:
                 print(f"DELAYED REPLY SKIPPED EMPTY AI REPLY FOR {sender_id}", flush=True)
-                skipped_count += 1
-                continue
-
-            if not reply_text.strip():
-                print(f"DELAYED REPLY SKIPPED EMPTY TEXT FOR {sender_id}", flush=True)
                 skipped_count += 1
                 continue
 

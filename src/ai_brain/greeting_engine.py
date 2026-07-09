@@ -3,6 +3,10 @@ Greeting Engine
 
 Handles safe deterministic replies for greetings,
 thanks, acknowledgements, and simple polite messages.
+
+IMPORTANT: These shortcuts only fire when there is NO prior conversation history.
+If the person has spoken before, the message goes to the full AI with context,
+so the AI can reply naturally based on what it already knows about the person.
 """
 
 
@@ -10,9 +14,20 @@ def normalize_text(message: str) -> str:
     return (message or "").lower().strip().replace(".", "").replace("!", "")
 
 
-def get_greeting_reply(message: str) -> dict | None:
+def get_greeting_reply(message: str, has_prior_conversation: bool = False) -> dict | None:
+    """
+    Returns a deterministic greeting reply if appropriate.
+
+    Args:
+        message: The incoming message text.
+        has_prior_conversation: True if this person has spoken before.
+                                If True, simple greetings and acknowledgements
+                                are passed to the full AI instead of using shortcuts.
+    """
+
     text = normalize_text(message)
 
+    # Islamic greetings — always reply deterministically regardless of history
     assalam_variants = [
         "assalamu alaikum",
         "asalamualaikum",
@@ -30,6 +45,11 @@ def get_greeting_reply(message: str) -> dict | None:
             "reason": "Islamic greeting detected",
         }
 
+    # For returning customers, skip all shortcuts — let the full AI handle it with context
+    if has_prior_conversation:
+        return None
+
+    # First-time greeting shortcuts (only for new conversations)
     morning_variants = [
         "good morning",
         "gm",
