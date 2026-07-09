@@ -22,6 +22,7 @@ const navItems = [
   { label: "Dashboard", href: "/" },
   { label: "Inbox", href: "/inbox" },
   { label: "Leads", href: "/leads" },
+  { label: "Business Brain", href: "/business-brain" },
   { label: "Analytics", href: "/analytics" },
   { label: "Knowledge", href: "/knowledge" },
   { label: "Settings", href: "/settings" },
