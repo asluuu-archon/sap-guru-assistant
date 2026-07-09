@@ -103,6 +103,26 @@ def score_appointment(latest: str, full_context: str, conversation: dict) -> flo
 
     return 0.0
 
+def score_learning_lead(latest: str) -> float:
+    learning_words = [
+        "want to learn",
+        "learn sap",
+        "course",
+        "fees",
+        "fee details",
+        "training",
+        "internship",
+        "mentorship",
+        "classes",
+        "online class",
+        "offline class",
+    ]
+
+    if contains_any(latest, learning_words):
+        return 0.95
+
+    return 0.0
+
 
 def score_lead_collection(latest: str, full_context: str, conversation: dict) -> float:
     state = conversation.get("conversation_state") or ""
@@ -152,6 +172,7 @@ def detect_conversation_goal(
     scores = {
         "greeting": score_greeting(latest),
         "appointment": score_appointment(latest, full_context, conversation),
+        "learning_lead": score_learning_lead(latest),
         "lead_collection": score_lead_collection(latest, full_context, conversation),
         "closing": score_closing(latest),
         "general": 0.50,
