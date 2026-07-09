@@ -297,3 +297,29 @@ def update_simple_summary(existing_summary: str, message: str) -> str:
             combined = (combined + ". " + fact).strip(". ")
 
     return combined[:1000]
+
+def update_conversation_goal(sender_id: str, goal_result: dict):
+    goal = goal_result.get("goal", "general")
+    confidence = goal_result.get("confidence", 0.0)
+
+    state_map = {
+        "learning_lead": "lead_collection",
+        "lead_collection": "lead_collection",
+        "appointment": "appointment_pending",
+        "closing": "closed",
+        "greeting": "active",
+        "general": "active",
+    }
+
+    conversation_state = state_map.get(goal, "active")
+
+    payload = {
+        "conversation_state": conversation_state,
+        "state_reason": f"Conversation goal detected: {goal} ({confidence})",
+        "updated_at": datetime.utcnow().isoformat(),
+    }
+
+    if conversation_state == "closed":
+        payload["closed_at"] = datetime.utcnow().isoformat()
+
+    supabase.table("conversations").update(payload).eq("sender_id", sender_id).execute()

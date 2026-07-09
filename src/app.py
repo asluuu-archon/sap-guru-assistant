@@ -22,6 +22,7 @@ from .memory import (
     mark_needs_human,
     mark_closed,
     supabase,
+    update_conversation_goal
 )
 from .reply_bank import save_manual_reply_to_bank
 from .leads import save_lead
@@ -288,6 +289,11 @@ async def receive_webhook(request: Request):
         )
 
         print(f"CONVERSATION_GOAL: {conversation_goal}", flush=True)
+
+        update_conversation_goal(
+            sender_id=sender_id,
+            goal_result=conversation_goal,
+        )
 
         if not message_id:
             print("No message ID found. Skipping.", flush=True)
