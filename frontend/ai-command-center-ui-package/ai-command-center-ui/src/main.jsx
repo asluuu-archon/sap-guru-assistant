@@ -100,31 +100,239 @@ function Stat({label,value,change}) {
   return <div className="card stat"><p>{label}</p><h2>{value}</h2><span>{change}</span><small>live data</small></div>;
 }
 
-function Overview({dashboard}) {
-  const counts = dashboard?.counts || {};
+function Overview() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [lastRefresh, setLastRefresh] = useState(null);
+
+  const fetchOverview = () => {
+    setLoading(true);
+    fetch(`${API_BASE}/overview`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') {
+          setData(d);
+          setLastRefresh(new Date());
+        }
+      })
+      .catch(err => console.error('Overview fetch error:', err))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchOverview(); }, []);
+
+  const s = data?.stat_cards || {};
+  const tempBreakdown = data?.temperature_breakdown || [];
+  const moduleBreakdown = data?.module_breakdown || [];
+  const activityChart = data?.activity_chart || [];
+  const recentLeads = data?.recent_leads || [];
+  const needsHumanList = data?.needs_human_list || [];
+
+  // % change for new leads today vs yesterday
+  const todayChange = s.new_leads_yesterday > 0
+    ? Math.round(((s.new_leads_today - s.new_leads_yesterday) / s.new_leads_yesterday) * 100)
+    : null;
+
+  const TEMP_COLORS = { Hot: '#ef4444', Warm: '#f59e0b', Cold: '#3b82f6' };
+  const STAGE_LABELS_OV = { new: 'New', qualified: 'Qualified', phone_pending: 'Phone Pending', name_pending: 'Name Pending', lead_collection: 'In Progress' };
 
   return (
     <section>
-      <Title title="Dashboard Overview" sub="Real-time performance at a glance" action={<button className="ghost">Live Backend Data</button>}/>
+      <Title
+        title="Dashboard Overview"
+        sub={lastRefresh ? `Last updated ${lastRefresh.toLocaleTimeString()}` : 'Loading live data...'}
+        action={
+          <button onClick={fetchOverview} disabled={loading} className="ghost">
+            {loading ? 'Refreshing...' : '↻ Refresh'}
+          </button>
+        }
+      />
 
+      {/* Row 1 — Primary stat cards */}
       <div className="grid4">
-        <Stat label="Total Conversations" value={counts.total_conversations ?? "Loading..."} change="From conversations table"/>
-        <Stat label="Total Leads" value={counts.total_leads ?? "Loading..."} change="From leads table"/>
-        <Stat label="Qualified Leads" value={counts.qualified_leads ?? "Loading..."} change="Qualified only"/>
-        <Stat label="Needs Human" value={counts.needs_human ?? "Loading..."} change="Waiting for manual review"/>
+        <div className="card stat">
+          <p>Total Leads</p>
+          <h2>{loading ? '...' : s.total_leads ?? 0}</h2>
+          <span style={{color:'#f59e0b'}}>{s.hot_leads ?? 0} hot · {s.warm_leads ?? 0} warm</span>
+          <small>all time</small>
+        </div>
+        <div className="card stat">
+          <p>New Today</p>
+          <h2>{loading ? '...' : s.new_leads_today ?? 0}</h2>
+          <span style={{color: todayChange >= 0 ? '#10b981' : '#ef4444'}}>
+            {todayChange !== null ? `${todayChange >= 0 ? '+' : ''}${todayChange}% vs yesterday` : 'vs yesterday'}
+          </span>
+          <small>leads created today</small>
+        </div>
+        <div className="card stat">
+          <p>Qualified Leads</p>
+          <h2>{loading ? '...' : s.qualified_leads ?? 0}</h2>
+          <span style={{color:'#10b981'}}>of {s.total_leads ?? 0} total</span>
+          <small>manually qualified</small>
+        </div>
+        <div className="card stat">
+          <p>Needs Human</p>
+          <h2 style={{color: (s.needs_human ?? 0) > 0 ? '#ef4444' : 'inherit'}}>{loading ? '...' : s.needs_human ?? 0}</h2>
+          <span style={{color: (s.needs_human ?? 0) > 0 ? '#ef4444' : '#64748b'}}>waiting for you</span>
+          <small>manual review required</small>
+        </div>
       </div>
 
-      <div className="grid2">
-        <Card title="Conversations Over Time"><LineBlock/></Card>
-        <Card title="Intent Distribution"><PieBlock data={intents}/></Card>
+      {/* Row 2 — Secondary stat cards */}
+      <div className="grid4" style={{marginTop:'12px'}}>
+        <div className="card stat">
+          <p>Total Conversations</p>
+          <h2>{loading ? '...' : s.total_conversations ?? 0}</h2>
+          <span>all Instagram DMs</span>
+          <small>all time</small>
+        </div>
+        <div className="card stat">
+          <p>Hot Leads</p>
+          <h2 style={{color:'#ef4444'}}>{loading ? '...' : s.hot_leads ?? 0}</h2>
+          <span style={{color:'#ef4444'}}>phone + email captured</span>
+          <small>highest priority</small>
+        </div>
+        <div className="card stat">
+          <p>With Phone</p>
+          <h2>{loading ? '...' : s.leads_with_phone ?? 0}</h2>
+          <span>contactable leads</span>
+          <small>have phone number</small>
+        </div>
+        <div className="card stat">
+          <p>With Email</p>
+          <h2>{loading ? '...' : s.leads_with_email ?? 0}</h2>
+          <span>email captured</span>
+          <small>have email address</small>
+        </div>
       </div>
 
-      <div className="grid5">
-        <Stat label="Lead Collection" value={counts.lead_collection ?? "Loading..."} change="Leads being collected"/>
-        <Stat label="Recent Conversations" value={counts.recent_conversations ?? "Loading..."} change="Latest records"/>
-        <Stat label="Response Rate" value="Coming soon" change="Needs calculation"/>
-        <Stat label="Avg Response Time" value="Coming soon" change="Needs timing data"/>
-        <Stat label="Active Campaigns" value="Coming soon" change="Business Brain"/>
+      {/* Row 3 — Charts */}
+      <div className="grid2" style={{marginTop:'20px'}}>
+        {/* 7-day activity chart */}
+        <Card title="7-Day Activity">
+          {activityChart.length > 0 ? (
+            <ResponsiveContainer height={220}>
+              <BarChart data={activityChart} margin={{top:5, right:10, left:-20, bottom:0}}>
+                <XAxis dataKey="day" tick={{fontSize:12, fill:'#64748b'}}/>
+                <YAxis tick={{fontSize:11, fill:'#64748b'}}/>
+                <Tooltip
+                  contentStyle={{background:'#1e293b', border:'1px solid #334155', borderRadius:'8px', fontSize:'0.82em'}}
+                  labelStyle={{color:'#e2e8f0'}}
+                />
+                <Bar dataKey="leads" name="New Leads" fill="#2563eb" radius={[4,4,0,0]}/>
+                <Bar dataKey="conversations" name="Conversations" fill="#8b5cf6" radius={[4,4,0,0]}/>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div style={{height:'220px', display:'flex', alignItems:'center', justifyContent:'center', color:'#475569'}}>Loading chart data...</div>
+          )}
+          <div style={{display:'flex', gap:'16px', marginTop:'8px', fontSize:'0.78em', color:'#64748b'}}>
+            <span><i style={{display:'inline-block', width:'10px', height:'10px', borderRadius:'2px', background:'#2563eb', marginRight:'5px'}}/> New Leads</span>
+            <span><i style={{display:'inline-block', width:'10px', height:'10px', borderRadius:'2px', background:'#8b5cf6', marginRight:'5px'}}/> Conversations</span>
+          </div>
+        </Card>
+
+        {/* Temperature breakdown pie */}
+        <Card title="Lead Temperature">
+          {tempBreakdown.length > 0 ? (
+            <div className="pie">
+              <ResponsiveContainer height={200}>
+                <PieChart>
+                  <Pie data={tempBreakdown} dataKey="value" innerRadius={55} outerRadius={85} paddingAngle={3}>
+                    {tempBreakdown.map((entry, i) => (
+                      <Cell key={i} fill={TEMP_COLORS[entry.label] || colors[i]}/>
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{background:'#1e293b', border:'1px solid #334155', borderRadius:'8px', fontSize:'0.82em'}}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div>
+                {tempBreakdown.map((d, i) => (
+                  <p key={d.label}>
+                    <i style={{background: TEMP_COLORS[d.label] || colors[i]}}/>
+                    {d.label} <b>{d.value}</b>
+                  </p>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div style={{height:'200px', display:'flex', alignItems:'center', justifyContent:'center', color:'#475569'}}>Loading...</div>
+          )}
+        </Card>
+      </div>
+
+      {/* Row 4 — Module breakdown + Needs Human */}
+      <div className="grid2" style={{marginTop:'20px'}}>
+        {/* Top modules */}
+        <Card title="Top Interested Modules">
+          {moduleBreakdown.length > 0 ? (
+            <div style={{display:'flex', flexDirection:'column', gap:'10px', marginTop:'4px'}}>
+              {moduleBreakdown.map((mod, i) => {
+                const maxVal = moduleBreakdown[0]?.value || 1;
+                const pct = Math.round((mod.value / maxVal) * 100);
+                return (
+                  <div key={i}>
+                    <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.83em', marginBottom:'4px'}}>
+                      <span style={{color:'#e2e8f0'}}>{mod.label}</span>
+                      <span style={{color:'#64748b'}}>{mod.value} leads</span>
+                    </div>
+                    <div style={{background:'rgba(255,255,255,0.06)', borderRadius:'4px', height:'6px'}}>
+                      <div style={{width:`${pct}%`, height:'6px', borderRadius:'4px', background: colors[i % colors.length]}}/>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={{padding:'20px', textAlign:'center', color:'#475569', fontSize:'0.85em'}}>No module data yet</div>
+          )}
+        </Card>
+
+        {/* Needs Human list */}
+        <Card title={`Needs Human Review ${needsHumanList.length > 0 ? `(${needsHumanList.length})` : ''}`}>
+          {needsHumanList.length > 0 ? (
+            <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
+              {needsHumanList.map((item, i) => (
+                <div key={i} style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 10px', background:'rgba(239,68,68,0.06)', borderRadius:'8px', borderLeft:'3px solid #ef4444'}}>
+                  <div>
+                    <div style={{fontSize:'0.88em', color:'#e2e8f0', fontWeight:600}}>{item.name}</div>
+                    <div style={{fontSize:'0.75em', color:'#64748b', marginTop:'2px'}}>
+                      {item.updated_at ? new Date(item.updated_at).toLocaleString() : '-'}
+                    </div>
+                  </div>
+                  <Badge text="Review" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{padding:'20px', textAlign:'center', color:'#10b981', fontSize:'0.85em'}}>
+              ✓ All conversations handled — no manual review needed
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* Row 5 — Recent Leads */}
+      <div style={{marginTop:'20px'}}>
+        <Card title="Recent Leads">
+          {recentLeads.length > 0 ? (
+            <Table
+              heads={['Name', 'Module', 'Phone', 'Temperature', 'Stage', 'Last Active']}
+              rows={recentLeads.map(lead => [
+                <Name name={lead.name}/>,
+                lead.interested_module || <span style={{color:'#475569'}}>—</span>,
+                lead.phone || <span style={{color:'#475569'}}>—</span>,
+                <LeadTemperatureDot temp={lead.temperature}/>,
+                <Badge text={STAGE_LABELS_OV[lead.lead_stage] || lead.lead_stage || 'New'}/>,
+                lead.updated_at ? new Date(lead.updated_at).toLocaleDateString() : '—',
+              ])}
+            />
+          ) : (
+            <div style={{padding:'20px', textAlign:'center', color:'#475569'}}>Loading recent leads...</div>
+          )}
+        </Card>
       </div>
     </section>
   );
