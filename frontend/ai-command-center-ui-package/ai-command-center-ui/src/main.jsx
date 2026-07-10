@@ -2492,7 +2492,7 @@ function Reports() {
                         background: lead.temperature==='hot' ? '#fef2f2' : lead.temperature==='warm' ? '#fffbeb' : '#eff6ff',
                         color: lead.temperature==='hot' ? '#ef4444' : lead.temperature==='warm' ? '#f59e0b' : '#3b82f6'
                       }}>
-                        {lead.temperature==='hot'?'🔴':'lead.temperature==='warm'?'🟡':'🔵'} {lead.temperature}
+                        {lead.temperature==='hot' ? '🔴' : lead.temperature==='warm' ? '🟡' : '🔵'} {lead.temperature}
                       </span>
                     </td>
                     <td style={{padding:'10px',fontSize:12,color:'#64748b'}}>{lead.stage || '—'}</td>
