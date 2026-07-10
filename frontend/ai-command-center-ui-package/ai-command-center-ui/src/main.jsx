@@ -1701,13 +1701,275 @@ function BusinessBrain() {
   );
 }
 
+const TEMP_COLORS_360 = { hot: '#ef4444', warm: '#f59e0b', cold: '#3b82f6' };
+const TIMELINE_ICONS = { start: '💬', lead: '🔥', qualified: '✅', activity: '⚡' };
+const SENTIMENT_COLORS = { positive: '#10b981', neutral: '#64748b', negative: '#ef4444' };
+const URGENCY_COLORS = { high: '#ef4444', medium: '#f59e0b', low: '#10b981' };
+
 function Customer360() {
+  const [customers, setCustomers] = useState([]);
+  const [searchQ, setSearchQ] = useState('');
+  const [loadingList, setLoadingList] = useState(true);
+  const [selectedId, setSelectedId] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+
+  useEffect(() => { fetchCustomers(''); }, []);
+
+  const fetchCustomers = async (q) => {
+    setLoadingList(true);
+    try {
+      const res = await fetch(`${API_BASE}/customers/search?q=${encodeURIComponent(q)}&limit=50`);
+      const data = await res.json();
+      setCustomers(data.customers || []);
+    } catch (e) { setCustomers([]); }
+    setLoadingList(false);
+  };
+
+  const loadProfile = async (sid) => {
+    setSelectedId(sid);
+    setProfile(null);
+    setShowHistory(false);
+    setLoadingProfile(true);
+    try {
+      const res = await fetch(`${API_BASE}/customer/${encodeURIComponent(sid)}`);
+      const data = await res.json();
+      setProfile(data);
+    } catch (e) { setProfile({ status: 'error', message: 'Failed to load profile' }); }
+    setLoadingProfile(false);
+  };
+
+  const handleSearch = (e) => { e.preventDefault(); fetchCustomers(searchQ); };
+  const temp = profile?.lead?.temperature;
+  const tempColor = TEMP_COLORS_360[temp] || '#64748b';
+
   return (
     <section>
-      <Title title="Customer 360° View" sub="Complete profile and interaction history"/>
-      <div className="customer">
-        <Card><div className="profileBig"><div className="avatar big">J</div><h2>John Dsouza</h2><Badge text="Warm Lead"/></div><KeyVals data={{Phone:'+971 50 123 4567',Email:'john.dsouza@email.com','Interested In':'SAP FICO','Lead Score':'85 / 100','Lead Stage':'phone_pending','First Contact':'May 20, 2025','Last Contact':'2 minutes ago'}}/></Card>
-        <Card title="Overview"><p>Customer 360 will be connected after the conversation detail screen is ready.</p><h3>Next Best Action</h3><p>Select a real conversation and open the full customer profile.</p><button>Start Conversation</button></Card>
+      <Title title="Customer 360°" sub="Complete profile, conversation history, and AI-generated insights for every customer"/>
+      <div style={{display:'grid', gridTemplateColumns:'300px 1fr', gap:'16px', minHeight:'600px'}}>
+
+        {/* Left: Customer list */}
+        <div style={{display:'flex', flexDirection:'column', gap:'10px'}}>
+          <Card>
+            <form onSubmit={handleSearch} style={{display:'flex', gap:'8px'}}>
+              <input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="Search by name..." style={{flex:1, fontSize:'0.88em'}}/>
+              <button type="submit" style={{padding:'6px 14px', fontSize:'0.85em'}}>Search</button>
+            </form>
+            <div style={{fontSize:'0.75em', color:'#94a3b8', marginTop:'6px'}}>{customers.length} customers</div>
+          </Card>
+          <div style={{overflowY:'auto', maxHeight:'560px', display:'flex', flexDirection:'column', gap:'6px'}}>
+            {loadingList ? (
+              <div style={{textAlign:'center', padding:'30px', color:'#94a3b8', fontSize:'0.88em'}}>Loading...</div>
+            ) : customers.length === 0 ? (
+              <div style={{textAlign:'center', padding:'30px', color:'#94a3b8', fontSize:'0.88em'}}>No customers found.</div>
+            ) : customers.map(c => {
+              const isSelected = selectedId === c.sender_id;
+              const tc = TEMP_COLORS_360[c.temperature] || '#64748b';
+              return (
+                <div key={c.sender_id} onClick={() => loadProfile(c.sender_id)}
+                  style={{padding:'10px 12px', background: isSelected ? '#eff6ff' : '#fff', border:`1px solid ${isSelected ? '#3b82f6' : '#e2e8f0'}`, borderRadius:'8px', cursor:'pointer', transition:'all 0.15s'}}>
+                  <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                    <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                      <div style={{width:'32px', height:'32px', borderRadius:'50%', background: isSelected ? '#3b82f6' : '#e2e8f0', color: isSelected ? '#fff' : '#475569', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.85em', fontWeight:700, flexShrink:0}}>
+                        {(c.name || c.sender_id || '?')[0].toUpperCase()}
+                      </div>
+                      <div>
+                        <div style={{fontSize:'0.85em', fontWeight:600, color:'#1e293b'}}>{c.name || c.instagram_username || c.sender_id}</div>
+                        <div style={{fontSize:'0.72em', color:'#94a3b8'}}>{c.interested_in || c.location || 'No details yet'}</div>
+                      </div>
+                    </div>
+                    <div style={{width:'8px', height:'8px', borderRadius:'50%', background: tc, flexShrink:0}}/>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Right: Profile panel */}
+        {!selectedId ? (
+          <Card>
+            <div style={{display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'400px', gap:'12px', color:'#94a3b8'}}>
+              <div style={{fontSize:'3em'}}>👤</div>
+              <div style={{fontSize:'1em', fontWeight:600, color:'#475569'}}>Select a customer</div>
+              <div style={{fontSize:'0.85em', textAlign:'center', maxWidth:'280px'}}>Click any customer on the left to see their full 360° profile, conversation history, and AI-generated insights.</div>
+            </div>
+          </Card>
+        ) : loadingProfile ? (
+          <Card><div style={{display:'flex', alignItems:'center', justifyContent:'center', height:'300px', color:'#94a3b8'}}>Loading profile...</div></Card>
+        ) : profile?.status === 'error' ? (
+          <Card><div style={{padding:'20px', color:'#ef4444'}}>Error: {profile.message}</div></Card>
+        ) : profile ? (
+          <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
+
+            {/* Header */}
+            <Card>
+              <div style={{display:'flex', alignItems:'center', gap:'16px', flexWrap:'wrap'}}>
+                <div style={{width:'56px', height:'56px', borderRadius:'50%', background:'#3b82f6', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.4em', fontWeight:700, flexShrink:0}}>
+                  {(profile.display_name || '?')[0].toUpperCase()}
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:'1.2em', fontWeight:700, color:'#1e293b'}}>{profile.display_name}</div>
+                  <div style={{fontSize:'0.82em', color:'#64748b', marginTop:'2px'}}>@{profile.instagram_username} · Instagram</div>
+                </div>
+                <div style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
+                  {temp && (
+                    <span style={{padding:'4px 12px', borderRadius:'20px', background:`${tempColor}18`, color:tempColor, fontWeight:700, fontSize:'0.8em', border:`1px solid ${tempColor}40`}}>
+                      {temp === 'hot' ? '🔥' : temp === 'warm' ? '⭐' : '❄️'} {temp.charAt(0).toUpperCase() + temp.slice(1)} Lead
+                    </span>
+                  )}
+                  {profile.lead?.is_qualified && <span style={{padding:'4px 12px', borderRadius:'20px', background:'#f0fdf4', color:'#14532d', fontWeight:700, fontSize:'0.8em', border:'1px solid #86efac'}}>✅ Qualified</span>}
+                  {profile.conversation?.needs_human && <span style={{padding:'4px 12px', borderRadius:'20px', background:'#fef2f2', color:'#991b1b', fontWeight:700, fontSize:'0.8em', border:'1px solid #fca5a5'}}>🚨 Needs Human</span>}
+                </div>
+              </div>
+            </Card>
+
+            {/* 3-col grid */}
+            <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'12px'}}>
+              <Card title="Identity">
+                <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
+                  {[['Name', profile.identity?.name], ['Phone', profile.identity?.phone], ['Email', profile.identity?.email], ['Location', profile.identity?.location], ['Education', profile.identity?.education], ['Experience', profile.identity?.experience], ['Source', profile.identity?.source]].map(([k,v]) => v ? (
+                    <div key={k}>
+                      <div style={{fontSize:'0.7em', color:'#94a3b8', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>{k}</div>
+                      <div style={{fontSize:'0.85em', color:'#1e293b', fontWeight:500, marginTop:'1px'}}>{v}</div>
+                    </div>
+                  ) : null)}
+                </div>
+              </Card>
+              <Card title="Lead Data">
+                <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
+                  {[['Interested In', profile.lead?.interested_in], ['Mode', profile.lead?.mode], ['Lead Stage', profile.lead?.lead_stage], ['Status', profile.lead?.status], ['Lead Score', profile.lead?.lead_score], ['Notes', profile.lead?.notes]].map(([k,v]) => v ? (
+                    <div key={k}>
+                      <div style={{fontSize:'0.7em', color:'#94a3b8', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>{k}</div>
+                      <div style={{fontSize:'0.85em', color:'#1e293b', fontWeight:500, marginTop:'1px'}}>{String(v)}</div>
+                    </div>
+                  ) : null)}
+                </div>
+              </Card>
+              <Card title="Conversation">
+                <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
+                  {[['Messages', profile.conversation?.message_count], ['State', profile.conversation?.conversation_state], ['Last Message', profile.conversation?.last_message], ['Last Active', profile.conversation?.last_active ? new Date(profile.conversation.last_active).toLocaleDateString() : null]].map(([k,v]) => v ? (
+                    <div key={k}>
+                      <div style={{fontSize:'0.7em', color:'#94a3b8', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>{k}</div>
+                      <div style={{fontSize:'0.85em', color:'#1e293b', fontWeight:500, marginTop:'1px', wordBreak:'break-word'}}>{String(v)}</div>
+                    </div>
+                  ) : null)}
+                  {profile.conversation?.ai_summary && (
+                    <div>
+                      <div style={{fontSize:'0.7em', color:'#94a3b8', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>AI Summary</div>
+                      <div style={{fontSize:'0.82em', color:'#475569', marginTop:'2px', fontStyle:'italic', lineHeight:'1.5'}}>{profile.conversation.ai_summary}</div>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </div>
+
+            {/* AI Profile */}
+            {profile.ai_profile && !profile.ai_profile.error && (
+              <Card title="🧠 AI Customer Profile">
+                <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px'}}>
+                  <div style={{gridColumn:'1/-1', padding:'12px 14px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', fontSize:'0.88em', color:'#1e293b', fontStyle:'italic', lineHeight:'1.6'}}>
+                    "{profile.ai_profile.one_liner}"
+                  </div>
+                  {[['Interest', profile.ai_profile.interest], ['Intent', profile.ai_profile.intent], ['Journey Stage', profile.ai_profile.stage], ['Contact Shared', profile.ai_profile.contact_info_shared]].map(([k,v]) => v ? (
+                    <div key={k} style={{padding:'8px 10px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px'}}>
+                      <div style={{fontSize:'0.7em', color:'#64748b', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'3px'}}>{k}</div>
+                      <div style={{fontSize:'0.85em', color:'#1e293b', fontWeight:600}}>{v}</div>
+                    </div>
+                  ) : null)}
+                  <div style={{padding:'8px 10px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px'}}>
+                    <div style={{fontSize:'0.7em', color:'#64748b', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'3px'}}>Sentiment</div>
+                    <div style={{fontSize:'0.85em', fontWeight:700, color: SENTIMENT_COLORS[profile.ai_profile.sentiment] || '#64748b'}}>{profile.ai_profile.sentiment}</div>
+                  </div>
+                  <div style={{padding:'8px 10px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px'}}>
+                    <div style={{fontSize:'0.7em', color:'#64748b', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'3px'}}>Urgency</div>
+                    <div style={{fontSize:'0.85em', fontWeight:700, color: URGENCY_COLORS[profile.ai_profile.urgency] || '#64748b'}}>{profile.ai_profile.urgency}</div>
+                  </div>
+                  {profile.ai_profile.key_facts?.length > 0 && (
+                    <div style={{gridColumn:'1/-1', padding:'10px 12px', background:'#fffbeb', border:'1px solid #fde68a', borderRadius:'8px'}}>
+                      <div style={{fontSize:'0.7em', color:'#92400e', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'6px'}}>Key Facts</div>
+                      {profile.ai_profile.key_facts.map((f,i) => (
+                        <div key={i} style={{fontSize:'0.84em', color:'#78350f', marginBottom:'3px', display:'flex', gap:'6px'}}>
+                          <span style={{color:'#f59e0b', flexShrink:0}}>•</span><span>{f}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {profile.ai_profile.recommended_action && (
+                    <div style={{gridColumn:'1/-1', padding:'10px 12px', background:'#f0fdf4', border:'1px solid #86efac', borderRadius:'8px'}}>
+                      <div style={{fontSize:'0.7em', color:'#14532d', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'4px'}}>Recommended Next Action</div>
+                      <div style={{fontSize:'0.88em', color:'#14532d', fontWeight:600}}>{profile.ai_profile.recommended_action}</div>
+                    </div>
+                  )}
+                  {profile.ai_profile.follow_up_message && (
+                    <div style={{gridColumn:'1/-1', padding:'10px 12px', background:'#eff6ff', border:'1px solid #bfdbfe', borderRadius:'8px'}}>
+                      <div style={{fontSize:'0.7em', color:'#1e40af', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'4px'}}>Suggested Follow-up Message</div>
+                      <div style={{fontSize:'0.88em', color:'#1e3a8a', fontStyle:'italic', lineHeight:'1.5'}}>"{profile.ai_profile.follow_up_message}"</div>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            )}
+
+            {/* Timeline */}
+            {profile.timeline?.length > 0 && (
+              <Card title="Timeline">
+                <div style={{display:'flex', flexDirection:'column', gap:'0'}}>
+                  {profile.timeline.map((event, i) => (
+                    <div key={i} style={{display:'flex', gap:'12px', paddingBottom: i < profile.timeline.length - 1 ? '16px' : '0'}}>
+                      <div style={{display:'flex', flexDirection:'column', alignItems:'center', flexShrink:0}}>
+                        <div style={{width:'28px', height:'28px', borderRadius:'50%', background:'#eff6ff', border:'2px solid #bfdbfe', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.85em'}}>
+                          {TIMELINE_ICONS[event.type] || '📌'}
+                        </div>
+                        {i < profile.timeline.length - 1 && <div style={{width:'2px', flex:1, background:'#e2e8f0', marginTop:'4px'}}/>}
+                      </div>
+                      <div style={{paddingTop:'4px'}}>
+                        <div style={{fontSize:'0.85em', fontWeight:700, color:'#1e293b'}}>{event.event}</div>
+                        <div style={{fontSize:'0.78em', color:'#64748b', marginTop:'1px'}}>{event.description}</div>
+                        {event.timestamp && <div style={{fontSize:'0.72em', color:'#94a3b8', marginTop:'2px'}}>{new Date(event.timestamp).toLocaleString()}</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
+            {/* Conversation history */}
+            {profile.conversation?.history?.length > 0 && (
+              <Card title={`Conversation History (${profile.conversation.history.length} exchanges)`}>
+                <button onClick={() => setShowHistory(!showHistory)} style={{marginBottom:'10px', fontSize:'0.82em', padding:'6px 14px'}}>
+                  {showHistory ? 'Hide Messages' : 'Show Full Conversation'}
+                </button>
+                {showHistory && (
+                  <div style={{display:'flex', flexDirection:'column', gap:'8px', maxHeight:'400px', overflowY:'auto'}}>
+                    {profile.conversation.history.map((item, i) => (
+                      <div key={i}>
+                        {item.user && (
+                          <div style={{display:'flex', justifyContent:'flex-start', marginBottom:'4px'}}>
+                            <div style={{maxWidth:'75%', padding:'8px 12px', background:'#f1f5f9', borderRadius:'12px 12px 12px 2px', fontSize:'0.84em', color:'#1e293b', lineHeight:'1.5'}}>
+                              <div style={{fontSize:'0.7em', color:'#64748b', fontWeight:700, marginBottom:'3px'}}>Customer</div>
+                              {item.user}
+                            </div>
+                          </div>
+                        )}
+                        {item.assistant && (
+                          <div style={{display:'flex', justifyContent:'flex-end'}}>
+                            <div style={{maxWidth:'75%', padding:'8px 12px', background:'#dbeafe', borderRadius:'12px 12px 2px 12px', fontSize:'0.84em', color:'#1e3a8a', lineHeight:'1.5'}}>
+                              <div style={{fontSize:'0.7em', color:'#1e40af', fontWeight:700, marginBottom:'3px'}}>AI Assistant</div>
+                              {item.assistant}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            )}
+
+          </div>
+        ) : null}
       </div>
     </section>
   );
