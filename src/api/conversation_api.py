@@ -1,3 +1,13 @@
+"""
+Conversation API
+
+Real columns in conversations table:
+sender_id, summary, last_question, last_reply, history,
+updated_at, first_message_at, ai_replied, manual_replied,
+pending_reply, needs_human, human_reason, conversation_state,
+closed_at, state_reason
+"""
+
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
 from typing import Optional
@@ -76,48 +86,49 @@ def list_conversations(
     offset: int = Query(default=0),
 ):
     """
-    Returns a paginated list of conversations for the inbox.
-    Supports filter: all | needs_human | pending_reply | ai_replied | manual_replied
-    Supports search by sender_id or last message content.
-    Enriches each row with customer name from the customers table.
+    Returns paginated list of conversations for the inbox.
+    Uses only real columns: sender_id, summary, last_question, last_reply,
+    history, updated_at, first_message_at, needs_human, conversation_state,
+    human_reason, ai_replied, manual_replied, pending_reply
     """
     try:
-        # Fetch conversations
-        query = (
+        # Only select columns that actually exist
+        result = (
             supabase.table("conversations")
-            .select("sender_id, updated_at, needs_human, conversation_state, category, history, last_question, summary")
+            .select(
+                "sender_id, summary, last_question, last_reply, history, "
+                "updated_at, first_message_at, needs_human, conversation_state, "
+                "human_reason, ai_replied, manual_replied, pending_reply"
+            )
             .order("updated_at", desc=True)
-            .limit(500)  # Fetch more, filter in Python for accuracy
+            .limit(500)
+            .execute()
         )
-        result = query.execute()
         all_convs = result.data or []
 
-        # Fetch customer name map
+        # Customer name lookup
         customers_result = supabase.table("customers").select("channel_user_id, name").execute()
         name_map = {
             c["channel_user_id"]: c.get("name", "")
             for c in (customers_result.data or [])
         }
 
-        # Enrich with customer name and last message
         def get_display_name(conv):
             sid = conv.get("sender_id", "")
             return name_map.get(sid) or (f"User ...{sid[-4:]}" if sid else "Unknown")
 
         def get_last_message(conv):
+            # Try history first
             history = conv.get("history") or []
             for item in reversed(history):
                 if item.get("user"):
                     return item["user"]
                 if item.get("assistant"):
                     return item["assistant"]
-            return conv.get("last_question") or conv.get("summary") or ""
-
-        def get_message_count(conv):
-            return len(conv.get("history") or [])
+            # Fall back to last_question or last_reply
+            return conv.get("last_question") or conv.get("last_reply") or conv.get("summary") or ""
 
         def get_last_sender(conv):
-            """Returns 'user' or 'ai' depending on who sent the last message."""
             history = conv.get("history") or []
             for item in reversed(history):
                 if item.get("user"):
@@ -125,6 +136,9 @@ def list_conversations(
                 if item.get("assistant"):
                     return "ai"
             return "unknown"
+
+        def get_message_count(conv):
+            return len(conv.get("history") or [])
 
         enriched = []
         for conv in all_convs:
@@ -144,11 +158,11 @@ def list_conversations(
         if filter == "needs_human":
             enriched = [c for c in enriched if c.get("needs_human")]
         elif filter == "pending_reply":
-            enriched = [c for c in enriched if c.get("conversation_state") in ("pending_reply", "awaiting_reply", "lead_collection")]
+            enriched = [c for c in enriched if c.get("pending_reply") or c.get("conversation_state") in ("pending_reply", "lead_collection")]
         elif filter == "ai_replied":
-            enriched = [c for c in enriched if c.get("conversation_state") in ("ai_replied", "replied")]
+            enriched = [c for c in enriched if c.get("ai_replied") or c.get("conversation_state") in ("ai_replied", "replied")]
         elif filter == "manual_replied":
-            enriched = [c for c in enriched if c.get("conversation_state") == "manual_replied"]
+            enriched = [c for c in enriched if c.get("manual_replied") or c.get("conversation_state") == "manual_replied"]
 
         # Apply search
         if search and search.strip():
@@ -163,12 +177,10 @@ def list_conversations(
         total = len(enriched)
         page = enriched[offset: offset + limit]
 
-        # Strip full history from list view (save bandwidth) — only keep last 2 messages
+        # Strip full history from list view to save bandwidth
         for conv in page:
             full_history = conv.get("history") or []
             conv["history_preview"] = full_history[-2:] if full_history else []
-            # Keep full history for the detail panel
-            # (frontend fetches full history via /conversation/{sender_id})
 
         return {
             "status": "success",
