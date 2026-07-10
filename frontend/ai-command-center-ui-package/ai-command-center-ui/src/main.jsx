@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Bell, HelpCircle, Search, Settings, LayoutDashboard, MessagesSquare, Users, Bug, Bot, Brain, UserRound, BarChart3, Workflow, Plus, Download, Filter, Play, X, Phone, MapPin, BookOpen, Star, Clock, ChevronRight, ToggleLeft, ToggleRight, Pencil, Trash2, Tag, Zap, Save, AlertTriangle, Building2, Globe, CheckCircle, Plug, Wifi, WifiOff, RefreshCw, ExternalLink, Key, Link } from 'lucide-react';
+import { Bell, HelpCircle, Search, Settings, LayoutDashboard, MessagesSquare, Users, Bug, Bot, Brain, UserRound, BarChart3, Workflow, Plus, Download, Filter, Play, X, Phone, MapPin, BookOpen, Star, Clock, ChevronRight, ToggleLeft, ToggleRight, Pencil, Trash2, Tag, Zap, Save, AlertTriangle, Building2, Globe, CheckCircle, Plug, Wifi, WifiOff, RefreshCw, ExternalLink, Key, Link, Send } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
 import './styles.css';
 
@@ -851,29 +851,43 @@ function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh }) 
       </div>
 
       {/* Reply box */}
-      <div style={{padding:'12px 14px', borderTop:'1px solid #1e293b', flexShrink:0}}>
+      <div style={{padding:'12px 14px', borderTop:'1px solid #1e293b', flexShrink:0, background:'rgba(0,0,0,0.15)'}}>
         {sendResult && (
-          <div style={{marginBottom:'8px', fontSize:'0.8em', color: sendResult.ok ? '#10b981' : '#ef4444', padding:'6px 10px', background: sendResult.ok ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)', borderRadius:'6px'}}>
-            {sendResult.msg}
+          <div style={{marginBottom:'8px', fontSize:'0.82em', color: sendResult.ok ? '#10b981' : '#ef4444', padding:'8px 12px', background: sendResult.ok ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', borderRadius:'7px', display:'flex', alignItems:'center', gap:6, border:`1px solid ${sendResult.ok ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.25)'}`}}>
+            <span style={{fontSize:14}}>{sendResult.ok ? '✓' : '✗'}</span>
+            <span>{sendResult.msg}</span>
+            {sendResult.ok && <span style={{marginLeft:'auto', fontSize:'0.85em', opacity:0.7}}>Delivered to Instagram DM</span>}
           </div>
         )}
         <div style={{display:'flex', gap:'8px', alignItems:'flex-end'}}>
-          <textarea
-            placeholder="Type a manual reply and send directly to Instagram..."
-            value={replyText}
-            onChange={e => setReplyText(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) handleSendReply(); }}
-            style={{flex:1, minHeight:'60px', maxHeight:'120px', resize:'vertical', fontSize:'0.85em'}}
-          />
+          <div style={{flex:1, position:'relative'}}>
+            <textarea
+              placeholder="Type a reply — will be sent directly to this person's Instagram DM..."
+              value={replyText}
+              onChange={e => setReplyText(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) handleSendReply(); }}
+              style={{width:'100%', minHeight:'64px', maxHeight:'120px', resize:'vertical', fontSize:'0.85em', paddingBottom:'18px', boxSizing:'border-box'}}
+            />
+            <div style={{position:'absolute', bottom:6, right:8, fontSize:'0.7em', color: replyText.length > 950 ? '#ef4444' : '#475569'}}>
+              {replyText.length}/1000
+            </div>
+          </div>
           <button
             onClick={handleSendReply}
-            disabled={sending || !replyText.trim()}
-            style={{padding:'8px 16px', alignSelf:'flex-end', flexShrink:0}}
+            disabled={sending || !replyText.trim() || replyText.length > 1000}
+            style={{padding:'10px 18px', alignSelf:'flex-end', flexShrink:0, background: sending ? '#64748b' : '#2563eb', color:'white', border:'none', borderRadius:8, cursor: sending ? 'not-allowed' : 'pointer', fontWeight:600, fontSize:'0.85em', display:'flex', alignItems:'center', gap:6}}
           >
-            {sending ? 'Sending...' : 'Send'}
+            {sending ? (
+              <><span style={{display:'inline-block',width:12,height:12,border:'2px solid rgba(255,255,255,0.3)',borderTopColor:'white',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/> Sending...</>
+            ) : (
+              <><Send size={13}/> Send DM</>
+            )}
           </button>
         </div>
-        <div style={{fontSize:'0.72em', color:'#475569', marginTop:'5px'}}>Ctrl+Enter to send · This sends directly to Instagram</div>
+        <div style={{fontSize:'0.72em', color:'#475569', marginTop:'5px', display:'flex', alignItems:'center', gap:8}}>
+          <span style={{color:'#3b82f6', fontWeight:500}}>⚡ Live</span>
+          <span>Ctrl+Enter to send · Sends directly to Instagram DM · Reply appears in their inbox instantly</span>
+        </div>
       </div>
     </div>
   );

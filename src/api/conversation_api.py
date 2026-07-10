@@ -60,6 +60,13 @@ def send_manual_reply_from_dashboard(req: ManualReplyRequest):
         )
 
         print(f"DASHBOARD SEND RESULT: {result}", flush=True)
+        
+        if result.get("status") == "error":
+            return {
+                "status": "error",
+                "message": result.get("message", "Failed to send to Instagram")
+            }
+            
         mark_manual_replied(req.sender_id, req.message.strip())
 
         return {

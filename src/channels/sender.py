@@ -1,6 +1,5 @@
 from ..instagram import send_instagram_reply
 
-
 def send_channel_reply(
     channel: str,
     recipient_id: str,
@@ -35,6 +34,13 @@ def send_channel_reply(
 
     if clean_channel == "instagram":
         result = send_instagram_reply(recipient_id, message.strip())
+        
+        if result.get("error"):
+            return {
+                "status": "error",
+                "message": result["error"],
+                "channel": "instagram"
+            }
 
         return {
             "status": "success",
