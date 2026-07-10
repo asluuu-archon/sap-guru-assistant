@@ -50,9 +50,11 @@ def get_customer_360(sender_id: str):
             return {"status": "not_found", "message": "No customer found with this sender_id"}
 
         # ── 3. Build display name and profile ─────────────────────────────────
+        # Try name fields in priority order: name > customer_name > instagram_username > sender_id
         display_name = (
-            (lead.get("name") if lead else None)
-            or (conv.get("display_name") if conv else None)
+            (lead.get("name") if lead and lead.get("name") else None)
+            or (lead.get("customer_name") if lead and lead.get("customer_name") else None)
+            or (lead.get("instagram_username") if lead and lead.get("instagram_username") else None)
             or sender_id
         )
         instagram_username = (
@@ -163,7 +165,7 @@ Return only valid JSON, no markdown."""
 
             # Identity
             "identity": {
-                "name": lead.get("name") if lead else None,
+                "name": (lead.get("name") or lead.get("customer_name") or lead.get("instagram_username")) if lead else None,
                 "phone": lead.get("phone") if lead else None,
                 "email": lead.get("email") if lead else None,
                 "location": lead.get("location") if lead else None,
@@ -243,7 +245,7 @@ def search_customers(q: str = "", limit: int = 20):
         for row in (res.data or []):
             customers.append({
                 "sender_id": row.get("sender_id"),
-                "name": row.get("name") or row.get("instagram_username") or row.get("sender_id"),
+                "name": row.get("name") or row.get("customer_name") or row.get("instagram_username") or row.get("sender_id"),
                 "phone": row.get("phone"),
                 "email": row.get("email"),
                 "location": row.get("location"),

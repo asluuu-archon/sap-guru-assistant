@@ -1348,15 +1348,295 @@ function Debugger() {
 }
 
 function Playground() {
+  const [message, setMessage] = React.useState('');
+  const [senderId, setSenderId] = React.useState('playground_test_user');
+  const [loading, setLoading] = React.useState(false);
+  const [result, setResult] = React.useState(null);
+  const [error, setError] = React.useState(null);
+  const [history, setHistory] = React.useState([]);
+  const [historyLoading, setHistoryLoading] = React.useState(true);
+  const [selectedHistory, setSelectedHistory] = React.useState(null);
+
+  const loadHistory = () => {
+    setHistoryLoading(true);
+    fetch(`${API_BASE}/playground/history?limit=20`)
+      .then(r => r.json())
+      .then(d => setHistory(d.history || []))
+      .catch(() => {})
+      .finally(() => setHistoryLoading(false));
+  };
+
+  React.useEffect(() => { loadHistory(); }, []);
+
+  const runTest = async () => {
+    if (!message.trim()) return;
+    setLoading(true);
+    setResult(null);
+    setError(null);
+    setSelectedHistory(null);
+    try {
+      const res = await fetch(`${API_BASE}/playground/test-message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: message.trim(), sender_id: senderId.trim() || 'playground_test_user' })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setResult(data);
+        loadHistory();
+      } else {
+        setError(data.message || 'Unknown error');
+      }
+    } catch (e) {
+      setError('Failed to connect to backend');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const displayResult = selectedHistory ? selectedHistory.result : result;
+
+  const intentColor = (conf) => {
+    if (!conf) return '#6b7280';
+    if (conf >= 0.85) return '#10b981';
+    if (conf >= 0.6) return '#f59e0b';
+    return '#ef4444';
+  };
+
+  const tempColor = { hot: '#ef4444', warm: '#f59e0b', cold: '#3b82f6' };
+
   return (
-    <section>
-      <Title title="AI Playground" sub="Test the AI in real-time"/>
-      <Tabs tabs={['Chat Mode','Intent Test','Lead Test','Business Brain Test']}/>
-      <div className="grid2">
-        <Card title="Your Message"><textarea defaultValue="Any SAP jobs available in Dubai?"/><button>Send</button><h3>AI Response</h3><div className="reply">Yes, there are good opportunities for SAP professionals in Dubai. What is your background?</div></Card>
-        <Card title="AI Analysis"><KeyVals data={{Intent:'job_enquiry',Confidence:'0.96','Lead Detected':'False','Business Brain':'Checked','Active Campaigns':'2 Found',Action:'reply','Should Reply':'True'}}/></Card>
+    <section style={{padding:'0 0 40px 0'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:24}}>
+        <div>
+          <h1 style={{fontSize:22,fontWeight:700,color:'#1e293b',margin:0}}>AI Playground</h1>
+          <p style={{color:'#64748b',margin:'4px 0 0',fontSize:14}}>Test any message and see exactly how the AI processes it</p>
+        </div>
+        <button onClick={loadHistory} style={{padding:'8px 16px',background:'#f1f5f9',border:'1px solid #e2e8f0',borderRadius:8,cursor:'pointer',fontSize:13,color:'#475569'}}>↻ Refresh History</button>
       </div>
-      <Card title="Conversation History"><Table heads={['Message','Reply','Category','Lead']} rows={[["I want to learn SAP FICO.","Sure... please share your name...",'training_enquiry','True'],["Any SAP jobs in Dubai?","Yes, there are good opportunities...",'job_enquiry','False']]}/></Card>
+
+      {/* Input Panel */}
+      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:24,marginBottom:24}}>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 280px',gap:16,marginBottom:16}}>
+          <div>
+            <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Test Message</label>
+            <textarea
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              onKeyDown={e => { if (e.ctrlKey && e.key === 'Enter') runTest(); }}
+              placeholder="Type any message a customer might send... (Ctrl+Enter to run)"
+              rows={3}
+              style={{width:'100%',padding:'10px 14px',border:'1px solid #d1d5db',borderRadius:8,fontSize:14,resize:'vertical',fontFamily:'inherit',color:'#1e293b',boxSizing:'border-box'}}
+            />
+          </div>
+          <div>
+            <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Sender ID <span style={{fontWeight:400,color:'#9ca3af'}}>(optional — use real ID for history)</span></label>
+            <input
+              value={senderId}
+              onChange={e => setSenderId(e.target.value)}
+              placeholder="playground_test_user"
+              style={{width:'100%',padding:'10px 14px',border:'1px solid #d1d5db',borderRadius:8,fontSize:14,fontFamily:'inherit',color:'#1e293b',boxSizing:'border-box'}}
+            />
+            <p style={{fontSize:12,color:'#9ca3af',margin:'6px 0 0'}}>Use a real sender_id to include conversation history in the test</p>
+          </div>
+        </div>
+        <div style={{display:'flex',gap:12,alignItems:'center'}}>
+          <button
+            onClick={runTest}
+            disabled={loading || !message.trim()}
+            style={{padding:'10px 28px',background: loading ? '#94a3b8' : '#2563eb',color:'#fff',border:'none',borderRadius:8,cursor: loading ? 'not-allowed' : 'pointer',fontWeight:600,fontSize:14,display:'flex',alignItems:'center',gap:8}}
+          >
+            {loading ? '⏳ Running Pipeline...' : '▶ Run Pipeline'}
+          </button>
+          <button onClick={() => { setMessage(''); setResult(null); setError(null); setSelectedHistory(null); }} style={{padding:'10px 16px',background:'#f1f5f9',border:'1px solid #e2e8f0',borderRadius:8,cursor:'pointer',fontSize:13,color:'#475569'}}>Clear</button>
+          {loading && <span style={{fontSize:13,color:'#6b7280',fontStyle:'italic'}}>Processing through 9 pipeline stages...</span>}
+        </div>
+        {error && <div style={{marginTop:12,padding:'10px 14px',background:'#fef2f2',border:'1px solid #fecaca',borderRadius:8,color:'#dc2626',fontSize:13}}>{error}</div>}
+      </div>
+
+      {/* Results */}
+      {displayResult && (
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20,marginBottom:24}}>
+
+          {/* Left: AI Reply + Analysis */}
+          <div style={{display:'flex',flexDirection:'column',gap:16}}>
+
+            {/* AI Reply */}
+            <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
+              <h3 style={{fontSize:14,fontWeight:700,color:'#1e293b',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
+                <span style={{fontSize:18}}>💬</span> AI Generated Reply
+              </h3>
+              <div style={{background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:8,padding:'14px 16px',color:'#1e40af',fontSize:14,lineHeight:1.6,fontStyle:'italic'}}>
+                {displayResult.reply?.reply || displayResult.reply?.message || 'No reply generated'}
+              </div>
+              {displayResult.reply?.category && (
+                <div style={{marginTop:8,display:'flex',gap:8,flexWrap:'wrap'}}>
+                  <span style={{padding:'3px 10px',background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:20,fontSize:12,color:'#15803d',fontWeight:600}}>{displayResult.reply.category}</span>
+                  <span style={{padding:'3px 10px',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:20,fontSize:12,color:'#475569'}}>{displayResult.reply.char_count || (displayResult.reply.reply || '').length} chars</span>
+                </div>
+              )}
+            </div>
+
+            {/* Intent Analysis */}
+            <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
+              <h3 style={{fontSize:14,fontWeight:700,color:'#1e293b',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
+                <span style={{fontSize:18}}>🎯</span> Intent Detection
+              </h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                <div style={{padding:'12px 14px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'}}>
+                  <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Intent</div>
+                  <div style={{fontSize:15,fontWeight:700,color:'#1e293b'}}>{displayResult.intent?.intent || 'unknown'}</div>
+                </div>
+                <div style={{padding:'12px 14px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'}}>
+                  <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Confidence</div>
+                  <div style={{fontSize:15,fontWeight:700,color: intentColor(displayResult.intent?.confidence)}}>
+                    {displayResult.intent?.confidence ? `${Math.round(displayResult.intent.confidence * 100)}%` : 'N/A'}
+                  </div>
+                </div>
+              </div>
+              {displayResult.intent?.reason && (
+                <div style={{marginTop:10,fontSize:13,color:'#475569',padding:'8px 12px',background:'#f8fafc',borderRadius:6}}>
+                  {displayResult.intent.reason}
+                </div>
+              )}
+            </div>
+
+            {/* Decision */}
+            <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
+              <h3 style={{fontSize:14,fontWeight:700,color:'#1e293b',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
+                <span style={{fontSize:18}}>⚡</span> Decision
+              </h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
+                <div style={{padding:'10px 12px',background: displayResult.decision?.should_reply ? '#f0fdf4' : '#fef2f2',borderRadius:8,border:`1px solid ${displayResult.decision?.should_reply ? '#bbf7d0' : '#fecaca'}`}}>
+                  <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Should Reply</div>
+                  <div style={{fontSize:14,fontWeight:700,color: displayResult.decision?.should_reply ? '#15803d' : '#dc2626'}}>{displayResult.decision?.should_reply ? '✓ Yes' : '✗ No'}</div>
+                </div>
+                <div style={{padding:'10px 12px',background: displayResult.decision?.needs_human ? '#fef3c7' : '#f0fdf4',borderRadius:8,border:`1px solid ${displayResult.decision?.needs_human ? '#fde68a' : '#bbf7d0'}`}}>
+                  <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Needs Human</div>
+                  <div style={{fontSize:14,fontWeight:700,color: displayResult.decision?.needs_human ? '#92400e' : '#15803d'}}>{displayResult.decision?.needs_human ? '⚠ Yes' : '✓ No'}</div>
+                </div>
+                <div style={{padding:'10px 12px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'}}>
+                  <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Action</div>
+                  <div style={{fontSize:14,fontWeight:700,color:'#1e293b'}}>{displayResult.decision?.action || 'reply'}</div>
+                </div>
+              </div>
+              {displayResult.decision?.reason && (
+                <div style={{marginTop:10,fontSize:13,color:'#475569',padding:'8px 12px',background:'#f8fafc',borderRadius:6}}>{displayResult.decision.reason}</div>
+              )}
+            </div>
+          </div>
+
+          {/* Right: Lead + Business Brain */}
+          <div style={{display:'flex',flexDirection:'column',gap:16}}>
+
+            {/* Lead Analysis */}
+            <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
+              <h3 style={{fontSize:14,fontWeight:700,color:'#1e293b',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
+                <span style={{fontSize:18}}>🔥</span> Lead Analysis
+              </h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10,marginBottom:12}}>
+                <div style={{padding:'10px 12px',background: displayResult.lead?.is_lead ? '#f0fdf4' : '#f8fafc',borderRadius:8,border:`1px solid ${displayResult.lead?.is_lead ? '#bbf7d0' : '#e2e8f0'}`}}>
+                  <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Lead</div>
+                  <div style={{fontSize:14,fontWeight:700,color: displayResult.lead?.is_lead ? '#15803d' : '#6b7280'}}>{displayResult.lead?.is_lead ? '✓ Yes' : '✗ No'}</div>
+                </div>
+                <div style={{padding:'10px 12px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'}}>
+                  <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Score</div>
+                  <div style={{fontSize:14,fontWeight:700,color:'#1e293b'}}>{displayResult.lead?.lead_score ?? 'N/A'}</div>
+                </div>
+                <div style={{padding:'10px 12px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'}}>
+                  <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Temperature</div>
+                  <div style={{fontSize:14,fontWeight:700,color: tempColor[displayResult.lead?.temperature] || '#6b7280',textTransform:'capitalize'}}>{displayResult.lead?.temperature || 'N/A'}</div>
+                </div>
+              </div>
+              {displayResult.lead?.next_action && (
+                <div style={{padding:'10px 12px',background:'#fffbeb',border:'1px solid #fde68a',borderRadius:8,fontSize:13,color:'#92400e'}}>
+                  <strong>Next Action:</strong> {displayResult.lead.next_action}
+                </div>
+              )}
+            </div>
+
+            {/* Business Brain */}
+            <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
+              <h3 style={{fontSize:14,fontWeight:700,color:'#1e293b',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
+                <span style={{fontSize:18}}>🧠</span> Business Brain
+              </h3>
+              {displayResult.business_brain ? (
+                <div>
+                  <div style={{display:'flex',gap:8,marginBottom:10}}>
+                    <span style={{padding:'4px 12px',borderRadius:20,fontSize:12,fontWeight:600,background: displayResult.business_brain.matched ? '#f0fdf4' : '#f8fafc',color: displayResult.business_brain.matched ? '#15803d' : '#6b7280',border:`1px solid ${displayResult.business_brain.matched ? '#bbf7d0' : '#e2e8f0'}`}}>
+                      {displayResult.business_brain.matched ? '✓ Rule Matched' : 'No Match'}
+                    </span>
+                  </div>
+                  {displayResult.business_brain.rule_name && (
+                    <div style={{padding:'10px 12px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,color:'#1e293b'}}>
+                      <strong>Rule:</strong> {displayResult.business_brain.rule_name}
+                    </div>
+                  )}
+                  {displayResult.business_brain.context_injected && (
+                    <div style={{marginTop:8,padding:'10px 12px',background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:8,fontSize:13,color:'#1e40af',fontStyle:'italic'}}>
+                      {displayResult.business_brain.context_injected}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{padding:'10px 12px',background:'#f8fafc',borderRadius:8,fontSize:13,color:'#6b7280'}}>No business brain data returned</div>
+              )}
+            </div>
+
+            {/* Customer Brain / Memory */}
+            {displayResult.customer_brain && (
+              <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
+                <h3 style={{fontSize:14,fontWeight:700,color:'#1e293b',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
+                  <span style={{fontSize:18}}>✨</span> Customer Memory
+                </h3>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+                  {Object.entries(displayResult.customer_brain).map(([k,v]) => v ? (
+                    <div key={k} style={{padding:'8px 12px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'}}>
+                      <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:2}}>{k.replace(/_/g,' ')}</div>
+                      <div style={{fontSize:13,color:'#1e293b',fontWeight:500}}>{String(v)}</div>
+                    </div>
+                  ) : null)}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Test History */}
+      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
+        <h3 style={{fontSize:15,fontWeight:700,color:'#1e293b',margin:'0 0 16px',display:'flex',alignItems:'center',gap:8}}>
+          <span>📋</span> Test History
+          <span style={{fontSize:13,fontWeight:400,color:'#9ca3af',marginLeft:4}}>({history.length} tests)</span>
+        </h3>
+        {historyLoading ? (
+          <div style={{color:'#9ca3af',fontSize:13,padding:'20px 0',textAlign:'center'}}>Loading history...</div>
+        ) : history.length === 0 ? (
+          <div style={{color:'#9ca3af',fontSize:13,padding:'20px 0',textAlign:'center'}}>No tests run yet. Send a message above to get started.</div>
+        ) : (
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {history.map((item, idx) => {
+              const r = item.result || {};
+              const isSelected = selectedHistory === item;
+              return (
+                <div
+                  key={idx}
+                  onClick={() => { setSelectedHistory(isSelected ? null : item); setResult(null); }}
+                  style={{padding:'12px 16px',border:`1px solid ${isSelected ? '#3b82f6' : '#e2e8f0'}`,borderRadius:8,cursor:'pointer',background: isSelected ? '#eff6ff' : '#fafafa',display:'grid',gridTemplateColumns:'1fr auto auto auto',gap:12,alignItems:'center',transition:'all 0.15s'}}
+                >
+                  <div>
+                    <div style={{fontSize:13,fontWeight:600,color:'#1e293b',marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.message || '—'}</div>
+                    <div style={{fontSize:12,color:'#6b7280',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.reply?.reply ? `↳ ${r.reply.reply.substring(0,80)}...` : 'No reply'}</div>
+                  </div>
+                  <span style={{padding:'3px 10px',background:'#f1f5f9',borderRadius:20,fontSize:12,color:'#475569',fontWeight:500,whiteSpace:'nowrap'}}>{r.intent?.intent || '—'}</span>
+                  <span style={{padding:'3px 10px',background: r.lead?.is_lead ? '#f0fdf4' : '#f8fafc',borderRadius:20,fontSize:12,color: r.lead?.is_lead ? '#15803d' : '#9ca3af',fontWeight:500,border:`1px solid ${r.lead?.is_lead ? '#bbf7d0' : '#e2e8f0'}`}}>{r.lead?.is_lead ? '🔥 Lead' : 'No Lead'}</span>
+                  <span style={{fontSize:11,color:'#9ca3af',whiteSpace:'nowrap'}}>{item.time ? new Date(item.time).toLocaleTimeString() : ''}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </section>
   );
 }
