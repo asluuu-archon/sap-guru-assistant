@@ -338,65 +338,205 @@ function Overview() {
   );
 }
 
-function Conversations({dashboard}) {
-  const rows = dashboard?.recent_conversations || [];
-  const [selectedConversation, setSelectedConversation] = useState(null);
+const CONV_FILTER_LABELS = {
+  all: 'All',
+  needs_human: 'Needs Human',
+  pending_reply: 'Pending Reply',
+  ai_replied: 'AI Replied',
+  manual_replied: 'Manual Replied',
+};
 
-  const displayName = (row) =>
-    row.customer_name ||
-    row.instagram_username ||
-    (row.sender_id ? `User ${String(row.sender_id).slice(-4)}` : "Unknown");
+const CONV_STATE_COLORS = {
+  needs_human: '#ef4444',
+  pending_reply: '#f59e0b',
+  ai_replied: '#10b981',
+  manual_replied: '#2563eb',
+  lead_collection: '#8b5cf6',
+  replied: '#10b981',
+};
 
-  const getLastMessage = (row) => {
-    const history = row.history || [];
-    for (let i = history.length - 1; i >= 0; i--) {
-      if (history[i]?.user) return history[i].user;
-      if (history[i]?.assistant) return history[i].assistant;
-    }
-    return row.last_question || row.summary || "No message";
+function Conversations() {
+  const [conversations, setConversations] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [selected, setSelected] = useState(null);
+  const [fullConv, setFullConv] = useState(null);
+  const [fullLoading, setFullLoading] = useState(false);
+
+  const fetchConversations = (f = filter, s = search) => {
+    setLoading(true);
+    const params = new URLSearchParams({ filter: f, limit: '100' });
+    if (s) params.set('search', s);
+    fetch(`${API_BASE}/conversations?${params}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') {
+          setConversations(data.conversations || []);
+          setTotal(data.total || 0);
+        }
+      })
+      .catch(err => console.error('Conversations fetch error:', err))
+      .finally(() => setLoading(false));
   };
 
-  const tableRows = rows.map((row) => {
-    const lastMessage = getLastMessage(row);
-    const status = row.needs_human ? "Needs Human" : row.conversation_state || "Active";
-    const updated = row.updated_at ? new Date(row.updated_at).toLocaleString() : "-";
+  useEffect(() => { fetchConversations(); }, []);
 
-    return [
-      <Name name={displayName(row)} />,
-      <span className="ig">IG</span>,
-      String(lastMessage).slice(0, 80),
-      <b className="blue">{row.category || "general"}</b>,
-      <Badge text={status}/>,
-      updated,
-      <button
-        type="button"
-        className="outline"
-        onClick={() => setSelectedConversation(row)}
-      >
-        Open
-      </button>
-    ];
-  });
+  const handleFilterChange = (f) => {
+    setFilter(f);
+    setSelected(null);
+    setFullConv(null);
+    fetchConversations(f, search);
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setSearch(searchInput);
+    fetchConversations(filter, searchInput);
+  };
+
+  const handleSelectConversation = (conv) => {
+    setSelected(conv);
+    setFullConv(null);
+    setFullLoading(true);
+    fetch(`${API_BASE}/conversation/${conv.sender_id}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') {
+          setFullConv(data.conversation);
+        }
+      })
+      .catch(err => console.error('Full conv error:', err))
+      .finally(() => setFullLoading(false));
+  };
+
+  const FILTER_KEYS = ['all', 'needs_human', 'pending_reply', 'ai_replied', 'manual_replied'];
 
   return (
     <section>
-      <Title title="Conversations" sub="Live conversations from backend" action={<button><Download size={15}/> Export</button>}/>
-      <Tabs tabs={['All','Needs Human','Pending Reply','AI Replied','Manual Replied']}/>
-      <div className="toolbar">
-        <div className="search wide"><Search size={15}/><input placeholder="Search by sender or message..."/></div>
-        <button className="icon"><Filter size={15}/></button>
+      <Title
+        title="Conversations"
+        sub={loading ? 'Loading...' : `${total} conversations`}
+        action={
+          <div style={{display:'flex', gap:'8px'}}>
+            <button className="ghost" onClick={() => fetchConversations()}>↻ Refresh</button>
+          </div>
+        }
+      />
+
+      {/* Filter tabs */}
+      <div style={{display:'flex', gap:'6px', marginBottom:'14px', flexWrap:'wrap'}}>
+        {FILTER_KEYS.map(f => (
+          <button
+            key={f}
+            onClick={() => handleFilterChange(f)}
+            style={{
+              padding:'6px 14px', fontSize:'0.82em', borderRadius:'20px',
+              background: filter === f ? '#2563eb' : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${filter === f ? '#2563eb' : '#334155'}`,
+              color: filter === f ? '#fff' : '#94a3b8',
+              cursor:'pointer',
+            }}
+          >
+            {CONV_FILTER_LABELS[f]}
+            {f === 'needs_human' && conversations.filter(c => c.needs_human).length > 0 && filter !== 'needs_human' && (
+              <span style={{marginLeft:'6px', background:'#ef4444', color:'#fff', borderRadius:'10px', padding:'1px 6px', fontSize:'0.75em'}}>
+                {conversations.filter(c => c.needs_human).length}
+              </span>
+            )}
+          </button>
+        ))}
       </div>
 
-      <div style={{display: "grid", gridTemplateColumns: selectedConversation ? "1.5fr 1fr" : "1fr", gap: "16px", alignItems: "start"}}>
-        <Table
-          heads={['Customer','Channel','Last Message','Category','Status','Updated','Action']}
-          rows={tableRows.length ? tableRows : [["Loading...", "-", "Fetching live conversations...", "-", "-", "-", "-"]]}
-        />
+      {/* Search bar */}
+      <form onSubmit={handleSearch} style={{display:'flex', gap:'8px', marginBottom:'16px'}}>
+        <div className="search" style={{flex:1}}>
+          <Search size={15}/>
+          <input
+            placeholder="Search by name, message, or sender ID..."
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
+          />
+        </div>
+        <button type="submit" style={{padding:'0 16px'}}>Search</button>
+        {search && (
+          <button type="button" className="outline" onClick={() => { setSearchInput(''); setSearch(''); fetchConversations(filter, ''); }}>
+            Clear
+          </button>
+        )}
+      </form>
 
-        {selectedConversation && (
-          <ConversationPanel
-            conversation={selectedConversation}
-            onClose={() => setSelectedConversation(null)}
+      {/* Main layout */}
+      <div style={{display:'grid', gridTemplateColumns: selected ? '1fr 1.1fr' : '1fr', gap:'16px', alignItems:'start'}}>
+
+        {/* Inbox list */}
+        <div style={{display:'flex', flexDirection:'column', gap:'6px'}}>
+          {loading ? (
+            <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>Loading conversations...</div>
+          ) : conversations.length === 0 ? (
+            <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>No conversations found.</div>
+          ) : conversations.map((conv, i) => {
+            const isSelected = selected?.sender_id === conv.sender_id;
+            const stateColor = conv.needs_human ? '#ef4444' : (CONV_STATE_COLORS[conv.conversation_state] || '#475569');
+            const stateLabel = conv.needs_human ? 'Needs Human' : (conv.conversation_state || 'active').replace(/_/g, ' ');
+            const lastMsg = conv.last_message || '';
+            const isUserLast = conv.last_sender === 'user';
+
+            return (
+              <div
+                key={i}
+                onClick={() => handleSelectConversation(conv)}
+                style={{
+                  padding:'12px 14px',
+                  background: isSelected ? 'rgba(37,99,235,0.12)' : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${isSelected ? '#2563eb' : '#1e293b'}`,
+                  borderLeft: `3px solid ${isSelected ? '#2563eb' : stateColor}`,
+                  borderRadius:'8px',
+                  cursor:'pointer',
+                  transition:'all 0.15s',
+                }}
+              >
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'5px'}}>
+                  <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                    <div style={{width:'32px', height:'32px', borderRadius:'50%', background:'#2563eb', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:'0.88em', fontWeight:700, flexShrink:0}}>
+                      {String(conv.display_name || '?')[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{fontSize:'0.9em', fontWeight:600, color:'#e2e8f0'}}>{conv.display_name}</div>
+                      <div style={{fontSize:'0.72em', color:'#475569'}}>
+                        <span className="ig" style={{fontSize:'0.85em', marginRight:'4px'}}>IG</span>
+                        {conv.message_count || 0} messages
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{textAlign:'right', flexShrink:0}}>
+                    <div style={{fontSize:'0.72em', color:'#475569', marginBottom:'3px'}}>
+                      {conv.updated_at ? new Date(conv.updated_at).toLocaleDateString() : '-'}
+                    </div>
+                    <span style={{fontSize:'0.72em', padding:'2px 7px', borderRadius:'10px', background:`${stateColor}18`, color:stateColor, fontWeight:600}}>
+                      {stateLabel}
+                    </span>
+                  </div>
+                </div>
+                <div style={{fontSize:'0.82em', color: isUserLast ? '#94a3b8' : '#64748b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', paddingLeft:'40px'}}>
+                  {isUserLast ? '' : <span style={{color:'#8b5cf6', marginRight:'4px'}}>AI:</span>}
+                  {String(lastMsg).slice(0, 90) || <span style={{fontStyle:'italic'}}>No messages</span>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Chat panel */}
+        {selected && (
+          <ConversationChatPanel
+            conv={selected}
+            fullConv={fullConv}
+            loading={fullLoading}
+            onClose={() => { setSelected(null); setFullConv(null); }}
+            onRefresh={() => handleSelectConversation(selected)}
           />
         )}
       </div>
@@ -404,62 +544,138 @@ function Conversations({dashboard}) {
   );
 }
 
-function ConversationPanel({ conversation, onClose }) {
-  const history = conversation.history || [];
-  const title = conversation.sender_id ? `User ${String(conversation.sender_id).slice(-4)}` : "Unknown User";
-  const status = conversation.needs_human ? "Needs Human" : conversation.conversation_state || "Active";
+function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh }) {
+  const [replyText, setReplyText] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sendResult, setSendResult] = useState(null);
+  const chatEndRef = React.useRef(null);
+
+  const history = fullConv?.history || [];
+  const stateColor = conv.needs_human ? '#ef4444' : (CONV_STATE_COLORS[conv.conversation_state] || '#475569');
+  const stateLabel = conv.needs_human ? 'Needs Human' : (conv.conversation_state || 'active').replace(/_/g, ' ');
+
+  // Scroll to bottom when history loads
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [history.length]);
+
+  const handleSendReply = async () => {
+    if (!replyText.trim()) return;
+    setSending(true);
+    setSendResult(null);
+    try {
+      const res = await fetch(`${API_BASE}/conversation/send-reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sender_id: conv.sender_id, message: replyText.trim() }),
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setSendResult({ ok: true, msg: 'Reply sent successfully' });
+        setReplyText('');
+        setTimeout(() => { onRefresh(); setSendResult(null); }, 1500);
+      } else {
+        setSendResult({ ok: false, msg: data.message || 'Send failed' });
+      }
+    } catch (e) {
+      setSendResult({ ok: false, msg: 'Network error' });
+    }
+    setSending(false);
+  };
 
   return (
-    <Card title="Conversation Details">
-      <div style={{display: "flex", justifyContent: "space-between", gap: "12px", alignItems: "center", marginBottom: "12px"}}>
-        <div>
-          <h2 style={{margin: 0}}>{title}</h2>
-          <p style={{margin: "4px 0 0", color: "#64748b"}}>Instagram Conversation</p>
+    <div style={{display:'flex', flexDirection:'column', height:'calc(100vh - 160px)', background:'rgba(255,255,255,0.02)', border:'1px solid #1e293b', borderRadius:'12px', overflow:'hidden'}}>
+
+      {/* Header */}
+      <div style={{padding:'14px 16px', borderBottom:'1px solid #1e293b', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0}}>
+        <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+          <div style={{width:'36px', height:'36px', borderRadius:'50%', background:'#2563eb', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:700}}>
+            {String(conv.display_name || '?')[0].toUpperCase()}
+          </div>
+          <div>
+            <div style={{fontWeight:700, color:'#e2e8f0', fontSize:'0.95em'}}>{conv.display_name}</div>
+            <div style={{fontSize:'0.75em', display:'flex', alignItems:'center', gap:'6px'}}>
+              <span className="ig" style={{fontSize:'0.85em'}}>IG</span>
+              <span style={{color: stateColor, fontWeight:600}}>{stateLabel}</span>
+              <span style={{color:'#475569'}}>· {history.length} messages</span>
+            </div>
+          </div>
         </div>
-        <button type="button" className="outline" onClick={onClose}>Close</button>
+        <div style={{display:'flex', gap:'8px'}}>
+          <button className="ghost" onClick={onRefresh} style={{padding:'4px 10px', fontSize:'0.8em'}}>↻</button>
+          <button className="outline" onClick={onClose} style={{padding:'4px 10px', fontSize:'0.8em'}}><X size={13}/></button>
+        </div>
       </div>
 
-      <KeyVals
-        data={{
-          Sender: conversation.sender_id || "-",
-          Status: status,
-          Category: conversation.category || "general",
-          "Needs Human": conversation.needs_human ? "Yes" : "No",
-          Updated: conversation.updated_at
-            ? new Date(conversation.updated_at).toLocaleString()
-            : "-",
-        }}
-      />
-
-      <h3 style={{marginTop: "18px"}}>Messages</h3>
-
-      <div style={{display: "flex", flexDirection: "column", gap: "10px", maxHeight: "420px", overflowY: "auto", paddingRight: "6px"}}>
-        {history.length ? history.map((item, index) => (
-          <React.Fragment key={index}>
+      {/* Chat history */}
+      <div style={{flex:1, overflowY:'auto', padding:'16px', display:'flex', flexDirection:'column', gap:'10px'}}>
+        {loading ? (
+          <div style={{textAlign:'center', color:'#64748b', padding:'40px'}}>Loading messages...</div>
+        ) : history.length === 0 ? (
+          <div style={{textAlign:'center', color:'#64748b', padding:'40px', fontStyle:'italic'}}>No message history found.</div>
+        ) : history.map((item, i) => (
+          <React.Fragment key={i}>
             {item.user && (
-              <div style={{background: "#eef2ff", padding: "10px 12px", borderRadius: "12px", alignSelf: "flex-start", maxWidth: "90%"}}>
-                <b>User</b>
-                <p style={{margin: "6px 0 0"}}>{item.user}</p>
+              <div style={{display:'flex', justifyContent:'flex-start'}}>
+                <div style={{
+                  maxWidth:'78%', padding:'10px 13px',
+                  background:'rgba(255,255,255,0.07)',
+                  border:'1px solid #334155',
+                  borderRadius:'16px 16px 16px 4px',
+                  fontSize:'0.85em', color:'#e2e8f0', lineHeight:'1.5',
+                }}>
+                  <div style={{fontSize:'0.72em', color:'#64748b', marginBottom:'4px', fontWeight:600}}>Customer</div>
+                  {item.user}
+                </div>
               </div>
             )}
-
             {item.assistant && (
-              <div style={{background: "#ecfdf5", padding: "10px 12px", borderRadius: "12px", alignSelf: "flex-end", maxWidth: "90%"}}>
-                <b>AI / Assistant</b>
-                <p style={{margin: "6px 0 0"}}>{item.assistant}</p>
+              <div style={{display:'flex', justifyContent:'flex-end'}}>
+                <div style={{
+                  maxWidth:'78%', padding:'10px 13px',
+                  background:'rgba(37,99,235,0.15)',
+                  border:'1px solid rgba(37,99,235,0.3)',
+                  borderRadius:'16px 16px 4px 16px',
+                  fontSize:'0.85em', color:'#e2e8f0', lineHeight:'1.5',
+                }}>
+                  <div style={{fontSize:'0.72em', color:'#2563eb', marginBottom:'4px', fontWeight:600}}>AI Assistant</div>
+                  {item.assistant}
+                </div>
               </div>
             )}
           </React.Fragment>
-        )) : (
-          <p>No message history found for this conversation.</p>
-        )}
+        ))}
+        <div ref={chatEndRef}/>
       </div>
 
-      <div style={{marginTop: "18px"}}>
-        <textarea placeholder="Type manual reply..." style={{width: "100%", minHeight: "90px"}} />
-        <button type="button" style={{marginTop: "10px"}}>Send Reply</button>
+      {/* Reply box */}
+      <div style={{padding:'12px 14px', borderTop:'1px solid #1e293b', flexShrink:0}}>
+        {sendResult && (
+          <div style={{marginBottom:'8px', fontSize:'0.8em', color: sendResult.ok ? '#10b981' : '#ef4444', padding:'6px 10px', background: sendResult.ok ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)', borderRadius:'6px'}}>
+            {sendResult.msg}
+          </div>
+        )}
+        <div style={{display:'flex', gap:'8px', alignItems:'flex-end'}}>
+          <textarea
+            placeholder="Type a manual reply and send directly to Instagram..."
+            value={replyText}
+            onChange={e => setReplyText(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) handleSendReply(); }}
+            style={{flex:1, minHeight:'60px', maxHeight:'120px', resize:'vertical', fontSize:'0.85em'}}
+          />
+          <button
+            onClick={handleSendReply}
+            disabled={sending || !replyText.trim()}
+            style={{padding:'8px 16px', alignSelf:'flex-end', flexShrink:0}}
+          >
+            {sending ? 'Sending...' : 'Send'}
+          </button>
+        </div>
+        <div style={{fontSize:'0.72em', color:'#475569', marginTop:'5px'}}>Ctrl+Enter to send · This sends directly to Instagram</div>
       </div>
-    </Card>
+    </div>
   );
 }
 
