@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Bell, HelpCircle, Search, Settings, LayoutDashboard, MessagesSquare, Users, Bug, Bot, Brain, UserRound, BarChart3, Workflow, Plus, Download, Filter, Play } from 'lucide-react';
+import { Bell, HelpCircle, Search, Settings, LayoutDashboard, MessagesSquare, Users, Bug, Bot, Brain, UserRound, BarChart3, Workflow, Plus, Download, Filter, Play, X, Phone, MapPin, BookOpen, Star, Clock, ChevronRight, ToggleLeft, ToggleRight, Pencil, Trash2, Tag, Zap, Save, AlertTriangle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import './styles.css';
 
@@ -80,7 +80,7 @@ function Screen({page, dashboard}) {
     <>
       {page==='Overview'&&<Overview dashboard={dashboard}/>}
       {page==='Conversations'&&<Conversations dashboard={dashboard}/>}
-      {page==='Leads'&&<Leads dashboard={dashboard}/>}
+      {page==='Leads'&&<Leads/>}
       {page==='Pipeline Debugger'&&<Debugger/>}
       {page==='AI Playground'&&<Playground/>}
       {page==='Business Brain'&&<BusinessBrain/>}
@@ -195,6 +195,7 @@ function Conversations({dashboard}) {
     </section>
   );
 }
+
 function ConversationPanel({ conversation, onClose }) {
   const history = conversation.history || [];
   const title = conversation.sender_id ? `User ${String(conversation.sender_id).slice(-4)}` : "Unknown User";
@@ -254,45 +255,289 @@ function ConversationPanel({ conversation, onClose }) {
   );
 }
 
-function Leads({dashboard}) {
-  const qualified = dashboard?.qualified_leads || [];
+// ─── LEADS PAGE (Fully Wired) ─────────────────────────────────────────────────
 
-  const rows = qualified.map((lead) => [
-    <Name
-      name={
-           lead.customer_name ||
-           lead.instagram_username ||
-           lead.name ||
-           (lead.sender_id ? `User ${String(lead.sender_id).slice(-4)}` : "Unknown")
-           }
-/>,
-    lead.phone || lead.email || "-",
-    lead.location || "-",
-    lead.interested_module || "-",
-    lead.lead_score || "-",
-    lead.lead_stage || "-",
-    <Badge text={lead.status || "qualified"}/>,
-    "Aslam",
-    lead.updated_at ? new Date(lead.updated_at).toLocaleString() : "-"
-  ]);
+const LEAD_TEMP_COLORS = {
+  hot: '#ef4444',
+  warm: '#f59e0b',
+  cold: '#3b82f6',
+  new: '#8b5cf6',
+};
+
+const STAGE_LABELS = {
+  qualified: 'Qualified',
+  lead_information: 'Lead Info',
+  phone_pending: 'Phone Pending',
+  name_pending: 'Name Pending',
+  learning_lead: 'Learning Lead',
+  job_inquiry: 'Job Inquiry',
+  new: 'New',
+};
+
+function LeadTemperatureDot({ temp }) {
+  const color = LEAD_TEMP_COLORS[String(temp).toLowerCase()] || '#64748b';
+  return (
+    <span style={{display:'inline-flex', alignItems:'center', gap:'5px'}}>
+      <span style={{width:8, height:8, borderRadius:'50%', background:color, display:'inline-block'}}/>
+      <span style={{color, fontWeight:600, fontSize:'0.82em', textTransform:'capitalize'}}>{temp || 'Unknown'}</span>
+    </span>
+  );
+}
+
+function Leads() {
+  const [allLeads, setAllLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('All Leads');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [stageFilter, setStageFilter] = useState('All');
+
+  const tabs = ['All Leads', 'New', 'Warm', 'Hot', 'Qualified', 'Converted'];
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`${API_BASE}/all-leads`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success') {
+          setAllLeads(data.leads || []);
+        } else {
+          console.error('Failed to load leads:', data);
+        }
+      })
+      .catch(err => console.error('Leads fetch error:', err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const getLeadName = (lead) =>
+    lead.customer_name || lead.instagram_username || lead.name ||
+    (lead.sender_id ? `User ${String(lead.sender_id).slice(-4)}` : 'Unknown');
+
+  // Filter by tab (temperature)
+  const tabFiltered = allLeads.filter(lead => {
+    if (activeTab === 'All Leads') return true;
+    if (activeTab === 'Qualified') return lead.lead_stage === 'qualified' || lead.status === 'qualified';
+    if (activeTab === 'Converted') return lead.status === 'converted';
+    return String(lead.temperature || '').toLowerCase() === activeTab.toLowerCase();
+  });
+
+  // Filter by stage dropdown
+  const stageFiltered = tabFiltered.filter(lead => {
+    if (stageFilter === 'All') return true;
+    return lead.lead_stage === stageFilter;
+  });
+
+  // Filter by search
+  const filtered = stageFiltered.filter(lead => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      getLeadName(lead).toLowerCase().includes(q) ||
+      String(lead.phone || '').includes(q) ||
+      String(lead.email || '').toLowerCase().includes(q) ||
+      String(lead.interested_module || '').toLowerCase().includes(q) ||
+      String(lead.location || '').toLowerCase().includes(q)
+    );
+  });
+
+  // Stats
+  const total = allLeads.length;
+  const qualified = allLeads.filter(l => l.lead_stage === 'qualified' || l.status === 'qualified').length;
+  const hot = allLeads.filter(l => String(l.temperature || '').toLowerCase() === 'hot').length;
+  const warm = allLeads.filter(l => String(l.temperature || '').toLowerCase() === 'warm').length;
+
+  const uniqueStages = ['All', ...new Set(allLeads.map(l => l.lead_stage).filter(Boolean))];
 
   return (
     <section>
-      <Title title="Leads Management" sub="Track and manage all your leads" action={<button><Plus size={15}/> Add Lead</button>}/>
-      <Tabs tabs={['All Leads','New','Warm','Hot','Qualified','Converted']}/>
+      <Title
+        title="Leads Management"
+        sub="Track and manage all your leads"
+        action={<button><Plus size={15}/> Add Lead</button>}
+      />
+
+      {/* Stats row */}
+      <div className="grid4" style={{marginBottom: '20px'}}>
+        <Stat label="Total Leads" value={loading ? '...' : total} change="All captured leads"/>
+        <Stat label="Qualified" value={loading ? '...' : qualified} change="Ready for follow-up"/>
+        <Stat label="Hot Leads" value={loading ? '...' : hot} change="High intent"/>
+        <Stat label="Warm Leads" value={loading ? '...' : warm} change="Engaged"/>
+      </div>
+
+      {/* Tabs */}
+      <div className="tabs">
+        {tabs.map(t => (
+          <button
+            key={t}
+            className={activeTab === t ? 'active' : ''}
+            onClick={() => { setActiveTab(t); setSelectedLead(null); }}
+          >
+            {t}
+            <span style={{
+              marginLeft: '6px', fontSize: '0.75em', opacity: 0.7,
+              background: activeTab === t ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
+              borderRadius: '10px', padding: '1px 6px'
+            }}>
+              {t === 'All Leads' ? allLeads.length :
+               t === 'Qualified' ? allLeads.filter(l => l.lead_stage === 'qualified' || l.status === 'qualified').length :
+               t === 'Converted' ? allLeads.filter(l => l.status === 'converted').length :
+               allLeads.filter(l => String(l.temperature || '').toLowerCase() === t.toLowerCase()).length}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Toolbar */}
       <div className="toolbar">
-        <select><option>Lead Stage: All</option></select>
-        <select><option>Status: All</option></select>
-        <div className="search wide"><Search size={15}/><input placeholder="Search by name, phone or email..."/></div>
+        <select value={stageFilter} onChange={e => setStageFilter(e.target.value)}>
+          {uniqueStages.map(s => (
+            <option key={s} value={s}>{s === 'All' ? 'Lead Stage: All' : STAGE_LABELS[s] || s}</option>
+          ))}
+        </select>
+        <div className="search wide">
+          <Search size={15}/>
+          <input
+            placeholder="Search by name, phone or email..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} style={{background:'none',border:'none',cursor:'pointer',padding:'0 4px'}}>
+              <X size={13}/>
+            </button>
+          )}
+        </div>
         <button className="icon"><Filter size={15}/></button>
       </div>
-      <Table
-        heads={['Name','Contact','Location','Interested In','Lead Score','Stage','Status','Assigned To','Updated']}
-        rows={rows.length ? rows : [["Loading...","-","-","-","-","-","-","-","-"]]}
-      />
+
+      {/* Main content — table + detail panel */}
+      <div style={{display:'grid', gridTemplateColumns: selectedLead ? '1.4fr 1fr' : '1fr', gap:'16px', alignItems:'start'}}>
+
+        {/* Table */}
+        <div className="table">
+          {loading ? (
+            <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>Loading leads...</div>
+          ) : filtered.length === 0 ? (
+            <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>
+              {searchQuery ? `No leads found for "${searchQuery}"` : 'No leads in this category yet.'}
+            </div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th><th>Contact</th><th>Location</th>
+                  <th>Interested In</th><th>Temperature</th><th>Stage</th>
+                  <th>Status</th><th>Updated</th><th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((lead, i) => (
+                  <tr
+                    key={lead.id || i}
+                    style={{cursor:'pointer', background: selectedLead?.id === lead.id ? 'rgba(37,99,235,0.08)' : ''}}
+                    onClick={() => setSelectedLead(lead)}
+                  >
+                    <td><Name name={getLeadName(lead)}/></td>
+                    <td>{lead.phone || lead.email || '-'}</td>
+                    <td>{lead.location || '-'}</td>
+                    <td>{lead.interested_module || '-'}</td>
+                    <td><LeadTemperatureDot temp={lead.temperature}/></td>
+                    <td><span style={{fontSize:'0.8em', color:'#94a3b8'}}>{STAGE_LABELS[lead.lead_stage] || lead.lead_stage || '-'}</span></td>
+                    <td><Badge text={lead.status || 'new'}/></td>
+                    <td style={{fontSize:'0.78em', color:'#64748b'}}>{lead.updated_at ? new Date(lead.updated_at).toLocaleString() : '-'}</td>
+                    <td><ChevronRight size={14} color="#64748b"/></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Lead Detail Panel */}
+        {selectedLead && (
+          <LeadDetailPanel lead={selectedLead} onClose={() => setSelectedLead(null)} getLeadName={getLeadName}/>
+        )}
+      </div>
     </section>
   );
 }
+
+function LeadDetailPanel({ lead, onClose, getLeadName }) {
+  const name = getLeadName(lead);
+
+  return (
+    <Card>
+      {/* Header */}
+      <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'16px'}}>
+        <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
+          <div className="avatar big" style={{background:'#2563eb', color:'white', fontSize:'1.2em'}}>
+            {String(name)[0].toUpperCase()}
+          </div>
+          <div>
+            <h2 style={{margin:0, fontSize:'1.1em'}}>{name}</h2>
+            <div style={{marginTop:'4px'}}><LeadTemperatureDot temp={lead.temperature}/></div>
+          </div>
+        </div>
+        <button className="outline" onClick={onClose} style={{padding:'4px 10px'}}><X size={14}/></button>
+      </div>
+
+      {/* Contact info */}
+      <div style={{display:'flex', flexDirection:'column', gap:'8px', marginBottom:'16px'}}>
+        {lead.phone && (
+          <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'0.88em', color:'#94a3b8'}}>
+            <Phone size={13}/> {lead.phone}
+          </div>
+        )}
+        {lead.location && (
+          <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'0.88em', color:'#94a3b8'}}>
+            <MapPin size={13}/> {lead.location}
+          </div>
+        )}
+        {lead.interested_module && (
+          <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'0.88em', color:'#94a3b8'}}>
+            <BookOpen size={13}/> {lead.interested_module}
+          </div>
+        )}
+        {lead.lead_score && (
+          <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'0.88em', color:'#94a3b8'}}>
+            <Star size={13}/> Lead Score: {lead.lead_score}
+          </div>
+        )}
+        {lead.updated_at && (
+          <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'0.88em', color:'#94a3b8'}}>
+            <Clock size={13}/> Last updated: {new Date(lead.updated_at).toLocaleString()}
+          </div>
+        )}
+      </div>
+
+      {/* Key details */}
+      <KeyVals data={{
+        'Lead Stage': STAGE_LABELS[lead.lead_stage] || lead.lead_stage || '-',
+        'Status': lead.status || '-',
+        'Channel': lead.channel || 'Instagram',
+        'Assigned To': 'Aslam',
+        ...(lead.preferred_mode ? {'Preferred Mode': lead.preferred_mode} : {}),
+        ...(lead.email ? {'Email': lead.email} : {}),
+      }}/>
+
+      {/* Notes */}
+      {lead.notes && (
+        <div style={{marginTop:'14px', padding:'10px 12px', background:'rgba(37,99,235,0.06)', borderRadius:'8px', fontSize:'0.85em', color:'#94a3b8', borderLeft:'3px solid #2563eb'}}>
+          <b style={{color:'#cbd5e1', display:'block', marginBottom:'4px'}}>Notes</b>
+          {lead.notes}
+        </div>
+      )}
+
+      {/* Actions */}
+      <div style={{marginTop:'16px', display:'flex', gap:'8px', flexWrap:'wrap'}}>
+        <button style={{flex:1}}>Mark Qualified</button>
+        <button className="outline" style={{flex:1}}>View Conversation</button>
+      </div>
+    </Card>
+  );
+}
+
+// ─── OTHER PAGES (unchanged) ──────────────────────────────────────────────────
 
 function Debugger() {
   const stages=['Customer Stage','Identity Stage','Conversation Stage','Business Brain Stage','Customer Brain Stage','Intent Stage','Lead Stage','Decision Stage','Reply Stage'];
@@ -322,12 +567,342 @@ function Playground() {
   );
 }
 
+const CATEGORY_COLORS = {
+  greeting: '#2563eb',
+  business_rule: '#10b981',
+  lead_collection: '#8b5cf6',
+  promotion: '#f59e0b',
+  job: '#ef4444',
+  faq: '#06b6d4',
+  appointment: '#ec4899',
+};
+
+const CATEGORY_LABELS = {
+  greeting: 'Greeting',
+  business_rule: 'Business Rule',
+  lead_collection: 'Lead Collection',
+  promotion: 'Promotion',
+  job: 'Job / Career',
+  faq: 'FAQ',
+  appointment: 'Appointment',
+};
+
+const EMPTY_RULE = { rule_name: '', category: 'business_rule', trigger_keywords: '', response_template: '', priority: 10, notes: '' };
+
 function BusinessBrain() {
+  const [rules, setRules] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingRule, setEditingRule] = useState(null);
+  const [form, setForm] = useState(EMPTY_RULE);
+  const [saving, setSaving] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [activeCategory, setActiveCategory] = useState('All');
+
+  const loadRules = () => {
+    setLoading(true);
+    fetch(`${API_BASE}/brain/rules`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') setRules(data.rules || []);
+      })
+      .catch(err => console.error('Brain rules error:', err))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { loadRules(); }, []);
+
+  const openAdd = () => {
+    setEditingRule(null);
+    setForm(EMPTY_RULE);
+    setShowForm(true);
+  };
+
+  const openEdit = (rule) => {
+    setEditingRule(rule);
+    setForm({
+      rule_name: rule.rule_name || '',
+      category: rule.category || 'business_rule',
+      trigger_keywords: Array.isArray(rule.trigger_keywords) ? rule.trigger_keywords.join(', ') : (rule.trigger_keywords || ''),
+      response_template: rule.response_template || '',
+      priority: rule.priority || 10,
+      notes: rule.notes || '',
+    });
+    setShowForm(true);
+  };
+
+  const handleSave = async () => {
+    if (!form.rule_name.trim() || !form.response_template.trim()) return;
+    setSaving(true);
+    const payload = {
+      rule_name: form.rule_name.trim(),
+      category: form.category,
+      trigger_keywords: form.trigger_keywords.split(',').map(k => k.trim()).filter(Boolean),
+      response_template: form.response_template.trim(),
+      priority: Number(form.priority) || 10,
+      notes: form.notes.trim(),
+    };
+    try {
+      if (editingRule) {
+        await fetch(`${API_BASE}/brain/rules/${editingRule.id}`, {
+          method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+        });
+      } else {
+        await fetch(`${API_BASE}/brain/rules`, {
+          method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+        });
+      }
+      setShowForm(false);
+      loadRules();
+    } catch(e) { console.error(e); }
+    setSaving(false);
+  };
+
+  const handleToggle = async (rule) => {
+    await fetch(`${API_BASE}/brain/rules/${rule.id}/toggle`, { method: 'PATCH' });
+    loadRules();
+  };
+
+  const handleDelete = async (ruleId) => {
+    await fetch(`${API_BASE}/brain/rules/${ruleId}`, { method: 'DELETE' });
+    setDeleteConfirm(null);
+    loadRules();
+  };
+
+  const categories = ['All', ...new Set(rules.map(r => r.category).filter(Boolean))];
+  const filtered = activeCategory === 'All' ? rules : rules.filter(r => r.category === activeCategory);
+  const activeCount = rules.filter(r => r.is_active).length;
+
   return (
     <section>
-      <Title title="Business Brain" sub="AI understands your business" action={<button><Plus size={15}/> Create Campaign</button>}/>
-      <Tabs tabs={['Campaigns','Promotions','Jobs','Courses','Resources','FAQs']}/>
-      <Table heads={['Campaign Name','Type','Target Audience','Status','Active','Responses','Updated']} rows={[['SAP FICO Course May 2025','Course','New Learners',<Badge text="Active"/>,'🔵',128,'2h ago'],['SAP Jobs Dubai','Job','Job Seekers',<Badge text="Active"/>,'🔵',96,'3h ago'],['SAP S/4HANA Training','Course','Professionals',<Badge text="Paused"/>,'⚪',64,'5h ago'],['Career in SAP Webinar','Event','All',<Badge text="Active"/>,'🔵',52,'1d ago']]}/>
+      <Title
+        title="Business Brain"
+        sub="Teach your AI how to respond — like briefing a new employee"
+        action={
+          <button onClick={openAdd}><Plus size={15}/> Add New Rule</button>
+        }
+      />
+
+      {/* Stats */}
+      <div className="grid4" style={{marginBottom:'20px'}}>
+        <Stat label="Total Rules" value={loading ? '...' : rules.length} change="All configured rules"/>
+        <Stat label="Active Rules" value={loading ? '...' : activeCount} change="Currently in use by AI"/>
+        <Stat label="Inactive Rules" value={loading ? '...' : rules.length - activeCount} change="Paused rules"/>
+        <Stat label="Categories" value={loading ? '...' : categories.length - 1} change="Rule categories"/>
+      </div>
+
+      {/* Category filter tabs */}
+      <div className="tabs" style={{marginBottom:'16px'}}>
+        {categories.map(cat => (
+          <button
+            key={cat}
+            className={activeCategory === cat ? 'active' : ''}
+            onClick={() => setActiveCategory(cat)}
+          >
+            {cat === 'All' ? 'All Rules' : (CATEGORY_LABELS[cat] || cat)}
+            <span style={{
+              marginLeft:'6px', fontSize:'0.75em', opacity:0.7,
+              background: activeCategory === cat ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
+              borderRadius:'10px', padding:'1px 6px'
+            }}>
+              {cat === 'All' ? rules.length : rules.filter(r => r.category === cat).length}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Add / Edit Form */}
+      {showForm && (
+        <div className="card" style={{marginBottom:'20px', border:'1px solid #2563eb', borderRadius:'12px'}}>
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'16px'}}>
+            <h3 style={{margin:0}}>{editingRule ? 'Edit Rule' : 'Add New Rule'}</h3>
+            <button className="outline" onClick={() => setShowForm(false)}><X size={14}/></button>
+          </div>
+
+          <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px'}}>
+            <label style={{display:'flex',flexDirection:'column',gap:'6px'}}>
+              <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Rule Name *</span>
+              <input
+                placeholder="e.g. SAP MM Weekend Batch Enquiry"
+                value={form.rule_name}
+                onChange={e => setForm({...form, rule_name: e.target.value})}
+              />
+            </label>
+            <label style={{display:'flex',flexDirection:'column',gap:'6px'}}>
+              <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Category</span>
+              <select value={form.category} onChange={e => setForm({...form, category: e.target.value})}>
+                {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
+                  <option key={val} value={val}>{label}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <label style={{display:'flex',flexDirection:'column',gap:'6px',marginTop:'12px'}}>
+            <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Trigger Keywords <span style={{opacity:0.6}}>(comma separated — e.g. mm, sap mm, material management)</span></span>
+            <input
+              placeholder="mm, sap mm, material management, weekend batch"
+              value={form.trigger_keywords}
+              onChange={e => setForm({...form, trigger_keywords: e.target.value})}
+            />
+          </label>
+
+          <label style={{display:'flex',flexDirection:'column',gap:'6px',marginTop:'12px'}}>
+            <span style={{fontSize:'0.82em',color:'#94a3b8'}}>What should the AI reply? *</span>
+            <textarea
+              placeholder="Write what the AI should say when this rule is triggered. Be natural — like you are telling a new employee what to say."
+              value={form.response_template}
+              onChange={e => setForm({...form, response_template: e.target.value})}
+              style={{minHeight:'90px'}}
+            />
+          </label>
+
+          <div style={{display:'grid', gridTemplateColumns:'1fr 2fr', gap:'12px', marginTop:'12px'}}>
+            <label style={{display:'flex',flexDirection:'column',gap:'6px'}}>
+              <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Priority <span style={{opacity:0.6}}>(higher = matched first)</span></span>
+              <input
+                type="number" min="1" max="100"
+                value={form.priority}
+                onChange={e => setForm({...form, priority: e.target.value})}
+              />
+            </label>
+            <label style={{display:'flex',flexDirection:'column',gap:'6px'}}>
+              <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Internal Notes <span style={{opacity:0.6}}>(not shown to customers)</span></span>
+              <input
+                placeholder="Optional notes for yourself"
+                value={form.notes}
+                onChange={e => setForm({...form, notes: e.target.value})}
+              />
+            </label>
+          </div>
+
+          <div style={{display:'flex', gap:'10px', marginTop:'16px'}}>
+            <button onClick={handleSave} disabled={saving || !form.rule_name.trim() || !form.response_template.trim()}>
+              <Save size={14}/> {saving ? 'Saving...' : (editingRule ? 'Update Rule' : 'Save Rule')}
+            </button>
+            <button className="outline" onClick={() => setShowForm(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation */}
+      {deleteConfirm && (
+        <div className="card" style={{marginBottom:'16px', border:'1px solid #ef4444', borderRadius:'12px', background:'rgba(239,68,68,0.06)'}}>
+          <div style={{display:'flex', alignItems:'center', gap:'10px', color:'#ef4444'}}>
+            <AlertTriangle size={18}/>
+            <span>Are you sure you want to delete <b>"{deleteConfirm.rule_name}"</b>? This cannot be undone.</span>
+          </div>
+          <div style={{display:'flex', gap:'10px', marginTop:'12px'}}>
+            <button style={{background:'#ef4444'}} onClick={() => handleDelete(deleteConfirm.id)}>Yes, Delete</button>
+            <button className="outline" onClick={() => setDeleteConfirm(null)}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* Rules grid */}
+      {loading ? (
+        <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>Loading rules...</div>
+      ) : filtered.length === 0 ? (
+        <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>
+          {activeCategory === 'All'
+            ? 'No rules yet. Click "Add New Rule" to teach your AI how to respond.'
+            : `No rules in the "${CATEGORY_LABELS[activeCategory] || activeCategory}" category.`}
+        </div>
+      ) : (
+        <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(360px, 1fr))', gap:'16px'}}>
+          {filtered.map(rule => {
+            const catColor = CATEGORY_COLORS[rule.category] || '#64748b';
+            const keywords = Array.isArray(rule.trigger_keywords) ? rule.trigger_keywords : [];
+            return (
+              <div key={rule.id} className="card" style={{
+                border: `1px solid ${rule.is_active ? catColor + '40' : '#334155'}`,
+                opacity: rule.is_active ? 1 : 0.6,
+                transition: 'all 0.2s'
+              }}>
+                {/* Card header */}
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'10px'}}>
+                  <div>
+                    <span style={{
+                      fontSize:'0.72em', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em',
+                      color: catColor, background: catColor + '18', padding:'2px 8px', borderRadius:'20px'
+                    }}>
+                      {CATEGORY_LABELS[rule.category] || rule.category}
+                    </span>
+                    <h3 style={{margin:'8px 0 0', fontSize:'0.95em'}}>{rule.rule_name}</h3>
+                  </div>
+                  <button
+                    onClick={() => handleToggle(rule)}
+                    style={{background:'none', border:'none', cursor:'pointer', padding:'4px', color: rule.is_active ? '#10b981' : '#64748b'}}
+                    title={rule.is_active ? 'Click to deactivate' : 'Click to activate'}
+                  >
+                    {rule.is_active ? <ToggleRight size={26}/> : <ToggleLeft size={26}/>}
+                  </button>
+                </div>
+
+                {/* Keywords */}
+                {keywords.length > 0 && (
+                  <div style={{display:'flex', flexWrap:'wrap', gap:'5px', marginBottom:'10px'}}>
+                    <Tag size={11} color="#64748b" style={{marginTop:'3px'}}/>
+                    {keywords.slice(0, 6).map((kw, i) => (
+                      <span key={i} style={{
+                        fontSize:'0.72em', background:'rgba(255,255,255,0.06)',
+                        border:'1px solid #334155', borderRadius:'20px', padding:'2px 8px', color:'#94a3b8'
+                      }}>{kw}</span>
+                    ))}
+                    {keywords.length > 6 && (
+                      <span style={{fontSize:'0.72em', color:'#64748b'}}>+{keywords.length - 6} more</span>
+                    )}
+                  </div>
+                )}
+
+                {/* Response preview */}
+                <div style={{
+                  fontSize:'0.83em', color:'#94a3b8', lineHeight:'1.5',
+                  background:'rgba(255,255,255,0.03)', borderRadius:'8px',
+                  padding:'8px 10px', marginBottom:'12px',
+                  borderLeft: `3px solid ${catColor}40`,
+                  maxHeight:'70px', overflow:'hidden',
+                  display:'-webkit-box', WebkitLineClamp:3, WebkitBoxOrient:'vertical'
+                }}>
+                  {rule.response_template}
+                </div>
+
+                {/* Footer */}
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                  <div style={{display:'flex', alignItems:'center', gap:'6px'}}>
+                    <Zap size={11} color="#64748b"/>
+                    <span style={{fontSize:'0.75em', color:'#64748b'}}>Priority: {rule.priority}</span>
+                    <span style={{fontSize:'0.75em', color: rule.is_active ? '#10b981' : '#64748b', marginLeft:'8px'}}>
+                      {rule.is_active ? '● Active' : '○ Inactive'}
+                    </span>
+                  </div>
+                  <div style={{display:'flex', gap:'6px'}}>
+                    <button
+                      className="outline"
+                      style={{padding:'4px 10px', fontSize:'0.78em'}}
+                      onClick={() => openEdit(rule)}
+                    >
+                      <Pencil size={11}/> Edit
+                    </button>
+                    <button
+                      style={{padding:'4px 10px', fontSize:'0.78em', background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.3)', color:'#ef4444'}}
+                      onClick={() => setDeleteConfirm(rule)}
+                    >
+                      <Trash2 size={11}/>
+                    </button>
+                  </div>
+                </div>
+
+                {rule.notes && (
+                  <div style={{marginTop:'8px', fontSize:'0.75em', color:'#475569', fontStyle:'italic'}}>
+                    Note: {rule.notes}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }
@@ -384,6 +959,8 @@ function Automation() {
     </section>
   );
 }
+
+// ─── SHARED COMPONENTS ────────────────────────────────────────────────────────
 
 function Card({title,children}) { return <div className="card">{title&&<h3>{title}</h3>}{children}</div>; }
 function Tabs({tabs}) { return <div className="tabs">{tabs.map((t,i)=><button className={i===0?'active':''} key={t}>{t}</button>)}</div>; }

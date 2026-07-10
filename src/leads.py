@@ -51,6 +51,36 @@ def determine_lead_stage(
     return "email_pending"
 
 
+def determine_temperature(
+    phone: str = "",
+    email: str = "",
+    interested_module: str = "",
+    location: str = "",
+    mode: str = "",
+    name: str = "",
+) -> str:
+    """
+    Determine lead temperature based on how much information has been provided.
+
+    hot  = has BOTH phone AND email (fully qualified, ready to contact)
+    warm = has phone OR email OR interested_module (partial info, showing intent)
+    cold = no contact details at all (just started)
+    """
+    has_phone = bool(phone and phone.strip())
+    has_email = bool(email and email.strip())
+    has_module = bool(interested_module and interested_module.strip())
+    has_location = bool(location and location.strip())
+    has_mode = bool(mode and mode.strip())
+
+    if has_phone and has_email:
+        return "hot"
+
+    if has_phone or has_email or has_module or has_location or has_mode:
+        return "warm"
+
+    return "cold"
+
+
 def save_lead(
     sender_id: str,
     name: str = "",
@@ -113,6 +143,15 @@ def save_lead(
             mode=final_mode,
         )
 
+        temperature = determine_temperature(
+            phone=final_phone,
+            email=final_email,
+            interested_module=final_module,
+            location=final_location,
+            mode=final_mode,
+            name=final_name,
+        )
+
         status = "qualified" if is_qualified else old.get("status", "new")
 
         payload = {
@@ -131,6 +170,7 @@ def save_lead(
             "lead_stage": lead_stage,
             "is_qualified": is_qualified,
             "qualified_at": qualified_at,
+            "temperature": temperature,
             "updated_at": datetime.utcnow().isoformat(),
         }
 
@@ -143,7 +183,7 @@ def save_lead(
             )
 
             if result.data:
-                print(f"LEAD UPDATED: {result.data[0].get('id')}", flush=True)
+                print(f"LEAD UPDATED: {result.data[0].get('id')} | temp={temperature}", flush=True)
                 return result.data[0]
 
             print("LEAD UPDATE WARNING: no data returned", flush=True)
@@ -152,7 +192,7 @@ def save_lead(
         result = supabase.table("leads").insert(payload).execute()
 
         if result.data:
-            print(f"LEAD SAVED: {result.data[0].get('id')}", flush=True)
+            print(f"LEAD SAVED: {result.data[0].get('id')} | temp={temperature}", flush=True)
             return result.data[0]
 
         print("LEAD INSERT WARNING: no data returned", flush=True)
