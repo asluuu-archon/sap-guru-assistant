@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Bell, HelpCircle, Search, Settings, LayoutDashboard, MessagesSquare, Users, Bug, Bot, Brain, UserRound, BarChart3, Workflow, Plus, Download, Filter, Play, X, Phone, MapPin, BookOpen, Star, Clock, ChevronRight, ToggleLeft, ToggleRight, Pencil, Trash2, Tag, Zap, Save, AlertTriangle } from 'lucide-react';
+import { Bell, HelpCircle, Search, Settings, LayoutDashboard, MessagesSquare, Users, Bug, Bot, Brain, UserRound, BarChart3, Workflow, Plus, Download, Filter, Play, X, Phone, MapPin, BookOpen, Star, Clock, ChevronRight, ToggleLeft, ToggleRight, Pencil, Trash2, Tag, Zap, Save, AlertTriangle, Building2, Globe, CheckCircle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
 import './styles.css';
 
@@ -8,7 +8,7 @@ const API_BASE = "https://sap-guru-assistant.onrender.com";
 
 const nav = [
   ['Overview', LayoutDashboard], ['Conversations', MessagesSquare], ['Leads', Users], ['Pipeline Debugger', Bug],
-  ['AI Playground', Bot], ['Business Brain', Brain], ['Customer 360°', UserRound], ['Reports', BarChart3], ['Automation', Workflow], ['Settings', Settings]
+  ['AI Playground', Bot], ['Business Brain', Brain], ['Customer 360°', UserRound], ['Reports', BarChart3], ['Automation', Workflow], ['Businesses', Building2], ['Settings', Settings]
 ];
 
 const colors = ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6'];
@@ -28,23 +28,42 @@ const intents = [
 function App() {
   const [page, setPage] = useState("Overview");
   const [dashboard, setDashboard] = useState(null);
+  const [businesses, setBusinesses] = useState([]);
+  const [activeBusiness, setActiveBusiness] = useState(null);
 
   useEffect(() => {
     fetch(`${API_BASE}/dashboard-data`)
       .then(res => res.json())
-      .then(data => {
-        console.log("Dashboard Data:", data);
-        setDashboard(data);
-      })
+      .then(data => setDashboard(data))
       .catch(err => console.error("Dashboard fetch error:", err));
   }, []);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/businesses/`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success' && d.businesses.length > 0) {
+          setBusinesses(d.businesses);
+          // Restore last selected business from localStorage
+          const saved = localStorage.getItem('activeBizId');
+          const found = d.businesses.find(b => b.id === saved);
+          setActiveBusiness(found || d.businesses[0]);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSwitchBusiness = (biz) => {
+    setActiveBusiness(biz);
+    localStorage.setItem('activeBizId', biz.id);
+  };
 
   return (
     <div className="app">
       <Sidebar page={page} setPage={setPage}/>
       <main>
-        <Topbar/>
-        <Screen page={page} dashboard={dashboard}/>
+        <Topbar businesses={businesses} activeBusiness={activeBusiness} onSwitch={handleSwitchBusiness}/>
+        <Screen page={page} dashboard={dashboard} activeBusiness={activeBusiness} setPage={setPage}/>
       </main>
     </div>
   );
@@ -66,16 +85,59 @@ function Sidebar({page,setPage}) {
   );
 }
 
-function Topbar() {
+function Topbar({ businesses, activeBusiness, onSwitch }) {
+  const [showSwitcher, setShowSwitcher] = useState(false);
+
   return (
-    <header>
+    <header style={{position:'relative'}}>
       <div className="search"><Search size={16}/><input placeholder="Search anything..."/></div>
+
+      {/* Business Switcher */}
+      {activeBusiness && (
+        <div style={{position:'relative'}}>
+          <button
+            onClick={() => setShowSwitcher(p => !p)}
+            style={{display:'flex',alignItems:'center',gap:8,padding:'6px 12px',borderRadius:8,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13,fontWeight:500,color:'#1e293b',maxWidth:220}}
+          >
+            <Building2 size={14} color="#3b82f6"/>
+            <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:140}}>{activeBusiness.name}</span>
+            <span style={{fontSize:10,color:'#94a3b8',marginLeft:2}}>▾</span>
+          </button>
+
+          {showSwitcher && (
+            <div style={{position:'absolute',top:'calc(100% + 6px)',right:0,background:'white',border:'1px solid #e2e8f0',borderRadius:10,boxShadow:'0 8px 30px rgba(0,0,0,0.12)',zIndex:200,minWidth:240,overflow:'hidden'}}>
+              <div style={{padding:'10px 14px',fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.05em',borderBottom:'1px solid #f1f5f9'}}>Switch Workspace</div>
+              {businesses.map(biz => (
+                <button
+                  key={biz.id}
+                  onClick={() => { onSwitch(biz); setShowSwitcher(false); }}
+                  style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'10px 14px',background: activeBusiness.id === biz.id ? '#f0f9ff' : 'white',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'1px solid #f8fafc'}}
+                >
+                  <div style={{width:28,height:28,borderRadius:6,background:'#3b82f6',display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:12,fontWeight:700,flexShrink:0}}>{(biz.name||'?')[0].toUpperCase()}</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:13,fontWeight:600,color:'#1e293b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{biz.name}</div>
+                    <div style={{fontSize:11,color:'#94a3b8'}}>{biz.industry || 'Business'}</div>
+                  </div>
+                  {activeBusiness.id === biz.id && <CheckCircle size={14} color="#3b82f6"/>}
+                </button>
+              ))}
+              <div style={{padding:'8px 14px',borderTop:'1px solid #f1f5f9'}}>
+                <button
+                  onClick={() => { setShowSwitcher(false); }}
+                  style={{width:'100%',padding:'7px',borderRadius:6,background:'#f8fafc',border:'1px solid #e2e8f0',cursor:'pointer',fontSize:12,color:'#475569',fontWeight:500}}
+                >+ Add New Business</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <Bell size={18}/><HelpCircle size={18}/><div className="avatar small">A</div>
     </header>
   );
 }
 
-function Screen({page, dashboard}) {
+function Screen({page, dashboard, activeBusiness, setPage}) {
   return (
     <>
       {page==='Overview'&&<Overview dashboard={dashboard}/>}
@@ -87,6 +149,7 @@ function Screen({page, dashboard}) {
       {page==='Customer 360°'&&<Customer360/>}
       {page==='Reports'&&<Reports dashboard={dashboard}/>}
       {page==='Automation'&&<Automation/>}
+      {page==='Businesses'&&<BusinessesAdmin activeBusiness={activeBusiness} setPage={setPage}/>}
       {page==='Settings'&&<SettingsPage/>}
     </>
   );
@@ -3140,6 +3203,208 @@ function Automation() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ─── BUSINESSES ADMIN ────────────────────────────────────────────────────────
+
+const INDUSTRIES = [
+  'Education / Training', 'E-commerce / Retail', 'Real Estate', 'Healthcare',
+  'Finance / Banking', 'IT Services', 'Consulting', 'Food & Beverage',
+  'Fitness / Wellness', 'Travel / Hospitality', 'Legal Services', 'Other'
+];
+
+function BusinessesAdmin({ activeBusiness, setPage }) {
+  const [businesses, setBusinesses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState('');
+  const [form, setForm] = useState({ name: '', industry: 'Education / Training', instagram_handle: '', description: '' });
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
+
+  const fetchBusinesses = () => {
+    setLoading(true);
+    fetch(`${API_BASE}/businesses/`)
+      .then(r => r.json())
+      .then(d => { if (d.status === 'success') setBusinesses(d.businesses || []); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchBusinesses(); }, []);
+
+  const handleAdd = () => {
+    if (!form.name.trim()) { showToast('Business name is required'); return; }
+    setSaving(true);
+    fetch(`${API_BASE}/businesses/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form)
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') {
+          setBusinesses(prev => [...prev, d.business]);
+          setShowAddModal(false);
+          setForm({ name: '', industry: 'Education / Training', instagram_handle: '', description: '' });
+          showToast('Business workspace created!');
+        } else showToast(d.detail || 'Failed to create business');
+      })
+      .catch(() => showToast('Failed to create business'))
+      .finally(() => setSaving(false));
+  };
+
+  const INDUSTRY_COLORS = {
+    'Education / Training': '#3b82f6',
+    'E-commerce / Retail': '#10b981',
+    'Real Estate': '#f59e0b',
+    'Healthcare': '#ef4444',
+    'Finance / Banking': '#8b5cf6',
+    'IT Services': '#06b6d4',
+    'Consulting': '#f97316',
+    'Food & Beverage': '#84cc16',
+  };
+
+  return (
+    <section>
+      {toast && (
+        <div style={{position:'fixed',bottom:24,right:24,background:'#1e293b',color:'white',padding:'12px 20px',borderRadius:10,fontSize:13,fontWeight:500,zIndex:9999,boxShadow:'0 4px 20px rgba(0,0,0,0.2)'}}>
+          {toast}
+        </div>
+      )}
+
+      <Title
+        title="Business Workspaces"
+        sub="Manage all businesses on this platform. Each workspace has isolated leads, conversations, and settings."
+        action={
+          <button onClick={() => setShowAddModal(true)} style={{padding:'7px 16px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',gap:6}}>
+            <Plus size={14}/> Add Business
+          </button>
+        }
+      />
+
+      {/* Platform stats */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
+        {[
+          { label:'Total Workspaces', value: businesses.length, color:'#1e293b' },
+          { label:'Active', value: businesses.filter(b=>b.is_active).length, color:'#10b981' },
+          { label:'Industries', value: [...new Set(businesses.map(b=>b.industry).filter(Boolean))].length, color:'#3b82f6' },
+          { label:'Current Workspace', value: activeBusiness?.name || '—', color:'#8b5cf6', small: true },
+        ].map((s,i) => (
+          <div key={i} style={{background:'white',borderRadius:10,padding:'14px 18px',border:'1px solid #e2e8f0'}}>
+            <div style={{fontSize:11,color:'#64748b',marginBottom:4}}>{s.label}</div>
+            <div style={{fontSize: s.small ? 14 : 24,fontWeight:700,color:s.color,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Business cards grid */}
+      {loading ? (
+        <div style={{textAlign:'center',padding:40,color:'#64748b'}}>Loading workspaces...</div>
+      ) : businesses.length === 0 ? (
+        <div style={{background:'white',borderRadius:10,border:'1px solid #e2e8f0',padding:48,textAlign:'center'}}>
+          <Building2 size={40} color="#e2e8f0" style={{margin:'0 auto 12px'}}/>
+          <div style={{fontSize:16,fontWeight:600,color:'#1e293b',marginBottom:6}}>No business workspaces yet</div>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:20}}>Your first workspace will be created when you run the SQL migration</div>
+          <button onClick={() => setShowAddModal(true)} style={{padding:'8px 20px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600}}>+ Add First Business</button>
+        </div>
+      ) : (
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:16}}>
+          {businesses.map(biz => {
+            const isActive = activeBusiness?.id === biz.id;
+            const color = INDUSTRY_COLORS[biz.industry] || '#64748b';
+            return (
+              <div key={biz.id} style={{background:'white',borderRadius:12,border: isActive ? '2px solid #3b82f6' : '1px solid #e2e8f0',padding:20,position:'relative',transition:'border-color 0.2s'}}>
+                {isActive && (
+                  <div style={{position:'absolute',top:12,right:12,background:'#eff6ff',color:'#3b82f6',fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:10,textTransform:'uppercase',letterSpacing:'0.05em'}}>Active</div>
+                )}
+                <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
+                  <div style={{width:44,height:44,borderRadius:10,background:color,display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:18,fontWeight:700,flexShrink:0}}>
+                    {(biz.name||'?')[0].toUpperCase()}
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:15,fontWeight:700,color:'#1e293b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{biz.name}</div>
+                    <div style={{fontSize:11,color:'#64748b',marginTop:2}}>{biz.industry || 'Business'}</div>
+                  </div>
+                </div>
+
+                {biz.description && (
+                  <div style={{fontSize:12,color:'#64748b',marginBottom:12,lineHeight:1.5,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{biz.description}</div>
+                )}
+
+                <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:14}}>
+                  {biz.instagram_handle && (
+                    <span style={{fontSize:11,color:'#8b5cf6',background:'#f5f3ff',padding:'2px 8px',borderRadius:10,fontWeight:500}}>
+                      📸 {biz.instagram_handle}
+                    </span>
+                  )}
+                  <span style={{fontSize:11,color: biz.is_active ? '#10b981' : '#94a3b8',background: biz.is_active ? '#f0fdf4' : '#f8fafc',padding:'2px 8px',borderRadius:10,fontWeight:500}}>
+                    {biz.is_active ? '● Active' : '○ Inactive'}
+                  </span>
+                </div>
+
+                <div style={{display:'flex',gap:8}}>
+                  <button
+                    onClick={() => setPage('Overview')}
+                    style={{flex:1,padding:'7px',borderRadius:6,background: isActive ? '#3b82f6' : '#f1f5f9',color: isActive ? 'white' : '#475569',border:'none',cursor:'pointer',fontSize:12,fontWeight:600}}
+                  >
+                    {isActive ? '✓ Current Workspace' : 'View Dashboard'}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* How it works info box */}
+      <div style={{background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:10,padding:'16px 20px',marginTop:20}}>
+        <div style={{fontWeight:600,color:'#0369a1',fontSize:13,marginBottom:6}}>💡 How Multi-Business Works</div>
+        <div style={{fontSize:12,color:'#0c4a6e',lineHeight:1.7}}>
+          Each business workspace has its own isolated leads, conversations, automation rules, and settings.
+          Switch workspaces using the dropdown in the top navigation bar. Future versions will include
+          per-business login so each client only sees their own data.
+        </div>
+      </div>
+
+      {/* Add Business Modal */}
+      {showAddModal && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
+          <div style={{background:'white',borderRadius:12,padding:28,width:500,maxWidth:'90vw',boxShadow:'0 20px 60px rgba(0,0,0,0.2)'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+              <div style={{fontSize:16,fontWeight:700,color:'#1e293b'}}>Add New Business Workspace</div>
+              <button onClick={() => setShowAddModal(false)} style={{background:'none',border:'none',cursor:'pointer',color:'#94a3b8'}}><X size={18}/></button>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:14}}>
+              <div>
+                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>BUSINESS NAME *</label>
+                <input value={form.name} onChange={e => setForm(p=>({...p,name:e.target.value}))} placeholder="e.g. Archon Solutions" style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,boxSizing:'border-box'}}/>
+              </div>
+              <div>
+                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>INDUSTRY</label>
+                <select value={form.industry} onChange={e => setForm(p=>({...p,industry:e.target.value}))} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,background:'white',boxSizing:'border-box'}}>
+                  {INDUSTRIES.map(ind => <option key={ind} value={ind}>{ind}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>INSTAGRAM HANDLE</label>
+                <input value={form.instagram_handle} onChange={e => setForm(p=>({...p,instagram_handle:e.target.value}))} placeholder="@yourbusiness" style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,boxSizing:'border-box'}}/>
+              </div>
+              <div>
+                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>DESCRIPTION</label>
+                <textarea value={form.description} onChange={e => setForm(p=>({...p,description:e.target.value}))} placeholder="Brief description of the business..." rows={3} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,resize:'vertical',fontFamily:'inherit',boxSizing:'border-box'}}/>
+              </div>
+            </div>
+            <div style={{display:'flex',gap:10,justifyContent:'flex-end',marginTop:20}}>
+              <button onClick={() => setShowAddModal(false)} style={{padding:'8px 18px',borderRadius:6,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13}}>Cancel</button>
+              <button onClick={handleAdd} disabled={saving} style={{padding:'8px 18px',borderRadius:6,background: saving ? '#93c5fd' : '#3b82f6',color:'white',border:'none',cursor: saving ? 'not-allowed' : 'pointer',fontSize:13,fontWeight:600}}>{saving ? 'Creating...' : 'Create Workspace'}</button>
+            </div>
           </div>
         </div>
       )}
