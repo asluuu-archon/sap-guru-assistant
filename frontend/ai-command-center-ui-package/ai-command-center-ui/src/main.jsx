@@ -30,6 +30,27 @@ function App() {
   const [dashboard, setDashboard] = useState(null);
   const [businesses, setBusinesses] = useState([]);
   const [activeBusiness, setActiveBusiness] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const fetchNotifications = () => {
+    fetch(`${API_BASE}/notifications/`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') {
+          setNotifications(d.notifications || []);
+          setUnreadCount(d.unread_count || 0);
+        }
+      })
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    // Poll every 60 seconds for new notifications
+    const interval = setInterval(fetchNotifications, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     fetch(`${API_BASE}/dashboard-data`)
@@ -62,7 +83,7 @@ function App() {
     <div className="app">
       <Sidebar page={page} setPage={setPage}/>
       <main>
-        <Topbar businesses={businesses} activeBusiness={activeBusiness} onSwitch={handleSwitchBusiness} onNavigate={setPage}/>
+        <Topbar businesses={businesses} activeBusiness={activeBusiness} onSwitch={handleSwitchBusiness} onNavigate={setPage} notifications={notifications} unreadCount={unreadCount} onMarkAllRead={() => setUnreadCount(0)}/>
         <Screen page={page} dashboard={dashboard} activeBusiness={activeBusiness} setPage={setPage}/>
       </main>
     </div>
@@ -85,20 +106,49 @@ function Sidebar({page,setPage}) {
   );
 }
 
-function Topbar({ businesses, activeBusiness, onSwitch, onNavigate }) {
-  const [showSwitcher, setShowSwitcher] = useState(false);
-  const dropdownRef = React.useRef(null);
+const NOTIF_ICONS = {
+  hot_lead: { icon: '🔥', color: '#ef4444', bg: '#fef2f2' },
+  needs_human: { icon: '👤', color: '#f59e0b', bg: '#fffbeb' },
+  stale_conversation: { icon: '⏰', color: '#6366f1', bg: '#f5f3ff' },
+};
 
-  // Close dropdown when clicking outside
+function timeAgo(ts) {
+  if (!ts) return '';
+  const diff = Math.floor((Date.now() - new Date(ts)) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+  return `${Math.floor(diff/86400)}d ago`;
+}
+
+function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notifications, unreadCount, onMarkAllRead }) {
+  const [showSwitcher, setShowSwitcher] = useState(false);
+  const [showNotifs, setShowNotifsState] = useState(false);
+  const dropdownRef = React.useRef(null);
+  const notifRef = React.useRef(null);
+
+  // Close business switcher when clicking outside
   React.useEffect(() => {
     const handleClick = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setShowSwitcher(false);
-      }
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setShowSwitcher(false);
     };
     if (showSwitcher) document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, [showSwitcher]);
+
+  // Close notification panel when clicking outside
+  React.useEffect(() => {
+    const handleClick = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifsState(false);
+    };
+    if (showNotifs) document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showNotifs]);
+
+  const handleBellClick = () => {
+    setShowNotifsState(p => !p);
+    if (!showNotifs && unreadCount > 0) onMarkAllRead();
+  };
 
   return (
     <header style={{position:'relative'}}>
@@ -114,7 +164,7 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate }) {
           <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:140}}>
             {activeBusiness ? activeBusiness.name : 'Select Workspace'}
           </span>
-          <span style={{fontSize:10,color:'#94a3b8',marginLeft:2,transition:'transform 0.15s',display:'inline-block',transform: showSwitcher ? 'rotate(180deg)' : 'rotate(0deg)'}}>▾</span>
+          <span style={{fontSize:10,color:'#94a3b8',marginLeft:2,display:'inline-block',transform: showSwitcher ? 'rotate(180deg)' : 'rotate(0deg)',transition:'transform 0.15s'}}>▾</span>
         </button>
 
         {showSwitcher && (
@@ -126,14 +176,9 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate }) {
             {businesses.map(biz => {
               const isSelected = activeBusiness && activeBusiness.id === biz.id;
               return (
-                <button
-                  key={biz.id}
-                  onClick={() => { onSwitch(biz); setShowSwitcher(false); }}
-                  style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'10px 14px',background: isSelected ? '#f0f9ff' : 'white',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'1px solid #f8fafc',transition:'background 0.1s'}}
-                >
-                  <div style={{width:30,height:30,borderRadius:7,background: isSelected ? '#3b82f6' : '#e2e8f0',display:'flex',alignItems:'center',justifyContent:'center',color: isSelected ? 'white' : '#64748b',fontSize:13,fontWeight:700,flexShrink:0,transition:'all 0.15s'}}>
-                    {(biz.name||'?')[0].toUpperCase()}
-                  </div>
+                <button key={biz.id} onClick={() => { onSwitch(biz); setShowSwitcher(false); }}
+                  style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'10px 14px',background: isSelected ? '#f0f9ff' : 'white',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'1px solid #f8fafc'}}>
+                  <div style={{width:30,height:30,borderRadius:7,background: isSelected ? '#3b82f6' : '#e2e8f0',display:'flex',alignItems:'center',justifyContent:'center',color: isSelected ? 'white' : '#64748b',fontSize:13,fontWeight:700,flexShrink:0}}>{(biz.name||'?')[0].toUpperCase()}</div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:13,fontWeight:600,color:'#1e293b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{biz.name}</div>
                     <div style={{fontSize:11,color:'#94a3b8'}}>{biz.industry || 'Business'}</div>
@@ -143,10 +188,8 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate }) {
               );
             })}
             <div style={{padding:'8px 14px',borderTop:'1px solid #f1f5f9'}}>
-              <button
-                onClick={() => { setShowSwitcher(false); onNavigate('Businesses'); }}
-                style={{width:'100%',padding:'8px',borderRadius:6,background:'#f8fafc',border:'1px solid #e2e8f0',cursor:'pointer',fontSize:12,color:'#3b82f6',fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}
-              >
+              <button onClick={() => { setShowSwitcher(false); onNavigate('Businesses'); }}
+                style={{width:'100%',padding:'8px',borderRadius:6,background:'#f8fafc',border:'1px solid #e2e8f0',cursor:'pointer',fontSize:12,color:'#3b82f6',fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
                 <Plus size={13}/> Add New Business
               </button>
             </div>
@@ -154,7 +197,78 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate }) {
         )}
       </div>
 
-      <Bell size={18}/><HelpCircle size={18}/><div className="avatar small">A</div>
+      {/* Bell Icon with badge */}
+      <div style={{position:'relative'}} ref={notifRef}>
+        <button onClick={handleBellClick}
+          style={{background:'none',border:'none',cursor:'pointer',padding:'6px',borderRadius:8,color: showNotifs ? '#3b82f6' : '#64748b',position:'relative',display:'flex',alignItems:'center',transition:'color 0.15s'}}>
+          <Bell size={18}/>
+          {unreadCount > 0 && (
+            <span style={{position:'absolute',top:2,right:2,width:16,height:16,borderRadius:'50%',background:'#ef4444',color:'white',fontSize:9,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
+
+        {showNotifs && (
+          <div style={{position:'absolute',top:'calc(100% + 8px)',right:0,background:'white',border:'1px solid #e2e8f0',borderRadius:12,boxShadow:'0 12px 40px rgba(0,0,0,0.15)',zIndex:9000,width:360,maxHeight:480,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+            {/* Header */}
+            <div style={{padding:'14px 16px',borderBottom:'1px solid #f1f5f9',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}}>
+              <div style={{fontSize:14,fontWeight:700,color:'#1e293b'}}>Notifications</div>
+              <div style={{display:'flex',alignItems:'center',gap:8}}>
+                {notifications.length > 0 && (
+                  <span style={{fontSize:11,color:'#64748b'}}>{notifications.length} alerts</span>
+                )}
+              </div>
+            </div>
+
+            {/* Notification list */}
+            <div style={{overflowY:'auto',flex:1}}>
+              {notifications.length === 0 ? (
+                <div style={{padding:32,textAlign:'center'}}>
+                  <Bell size={28} color="#e2e8f0" style={{margin:'0 auto 10px',display:'block'}}/>
+                  <div style={{fontSize:13,color:'#94a3b8',fontWeight:500}}>All caught up!</div>
+                  <div style={{fontSize:12,color:'#cbd5e1',marginTop:4}}>No new alerts right now</div>
+                </div>
+              ) : (
+                notifications.map((notif, idx) => {
+                  const cfg = NOTIF_ICONS[notif.type] || { icon: '🔔', color: '#64748b', bg: '#f8fafc' };
+                  return (
+                    <div key={notif.id}
+                      onClick={() => { onNavigate(notif.target_page); setShowNotifsState(false); }}
+                      style={{display:'flex',gap:12,padding:'12px 16px',borderBottom:'1px solid #f8fafc',cursor:'pointer',background: notif.is_read ? 'white' : '#fafbff',transition:'background 0.1s'}}
+                      onMouseEnter={e => e.currentTarget.style.background='#f8fafc'}
+                      onMouseLeave={e => e.currentTarget.style.background= notif.is_read ? 'white' : '#fafbff'}
+                    >
+                      <div style={{width:36,height:36,borderRadius:9,background:cfg.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>{cfg.icon}</div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:2}}>
+                          <span style={{fontSize:12,fontWeight:700,color:'#1e293b'}}>{notif.title}</span>
+                          <span style={{fontSize:10,color:'#94a3b8',flexShrink:0,marginLeft:8}}>{timeAgo(notif.time)}</span>
+                        </div>
+                        <div style={{fontSize:12,color:'#64748b',lineHeight:1.4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{notif.message}</div>
+                        <div style={{fontSize:11,color:cfg.color,fontWeight:600,marginTop:4}}>{notif.action} →</div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Footer */}
+            {notifications.length > 0 && (
+              <div style={{padding:'10px 16px',borderTop:'1px solid #f1f5f9',flexShrink:0}}>
+                <button onClick={() => { onNavigate('Leads'); setShowNotifsState(false); }}
+                  style={{width:'100%',padding:'7px',borderRadius:6,background:'#f8fafc',border:'1px solid #e2e8f0',cursor:'pointer',fontSize:12,color:'#475569',fontWeight:500}}>
+                  View All Leads
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <HelpCircle size={18} style={{color:'#94a3b8',cursor:'pointer'}}/>
+      <div className="avatar small">A</div>
     </header>
   );
 }

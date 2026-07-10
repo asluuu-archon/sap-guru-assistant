@@ -19,6 +19,7 @@ from .api.reports_api import router as reports_router
 from .api.automation_api import router as automation_router
 from .api.businesses_api import router as businesses_router
 from .api.integrations_api import router as integrations_router
+from .api.notifications_api import router as notifications_router
 from .services.webhook_service import process_instagram_webhook
 
 
@@ -65,6 +66,7 @@ app.include_router(reports_router)
 app.include_router(automation_router)
 app.include_router(businesses_router)
 app.include_router(integrations_router)
+app.include_router(notifications_router)
 
 VERIFY_TOKEN = "sap_guru_2026"
 AUTO_REPLY = os.getenv("AUTO_REPLY", "false").lower() == "true"
