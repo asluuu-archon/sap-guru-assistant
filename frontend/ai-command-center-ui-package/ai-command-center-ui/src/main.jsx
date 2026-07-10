@@ -1099,16 +1099,250 @@ function LeadDetailPanel({ lead: initialLead, onClose, getLeadName }) {
 
 // ─── OTHER PAGES (unchanged) ──────────────────────────────────────────────────
 
+const STAGE_ICONS = {
+  'Customer Stage': '👤',
+  'Identity Stage': '🪪',
+  'Conversation Stage': '💬',
+  'Business Brain Stage': '🧠',
+  'Customer Brain Stage': '✨',
+  'Intent Stage': '🎯',
+  'Lead Stage': '🔥',
+  'Decision Stage': '⚡',
+  'Reply Stage': '📤',
+};
+
+const STAGE_COLORS = {
+  completed: { bg: '#f0fdf4', border: '#86efac', dot: '#10b981', text: '#14532d' },
+  skipped:   { bg: '#f8fafc', border: '#e2e8f0', dot: '#94a3b8', text: '#64748b' },
+  error:     { bg: '#fef2f2', border: '#fca5a5', dot: '#ef4444', text: '#7f1d1d' },
+  running:   { bg: '#eff6ff', border: '#93c5fd', dot: '#2563eb', text: '#1e3a8a' },
+};
+
 function Debugger() {
-  const stages=['Customer Stage','Identity Stage','Conversation Stage','Business Brain Stage','Customer Brain Stage','Intent Stage','Lead Stage','Decision Stage','Reply Stage'];
+  const [message, setMessage] = useState('I want to learn SAP FICO. I am based in Mumbai. Please share fee details.');
+  const [senderId, setSenderId] = useState('debug_test_user');
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+  const [expandedStage, setExpandedStage] = useState(null);
+
+  const runPipeline = async () => {
+    if (!message.trim()) return;
+    setRunning(true);
+    setResult(null);
+    setError(null);
+    setExpandedStage(null);
+    try {
+      const res = await fetch(`${API_BASE}/debug/pipeline`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: message.trim(), sender_id: senderId.trim() || 'debug_test_user' }),
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setResult(data);
+      } else {
+        setError(data.message || 'Pipeline failed');
+      }
+    } catch (e) {
+      setError('Network error — is the backend running?');
+    }
+    setRunning(false);
+  };
+
+  const maxTiming = result ? Math.max(...result.stages.map(s => s.timing_ms || 0), 1) : 1;
+
   return (
     <section>
-      <Title title="Pipeline Debugger" sub="See how the AI is thinking"/>
-      <div className="debug-input"><input defaultValue="I want to learn SAP and become a functional consultant. I am based in Dubai..."/><button><Play size={14}/> Run Pipeline</button></div>
-      <div className="grid2">
-        <Card title="Pipeline Stages"><div>{stages.map((s,i)=><div className="stage" key={s}><span>{i+1}. {s}</span><b>Completed</b><small>{[120,89,112,210,310,15,18,10,120][i]}ms</small></div>)}</div><h3>Total Time: 1.013s</h3></Card>
-        <Card title="Pipeline Result"><Badge text="Lead Detected"/><KeyVals data={{Intent:'training_enquiry','Intent Confidence':'0.95','Lead Detected':'True','Lead Score':'85','Temperature':'Warm','Action':'reply','Should Reply':'True'}}/><div className="reply">Sure... please share your name, contact number, location and whether you prefer online/offline.</div></Card>
-      </div>
+      <Title title="Pipeline Debugger" sub="Type any message and watch the AI process it stage by stage"/>
+
+      {/* Input panel */}
+      <Card>
+        <div style={{display:'flex', flexDirection:'column', gap:'10px'}}>
+          <div style={{display:'flex', gap:'10px'}}>
+            <div style={{flex:1}}>
+              <label style={{fontSize:'0.78em', fontWeight:700, color:'#475569', textTransform:'uppercase', letterSpacing:'0.04em', display:'block', marginBottom:'5px'}}>Test Message</label>
+              <textarea
+                value={message}
+                onChange={e => setMessage(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) runPipeline(); }}
+                style={{width:'100%', minHeight:'70px', maxHeight:'120px', resize:'vertical', fontSize:'0.9em', boxSizing:'border-box'}}
+                placeholder="Type any message a customer might send..."
+              />
+            </div>
+            <div style={{width:'180px', flexShrink:0}}>
+              <label style={{fontSize:'0.78em', fontWeight:700, color:'#475569', textTransform:'uppercase', letterSpacing:'0.04em', display:'block', marginBottom:'5px'}}>Sender ID (optional)</label>
+              <input
+                value={senderId}
+                onChange={e => setSenderId(e.target.value)}
+                style={{width:'100%', fontSize:'0.88em', boxSizing:'border-box'}}
+                placeholder="debug_test_user"
+              />
+              <div style={{fontSize:'0.72em', color:'#94a3b8', marginTop:'4px'}}>Use a real sender_id to test with existing conversation history</div>
+            </div>
+          </div>
+          <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
+            <button onClick={runPipeline} disabled={running || !message.trim()} style={{display:'flex', alignItems:'center', gap:'6px', padding:'8px 20px'}}>
+              <Play size={14}/> {running ? 'Running Pipeline...' : 'Run Pipeline'}
+            </button>
+            {result && (
+              <div style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
+                <span style={{fontSize:'0.8em', padding:'4px 10px', borderRadius:'20px', background: result.is_lead ? '#fef3c7' : '#f1f5f9', color: result.is_lead ? '#92400e' : '#475569', fontWeight:600, border:`1px solid ${result.is_lead ? '#fcd34d' : '#e2e8f0'}`}}>
+                  {result.is_lead ? '🔥 Lead Detected' : '👤 Not a Lead'}
+                </span>
+                <span style={{fontSize:'0.8em', padding:'4px 10px', borderRadius:'20px', background:'#eff6ff', color:'#1e40af', fontWeight:600, border:'1px solid #bfdbfe'}}>
+                  🎯 {result.intent}
+                </span>
+                <span style={{fontSize:'0.8em', padding:'4px 10px', borderRadius:'20px', background: result.needs_human ? '#fef2f2' : '#f0fdf4', color: result.needs_human ? '#991b1b' : '#14532d', fontWeight:600, border:`1px solid ${result.needs_human ? '#fca5a5' : '#86efac'}`}}>
+                  {result.needs_human ? '🚨 Needs Human' : '✅ AI Handled'}
+                </span>
+                <span style={{fontSize:'0.8em', padding:'4px 10px', borderRadius:'20px', background:'#f8fafc', color:'#475569', fontWeight:600, border:'1px solid #e2e8f0'}}>
+                  ⏱ {result.total_ms}ms total
+                </span>
+              </div>
+            )}
+          </div>
+          <div style={{fontSize:'0.75em', color:'#94a3b8'}}>Ctrl+Enter to run · This runs a test — it will NOT send any message to Instagram</div>
+        </div>
+      </Card>
+
+      {error && (
+        <div style={{padding:'12px 16px', background:'#fef2f2', border:'1px solid #fca5a5', borderRadius:'8px', color:'#991b1b', fontSize:'0.88em', marginTop:'12px'}}>
+          ⚠ {error}
+        </div>
+      )}
+
+      {result && (
+        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px', marginTop:'16px'}}>
+
+          {/* Stage cards */}
+          <Card title={`Pipeline Stages · ${result.stages.length} stages · ${result.total_ms}ms`}>
+            <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
+              {result.stages.map((stage, i) => {
+                const colors = STAGE_COLORS[stage.status] || STAGE_COLORS.completed;
+                const isExpanded = expandedStage === i;
+                const timingPct = Math.round((stage.timing_ms / maxTiming) * 100);
+                return (
+                  <div
+                    key={i}
+                    onClick={() => setExpandedStage(isExpanded ? null : i)}
+                    style={{
+                      padding:'10px 12px',
+                      background: colors.bg,
+                      border: `1px solid ${colors.border}`,
+                      borderRadius:'8px',
+                      cursor:'pointer',
+                      transition:'all 0.15s',
+                    }}
+                  >
+                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                      <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                        <span style={{fontSize:'1em'}}>{STAGE_ICONS[stage.name] || '⚙️'}</span>
+                        <div>
+                          <div style={{fontSize:'0.85em', fontWeight:700, color:'#1e293b'}}>{stage.name}</div>
+                          <div style={{fontSize:'0.75em', color:'#64748b', marginTop:'1px'}}>{stage.summary}</div>
+                        </div>
+                      </div>
+                      <div style={{textAlign:'right', flexShrink:0, marginLeft:'8px'}}>
+                        <div style={{fontSize:'0.75em', fontWeight:700, color: colors.text}}>
+                          {stage.status === 'skipped' ? 'SKIPPED' : `${stage.timing_ms}ms`}
+                        </div>
+                        <div style={{fontSize:'0.65em', color:'#94a3b8'}}>{isExpanded ? '▲ hide' : '▼ details'}</div>
+                      </div>
+                    </div>
+                    {/* Timing bar */}
+                    {stage.status !== 'skipped' && (
+                      <div style={{marginTop:'6px', height:'3px', background:'#e2e8f0', borderRadius:'2px'}}>
+                        <div style={{height:'100%', width:`${timingPct}%`, background: colors.dot, borderRadius:'2px', transition:'width 0.4s ease'}} />
+                      </div>
+                    )}
+                    {/* Expanded details */}
+                    {isExpanded && (
+                      <div style={{marginTop:'10px', padding:'10px', background:'rgba(255,255,255,0.7)', borderRadius:'6px', border:'1px solid #e2e8f0'}}>
+                        {Object.entries(stage.details || {}).map(([k, v]) => (
+                          <div key={k} style={{display:'flex', gap:'8px', marginBottom:'4px', fontSize:'0.8em'}}>
+                            <span style={{color:'#64748b', fontWeight:600, minWidth:'120px', flexShrink:0}}>{k.replace(/_/g, ' ')}:</span>
+                            <span style={{color:'#1e293b', wordBreak:'break-word'}}>
+                              {typeof v === 'boolean' ? (v ? '✅ Yes' : '❌ No') : (v === null || v === undefined || v === '') ? <span style={{color:'#94a3b8', fontStyle:'italic'}}>none</span> : String(v)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+
+          {/* Result panel */}
+          <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
+
+            {/* AI Reply */}
+            <Card title="AI Generated Reply">
+              {result.reply_text ? (
+                <div>
+                  <div style={{padding:'14px', background:'#eff6ff', border:'1px solid #bfdbfe', borderRadius:'8px', fontSize:'0.9em', color:'#1e3a8a', lineHeight:'1.6', marginBottom:'10px'}}>
+                    {result.reply_text}
+                  </div>
+                  <div style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
+                    <span style={{fontSize:'0.78em', padding:'3px 9px', borderRadius:'12px', background:'#f1f5f9', color:'#475569', border:'1px solid #e2e8f0'}}>Category: {result.reply_category}</span>
+                    <span style={{fontSize:'0.78em', padding:'3px 9px', borderRadius:'12px', background:'#f1f5f9', color:'#475569', border:'1px solid #e2e8f0'}}>{result.reply_text.length} characters</span>
+                  </div>
+                </div>
+              ) : (
+                <div style={{padding:'14px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', fontSize:'0.88em', color:'#64748b', fontStyle:'italic'}}>
+                  No reply generated — action was "{result.action}"
+                </div>
+              )}
+            </Card>
+
+            {/* Summary */}
+            <Card title="Pipeline Summary">
+              <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px'}}>
+                {[
+                  ['Intent', result.intent],
+                  ['Action', result.action],
+                  ['Lead Detected', result.is_lead ? 'Yes' : 'No'],
+                  ['Needs Human', result.needs_human ? 'Yes' : 'No'],
+                  ['Total Time', `${result.total_ms}ms`],
+                  ['Stages Run', result.stages.filter(s => s.status === 'completed').length + ' / ' + result.stages.length],
+                ].map(([k, v]) => (
+                  <div key={k} style={{padding:'8px 10px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px'}}>
+                    <div style={{fontSize:'0.7em', color:'#64748b', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'3px'}}>{k}</div>
+                    <div style={{fontSize:'0.88em', color:'#1e293b', fontWeight:600}}>{v}</div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* AI Memory */}
+            {result.ai_memory && Object.keys(result.ai_memory).length > 0 && (
+              <Card title="AI Memory (what the AI remembered)">
+                <div style={{display:'flex', flexDirection:'column', gap:'4px'}}>
+                  {Object.entries(result.ai_memory).map(([k, v]) => (
+                    <div key={k} style={{display:'flex', gap:'8px', fontSize:'0.82em', padding:'4px 0', borderBottom:'1px solid #f1f5f9'}}>
+                      <span style={{color:'#64748b', fontWeight:600, minWidth:'140px', flexShrink:0}}>{k.replace(/_/g, ' ')}:</span>
+                      <span style={{color:'#1e293b'}}>{v === null || v === undefined ? <span style={{color:'#94a3b8', fontStyle:'italic'}}>null</span> : String(v)}</span>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
+            {/* Logs */}
+            <Card title="Pipeline Logs">
+              <div style={{fontFamily:'monospace', fontSize:'0.78em', display:'flex', flexDirection:'column', gap:'3px'}}>
+                {(result.logs || []).map((log, i) => (
+                  <div key={i} style={{color: log.includes('error') || log.includes('Error') ? '#ef4444' : '#475569', padding:'2px 0', borderBottom:'1px solid #f8fafc'}}>
+                    <span style={{color:'#94a3b8', marginRight:'8px'}}>{String(i+1).padStart(2,'0')}</span>{log}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
