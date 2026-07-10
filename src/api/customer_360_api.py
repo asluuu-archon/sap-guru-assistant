@@ -231,9 +231,7 @@ def search_customers(q: str = "", limit: int = 20):
     Returns a lightweight list for the search/browse UI.
     """
     try:
-        query = supabase.table("leads").select(
-            "sender_id, name, phone, email, location, temperature, lead_stage, status, is_qualified, interested_module, updated_at, instagram_username"
-        )
+        query = supabase.table("leads").select("*")
 
         if q:
             # Supabase ilike search on name
