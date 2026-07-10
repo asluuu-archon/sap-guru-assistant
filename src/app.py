@@ -10,6 +10,7 @@ from .api.business_api import router as business_router
 from .api.conversation_api import router as conversation_router
 from .api.suggest_api import router as suggest_router
 from .api.business_brain_api import router as brain_router
+from .api.settings_api import router as settings_router
 from .services.webhook_service import process_instagram_webhook
 
 
@@ -50,6 +51,7 @@ app.include_router(business_router)
 app.include_router(conversation_router)
 app.include_router(suggest_router)
 app.include_router(brain_router)
+app.include_router(settings_router)
 
 VERIFY_TOKEN = "sap_guru_2026"
 AUTO_REPLY = os.getenv("AUTO_REPLY", "false").lower() == "true"
