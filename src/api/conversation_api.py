@@ -85,7 +85,7 @@ def list_conversations(
         # Fetch conversations
         query = (
             supabase.table("conversations")
-            .select("sender_id, updated_at, created_at, needs_human, conversation_state, category, history, last_question, summary")
+            .select("sender_id, updated_at, needs_human, conversation_state, category, history, last_question, summary")
             .order("updated_at", desc=True)
             .limit(500)  # Fetch more, filter in Python for accuracy
         )

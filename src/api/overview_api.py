@@ -53,10 +53,10 @@ def overview():
     leads_result = supabase.table("leads").select("*").execute()
     all_leads = leads_result.data or []
 
-    # All conversations
+    # All conversations (conversations table has no created_at, only updated_at)
     convs_result = (
         supabase.table("conversations")
-        .select("sender_id, updated_at, created_at, needs_human, conversation_state, category")
+        .select("sender_id, updated_at, needs_human, conversation_state, category")
         .execute()
     )
     all_convs = convs_result.data or []
@@ -155,7 +155,7 @@ def overview():
 
     # Count conversations per day
     for conv in all_convs:
-        dt = safe_date(conv.get("updated_at") or conv.get("created_at"))
+        dt = safe_date(conv.get("updated_at"))
         if dt and dt >= seven_days_ago:
             day_key = dt.date()
             if day_key in chart_days:
@@ -197,7 +197,7 @@ def overview():
     needs_human_list = [
         {
             "sender_id": c.get("sender_id"),
-            "name": customer_name_map.get(c.get("sender_id"), f"User ...{str(c.get('sender_id', ''))[-4:]}"),
+            "name": customer_name_map.get(c.get("sender_id") or "", f"User ...{str(c.get('sender_id', ''))[-4:]}"),
             "state": c.get("conversation_state"),
             "updated_at": c.get("updated_at"),
         }
