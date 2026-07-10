@@ -1042,23 +1042,23 @@ function LeadDetailPanel({ lead: initialLead, onClose, getLeadName }) {
             <div style={{display:'flex', flexDirection:'column', gap:'10px'}}>
 
               {/* One-liner */}
-              <div style={{padding:'10px 12px', background:'rgba(139,92,246,0.08)', borderRadius:'8px', borderLeft:'3px solid #8b5cf6', fontSize:'0.88em', color:'#e2e8f0', fontStyle:'italic'}}>
+              <div style={{padding:'10px 12px', background:'#f3f0ff', borderRadius:'8px', borderLeft:'3px solid #8b5cf6', fontSize:'0.88em', color:'#3b0764', fontStyle:'italic', lineHeight:'1.5'}}>
                 "{summary.summary?.one_liner}"
               </div>
 
               {/* Intent + Stage + Urgency row */}
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'8px'}}>
-                <div style={{padding:'8px', background:'rgba(255,255,255,0.04)', borderRadius:'8px', textAlign:'center'}}>
-                  <div style={{fontSize:'0.7em', color:'#64748b', marginBottom:'3px'}}>INTENT</div>
-                  <div style={{fontSize:'0.8em', color:'#e2e8f0'}}>{summary.summary?.intent || '-'}</div>
+                <div style={{padding:'8px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', textAlign:'center'}}>
+                  <div style={{fontSize:'0.7em', color:'#64748b', marginBottom:'3px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>INTENT</div>
+                  <div style={{fontSize:'0.82em', color:'#1e293b', fontWeight:600}}>{summary.summary?.intent || '-'}</div>
                 </div>
-                <div style={{padding:'8px', background:'rgba(255,255,255,0.04)', borderRadius:'8px', textAlign:'center'}}>
-                  <div style={{fontSize:'0.7em', color:'#64748b', marginBottom:'3px'}}>STAGE</div>
-                  <div style={{fontSize:'0.8em', color:'#e2e8f0'}}>{summary.summary?.stage || '-'}</div>
+                <div style={{padding:'8px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', textAlign:'center'}}>
+                  <div style={{fontSize:'0.7em', color:'#64748b', marginBottom:'3px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>STAGE</div>
+                  <div style={{fontSize:'0.82em', color:'#1e293b', fontWeight:600}}>{summary.summary?.stage || '-'}</div>
                 </div>
-                <div style={{padding:'8px', background:'rgba(255,255,255,0.04)', borderRadius:'8px', textAlign:'center'}}>
-                  <div style={{fontSize:'0.7em', color:'#64748b', marginBottom:'3px'}}>URGENCY</div>
-                  <div style={{fontSize:'0.8em', fontWeight:700, color: URGENCY_COLORS[summary.summary?.urgency] || '#94a3b8', textTransform:'capitalize'}}>
+                <div style={{padding:'8px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', textAlign:'center'}}>
+                  <div style={{fontSize:'0.7em', color:'#64748b', marginBottom:'3px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>URGENCY</div>
+                  <div style={{fontSize:'0.82em', fontWeight:700, color: URGENCY_COLORS[summary.summary?.urgency] || '#475569', textTransform:'capitalize'}}>
                     {summary.summary?.urgency || '-'}
                   </div>
                 </div>
@@ -1066,11 +1066,11 @@ function LeadDetailPanel({ lead: initialLead, onClose, getLeadName }) {
 
               {/* Key facts */}
               {summary.summary?.key_facts?.length > 0 && (
-                <div>
-                  <div style={{fontSize:'0.75em', color:'#64748b', marginBottom:'6px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Key Facts</div>
-                  <ul style={{margin:0, padding:'0 0 0 16px', display:'flex', flexDirection:'column', gap:'4px'}}>
+                <div style={{background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', padding:'10px 12px'}}>
+                  <div style={{fontSize:'0.75em', color:'#475569', marginBottom:'6px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em'}}>Key Facts</div>
+                  <ul style={{margin:0, padding:'0 0 0 16px', display:'flex', flexDirection:'column', gap:'5px'}}>
                     {summary.summary.key_facts.map((fact, i) => (
-                      <li key={i} style={{fontSize:'0.83em', color:'#94a3b8'}}>{fact}</li>
+                      <li key={i} style={{fontSize:'0.85em', color:'#1e293b', lineHeight:'1.5'}}>{fact}</li>
                     ))}
                   </ul>
                 </div>
@@ -1078,14 +1078,14 @@ function LeadDetailPanel({ lead: initialLead, onClose, getLeadName }) {
 
               {/* Recommended action */}
               {summary.summary?.recommended_action && (
-                <div style={{padding:'10px 12px', background:'rgba(16,185,129,0.08)', borderRadius:'8px', borderLeft:'3px solid #10b981'}}>
-                  <div style={{fontSize:'0.72em', color:'#10b981', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'4px'}}>Recommended Action</div>
-                  <div style={{fontSize:'0.85em', color:'#e2e8f0'}}>{summary.summary.recommended_action}</div>
+                <div style={{padding:'10px 12px', background:'#f0fdf4', border:'1px solid #86efac', borderRadius:'8px', borderLeft:'3px solid #10b981'}}>
+                  <div style={{fontSize:'0.72em', color:'#15803d', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'4px'}}>Recommended Action</div>
+                  <div style={{fontSize:'0.87em', color:'#14532d', lineHeight:'1.5'}}>{summary.summary.recommended_action}</div>
                 </div>
               )}
 
               {/* Meta */}
-              <div style={{fontSize:'0.75em', color:'#475569', display:'flex', gap:'12px'}}>
+              <div style={{fontSize:'0.75em', color:'#64748b', display:'flex', gap:'12px'}}>
                 <span>{summary.message_count} messages</span>
                 {summary.last_active && <span>Last active: {new Date(summary.last_active).toLocaleDateString()}</span>}
               </div>
