@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Bell, HelpCircle, Search, Settings, LayoutDashboard, MessagesSquare, Users, Bug, Bot, Brain, UserRound, BarChart3, Workflow, Plus, Download, Filter, Play, X, Phone, MapPin, BookOpen, Star, Clock, ChevronRight, ToggleLeft, ToggleRight, Pencil, Trash2, Tag, Zap, Save, AlertTriangle } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
 import './styles.css';
 
 const API_BASE = "https://sap-guru-assistant.onrender.com";
@@ -2807,10 +2807,342 @@ function SettingsPage() {
 }
 
 function Automation() {
+  const [rules, setRules] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [sendingRule, setSendingRule] = useState(null);
+  const [sendConfirm, setSendConfirm] = useState(null); // {ruleId, count, message, target}
+  const [bulkForm, setBulkForm] = useState({ target_group: 'hot_leads', message_template: '' });
+  const [bulkPreview, setBulkPreview] = useState(null);
+  const [bulkSending, setBulkSending] = useState(false);
+  const [bulkResult, setBulkResult] = useState(null);
+  const [toast, setToast] = useState('');
+  const [newRule, setNewRule] = useState({ name: '', target_group: 'hot_leads', message_template: '' });
+  const [saving, setSaving] = useState(false);
+
+  const TARGET_LABELS = {
+    hot_leads: { label: 'Hot Leads', color: '#ef4444', bg: '#fef2f2', emoji: '🔴' },
+    warm_leads: { label: 'Warm Leads', color: '#f59e0b', bg: '#fffbeb', emoji: '🟡' },
+    all_leads: { label: 'All Leads', color: '#3b82f6', bg: '#eff6ff', emoji: '📋' },
+    qualified: { label: 'Qualified Leads', color: '#10b981', bg: '#f0fdf4', emoji: '✅' },
+    needs_human: { label: 'Needs Human Review', color: '#8b5cf6', bg: '#f5f3ff', emoji: '👤' },
+  };
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
+
+  const fetchRules = () => {
+    setLoading(true);
+    fetch(`${API_BASE}/automation/rules`)
+      .then(r => r.json())
+      .then(d => { if (d.status === 'success') setRules(d.rules || []); })
+      .catch(() => setRules([]))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchRules(); }, []);
+
+  const handleToggle = (rule) => {
+    const newState = !rule.is_active;
+    setRules(prev => prev.map(r => r.id === rule.id ? { ...r, is_active: newState } : r));
+    fetch(`${API_BASE}/automation/rules/${rule.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_active: newState })
+    })
+      .then(r => r.json())
+      .then(d => { if (d.status === 'success') showToast(`Rule "${rule.name}" ${newState ? 'enabled' : 'disabled'}`); })
+      .catch(() => { setRules(prev => prev.map(r => r.id === rule.id ? { ...r, is_active: !newState } : r)); showToast('Failed to update rule'); });
+  };
+
+  const handleSendNow = (rule) => {
+    setSendingRule(rule.id);
+    fetch(`${API_BASE}/automation/preview-audience`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target_group: rule.target_group, message_template: rule.message_template })
+    })
+      .then(r => r.json())
+      .then(d => {
+        setSendingRule(null);
+        setSendConfirm({ ruleId: rule.id, count: d.count || 0, message: rule.message_template, target: rule.target_group, ruleName: rule.name });
+      })
+      .catch(() => { setSendingRule(null); showToast('Failed to preview audience'); });
+  };
+
+  const confirmSend = () => {
+    if (!sendConfirm) return;
+    setSendingRule(sendConfirm.ruleId);
+    fetch(`${API_BASE}/automation/send-bulk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target_group: sendConfirm.target, message_template: sendConfirm.message })
+    })
+      .then(r => r.json())
+      .then(d => {
+        setSendingRule(null);
+        setSendConfirm(null);
+        showToast(d.message || `Queued ${d.queued} messages successfully!`);
+      })
+      .catch(() => { setSendingRule(null); setSendConfirm(null); showToast('Send failed'); });
+  };
+
+  const handleDeleteRule = (ruleId, ruleName) => {
+    if (!window.confirm(`Delete rule "${ruleName}"?`)) return;
+    fetch(`${API_BASE}/automation/rules/${ruleId}`, { method: 'DELETE' })
+      .then(() => { setRules(prev => prev.filter(r => r.id !== ruleId)); showToast('Rule deleted'); })
+      .catch(() => showToast('Delete failed'));
+  };
+
+  const handleAddRule = () => {
+    if (!newRule.name.trim() || !newRule.message_template.trim()) { showToast('Name and message are required'); return; }
+    setSaving(true);
+    fetch(`${API_BASE}/automation/rules`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...newRule, is_active: false })
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') {
+          setRules(prev => [...prev, d.rule]);
+          setShowAddModal(false);
+          setNewRule({ name: '', target_group: 'hot_leads', message_template: '' });
+          showToast('Rule created!');
+        } else showToast(d.detail || 'Failed to create rule');
+      })
+      .catch(() => showToast('Failed to create rule'))
+      .finally(() => setSaving(false));
+  };
+
+  const handleBulkPreview = () => {
+    if (!bulkForm.message_template.trim()) { showToast('Enter a message first'); return; }
+    fetch(`${API_BASE}/automation/preview-audience`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bulkForm)
+    })
+      .then(r => r.json())
+      .then(d => setBulkPreview(d.count || 0))
+      .catch(() => showToast('Preview failed'));
+  };
+
+  const handleBulkSend = () => {
+    if (!bulkForm.message_template.trim()) { showToast('Enter a message first'); return; }
+    setBulkSending(true);
+    fetch(`${API_BASE}/automation/send-bulk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bulkForm)
+    })
+      .then(r => r.json())
+      .then(d => { setBulkResult(d); setBulkSending(false); })
+      .catch(() => { showToast('Send failed'); setBulkSending(false); });
+  };
+
   return (
     <section>
-      <Title title="Automation" sub="Rules, delays and approval flow" action={<button><Plus size={15}/> New Rule</button>}/>
-      <Card title="Auto Reply Engine"><Table heads={['Rule','Trigger','Delay','Status','Action']} rows={[[ '15-minute delayed reply','Pending reply created','15 min',<Badge text="Active"/>,<button className="outline">Edit</button>],[ 'Manual review required','Low confidence reply','No auto send',<Badge text="Active"/>,<button className="outline">Edit</button>],[ 'Lead handoff','High-intent course enquiry','Instant',<Badge text="Active"/>,<button className="outline">Edit</button>]]}/></Card>
+      {/* Toast */}
+      {toast && (
+        <div style={{position:'fixed',bottom:24,right:24,background:'#1e293b',color:'white',padding:'12px 20px',borderRadius:10,fontSize:13,fontWeight:500,zIndex:9999,boxShadow:'0 4px 20px rgba(0,0,0,0.2)'}}>
+          {toast}
+        </div>
+      )}
+
+      <Title
+        title="Automation"
+        sub="Manage automation rules and send bulk messages to your lead groups"
+        action={
+          <div style={{display:'flex',gap:8}}>
+            <button onClick={() => setShowBulkModal(true)} style={{padding:'7px 14px',borderRadius:6,background:'#10b981',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',gap:6}}>
+              <Zap size={14}/> Bulk Message
+            </button>
+            <button onClick={() => setShowAddModal(true)} style={{padding:'7px 14px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',gap:6}}>
+              <Plus size={14}/> New Rule
+            </button>
+          </div>
+        }
+      />
+
+      {/* Stats strip */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
+        {[
+          { label:'Total Rules', value: rules.length, color:'#1e293b' },
+          { label:'Active Rules', value: rules.filter(r=>r.is_active).length, color:'#10b981' },
+          { label:'Inactive Rules', value: rules.filter(r=>!r.is_active).length, color:'#94a3b8' },
+          { label:'Target Groups', value: [...new Set(rules.map(r=>r.target_group))].length, color:'#3b82f6' },
+        ].map((s,i) => (
+          <div key={i} style={{background:'white',borderRadius:10,padding:'14px 18px',border:'1px solid #e2e8f0'}}>
+            <div style={{fontSize:11,color:'#64748b',marginBottom:4}}>{s.label}</div>
+            <div style={{fontSize:24,fontWeight:700,color:s.color}}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Rules list */}
+      {loading ? (
+        <div style={{textAlign:'center',padding:40,color:'#64748b'}}>Loading automation rules...</div>
+      ) : rules.length === 0 ? (
+        <div style={{background:'white',borderRadius:10,border:'1px solid #e2e8f0',padding:48,textAlign:'center'}}>
+          <Zap size={40} color="#e2e8f0" style={{margin:'0 auto 12px'}}/>
+          <div style={{fontSize:16,fontWeight:600,color:'#1e293b',marginBottom:6}}>No automation rules yet</div>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:20}}>Create your first rule to start automating follow-ups</div>
+          <button onClick={() => setShowAddModal(true)} style={{padding:'8px 20px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600}}>+ Create First Rule</button>
+        </div>
+      ) : (
+        <div style={{display:'flex',flexDirection:'column',gap:12}}>
+          {rules.map(rule => {
+            const tg = TARGET_LABELS[rule.target_group] || { label: rule.target_group, color:'#64748b', bg:'#f8fafc', emoji:'📋' };
+            const isSending = sendingRule === rule.id;
+            return (
+              <div key={rule.id} style={{background:'white',borderRadius:10,border:`1px solid ${rule.is_active ? '#bfdbfe' : '#e2e8f0'}`,padding:'18px 20px',display:'flex',alignItems:'flex-start',gap:16,transition:'border-color 0.2s'}}>
+                {/* Left — toggle */}
+                <div style={{paddingTop:2}}>
+                  <button
+                    onClick={() => handleToggle(rule)}
+                    title={rule.is_active ? 'Click to disable' : 'Click to enable'}
+                    style={{background:'none',border:'none',cursor:'pointer',padding:0,display:'flex',alignItems:'center'}}
+                  >
+                    {rule.is_active
+                      ? <ToggleRight size={32} color="#3b82f6"/>
+                      : <ToggleLeft size={32} color="#cbd5e1"/>}
+                  </button>
+                </div>
+
+                {/* Middle — content */}
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:6}}>
+                    <span style={{fontSize:15,fontWeight:700,color:'#1e293b'}}>{rule.name}</span>
+                    <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:tg.bg,color:tg.color}}>{tg.emoji} {tg.label}</span>
+                    {rule.is_active
+                      ? <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:'#f0fdf4',color:'#10b981'}}>● Active</span>
+                      : <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:'#f8fafc',color:'#94a3b8'}}>○ Inactive</span>}
+                  </div>
+                  <div style={{fontSize:13,color:'#475569',background:'#f8fafc',borderRadius:6,padding:'10px 12px',fontFamily:'monospace',lineHeight:1.5,wordBreak:'break-word'}}>
+                    {rule.message_template}
+                  </div>
+                  {rule.created_at && (
+                    <div style={{fontSize:11,color:'#94a3b8',marginTop:6}}>Created {new Date(rule.created_at).toLocaleDateString()}</div>
+                  )}
+                </div>
+
+                {/* Right — actions */}
+                <div style={{display:'flex',flexDirection:'column',gap:8,minWidth:100}}>
+                  <button
+                    onClick={() => handleSendNow(rule)}
+                    disabled={isSending}
+                    style={{padding:'7px 14px',borderRadius:6,background: isSending ? '#e2e8f0' : '#3b82f6',color: isSending ? '#94a3b8' : 'white',border:'none',cursor: isSending ? 'not-allowed' : 'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',gap:5,justifyContent:'center'}}
+                  >
+                    <Play size={12}/> {isSending ? 'Loading...' : 'Send Now'}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteRule(rule.id, rule.name)}
+                    style={{padding:'7px 14px',borderRadius:6,background:'white',color:'#ef4444',border:'1px solid #fecaca',cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',gap:5,justifyContent:'center'}}
+                  >
+                    <Trash2 size={12}/> Delete
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Confirm Send Modal ── */}
+      {sendConfirm && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
+          <div style={{background:'white',borderRadius:12,padding:28,width:440,maxWidth:'90vw',boxShadow:'0 20px 60px rgba(0,0,0,0.2)'}}>
+            <div style={{fontSize:16,fontWeight:700,color:'#1e293b',marginBottom:8}}>Confirm Bulk Send</div>
+            <div style={{fontSize:13,color:'#64748b',marginBottom:16}}>You are about to send a message to <strong style={{color:'#1e293b'}}>{sendConfirm.count} leads</strong> in the <strong style={{color:'#1e293b'}}>{TARGET_LABELS[sendConfirm.target]?.label || sendConfirm.target}</strong> group.</div>
+            <div style={{background:'#f8fafc',borderRadius:8,padding:'12px 14px',fontSize:13,color:'#475569',fontFamily:'monospace',marginBottom:20,lineHeight:1.5}}>{sendConfirm.message}</div>
+            <div style={{display:'flex',gap:10,justifyContent:'flex-end'}}>
+              <button onClick={() => setSendConfirm(null)} style={{padding:'8px 18px',borderRadius:6,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13}}>Cancel</button>
+              <button onClick={confirmSend} style={{padding:'8px 18px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600}}>Send to {sendConfirm.count} leads</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Add Rule Modal ── */}
+      {showAddModal && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
+          <div style={{background:'white',borderRadius:12,padding:28,width:500,maxWidth:'90vw',boxShadow:'0 20px 60px rgba(0,0,0,0.2)'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+              <div style={{fontSize:16,fontWeight:700,color:'#1e293b'}}>Create Automation Rule</div>
+              <button onClick={() => setShowAddModal(false)} style={{background:'none',border:'none',cursor:'pointer',color:'#94a3b8'}}><X size={18}/></button>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:14}}>
+              <div>
+                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>RULE NAME</label>
+                <input value={newRule.name} onChange={e => setNewRule(p => ({...p, name: e.target.value}))} placeholder="e.g. Hot Lead Follow-Up" style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,boxSizing:'border-box'}}/>
+              </div>
+              <div>
+                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>TARGET GROUP</label>
+                <select value={newRule.target_group} onChange={e => setNewRule(p => ({...p, target_group: e.target.value}))} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,background:'white',boxSizing:'border-box'}}>
+                  {Object.entries(TARGET_LABELS).map(([k,v]) => <option key={k} value={k}>{v.emoji} {v.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>MESSAGE TEMPLATE</label>
+                <textarea value={newRule.message_template} onChange={e => setNewRule(p => ({...p, message_template: e.target.value}))} placeholder="Hi {name}, just checking in..." rows={4} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,resize:'vertical',fontFamily:'inherit',boxSizing:'border-box'}}/>
+                <div style={{fontSize:11,color:'#94a3b8',marginTop:4}}>Use {'{name}'} to personalise with the lead's name</div>
+              </div>
+            </div>
+            <div style={{display:'flex',gap:10,justifyContent:'flex-end',marginTop:20}}>
+              <button onClick={() => setShowAddModal(false)} style={{padding:'8px 18px',borderRadius:6,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13}}>Cancel</button>
+              <button onClick={handleAddRule} disabled={saving} style={{padding:'8px 18px',borderRadius:6,background: saving ? '#93c5fd' : '#3b82f6',color:'white',border:'none',cursor: saving ? 'not-allowed' : 'pointer',fontSize:13,fontWeight:600}}>{saving ? 'Saving...' : 'Create Rule'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Bulk Message Modal ── */}
+      {showBulkModal && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
+          <div style={{background:'white',borderRadius:12,padding:28,width:520,maxWidth:'90vw',boxShadow:'0 20px 60px rgba(0,0,0,0.2)'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+              <div style={{fontSize:16,fontWeight:700,color:'#1e293b'}}>Send Bulk Message</div>
+              <button onClick={() => { setShowBulkModal(false); setBulkPreview(null); setBulkResult(null); setBulkForm({target_group:'hot_leads',message_template:''}); }} style={{background:'none',border:'none',cursor:'pointer',color:'#94a3b8'}}><X size={18}/></button>
+            </div>
+
+            {bulkResult ? (
+              <div style={{textAlign:'center',padding:'20px 0'}}>
+                <div style={{fontSize:40,marginBottom:12}}>✅</div>
+                <div style={{fontSize:16,fontWeight:700,color:'#10b981',marginBottom:6}}>Messages Queued!</div>
+                <div style={{fontSize:13,color:'#64748b',marginBottom:20}}>{bulkResult.message}</div>
+                <button onClick={() => { setShowBulkModal(false); setBulkPreview(null); setBulkResult(null); setBulkForm({target_group:'hot_leads',message_template:''}); }} style={{padding:'8px 20px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600}}>Done</button>
+              </div>
+            ) : (
+              <div style={{display:'flex',flexDirection:'column',gap:14}}>
+                <div>
+                  <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>TARGET GROUP</label>
+                  <select value={bulkForm.target_group} onChange={e => { setBulkForm(p => ({...p, target_group: e.target.value})); setBulkPreview(null); }} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,background:'white',boxSizing:'border-box'}}>
+                    {Object.entries(TARGET_LABELS).map(([k,v]) => <option key={k} value={k}>{v.emoji} {v.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>MESSAGE</label>
+                  <textarea value={bulkForm.message_template} onChange={e => { setBulkForm(p => ({...p, message_template: e.target.value})); setBulkPreview(null); }} placeholder="Hi {name}, just checking in..." rows={4} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,resize:'vertical',fontFamily:'inherit',boxSizing:'border-box'}}/>
+                  <div style={{fontSize:11,color:'#94a3b8',marginTop:4}}>Use {'{name}'} to personalise with the lead's name</div>
+                </div>
+
+                {bulkPreview !== null && (
+                  <div style={{background: bulkPreview > 0 ? '#f0fdf4' : '#fef2f2',border:`1px solid ${bulkPreview > 0 ? '#bbf7d0' : '#fecaca'}`,borderRadius:8,padding:'10px 14px',fontSize:13,color: bulkPreview > 0 ? '#166534' : '#dc2626',fontWeight:600}}>
+                    {bulkPreview > 0 ? `✓ ${bulkPreview} leads will receive this message` : '⚠ No leads found in this group'}
+                  </div>
+                )}
+
+                <div style={{display:'flex',gap:10,justifyContent:'flex-end',marginTop:4}}>
+                  <button onClick={handleBulkPreview} style={{padding:'8px 16px',borderRadius:6,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13}}>Preview Audience</button>
+                  <button onClick={handleBulkSend} disabled={bulkSending || bulkPreview === 0} style={{padding:'8px 18px',borderRadius:6,background: bulkSending ? '#93c5fd' : '#3b82f6',color:'white',border:'none',cursor: bulkSending ? 'not-allowed' : 'pointer',fontSize:13,fontWeight:600}}>
+                    {bulkSending ? 'Sending...' : bulkPreview !== null ? `Send to ${bulkPreview} leads` : 'Send'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
