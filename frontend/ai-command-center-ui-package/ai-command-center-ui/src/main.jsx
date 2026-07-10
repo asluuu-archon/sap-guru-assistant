@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Bell, HelpCircle, Search, Settings, LayoutDashboard, MessagesSquare, Users, Bug, Bot, Brain, UserRound, BarChart3, Workflow, Plus, Download, Filter, Play, X, Phone, MapPin, BookOpen, Star, Clock, ChevronRight, ToggleLeft, ToggleRight, Pencil, Trash2, Tag, Zap, Save, AlertTriangle, Building2, Globe, CheckCircle } from 'lucide-react';
+import { Bell, HelpCircle, Search, Settings, LayoutDashboard, MessagesSquare, Users, Bug, Bot, Brain, UserRound, BarChart3, Workflow, Plus, Download, Filter, Play, X, Phone, MapPin, BookOpen, Star, Clock, ChevronRight, ToggleLeft, ToggleRight, Pencil, Trash2, Tag, Zap, Save, AlertTriangle, Building2, Globe, CheckCircle, Plug, Wifi, WifiOff, RefreshCw, ExternalLink, Key, Link } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
 import './styles.css';
 
@@ -8,7 +8,7 @@ const API_BASE = "https://sap-guru-assistant.onrender.com";
 
 const nav = [
   ['Overview', LayoutDashboard], ['Conversations', MessagesSquare], ['Leads', Users], ['Pipeline Debugger', Bug],
-  ['AI Playground', Bot], ['Business Brain', Brain], ['Customer 360°', UserRound], ['Reports', BarChart3], ['Automation', Workflow], ['Businesses', Building2], ['Settings', Settings]
+  ['AI Playground', Bot], ['Business Brain', Brain], ['Customer 360°', UserRound], ['Reports', BarChart3], ['Automation', Workflow], ['Businesses', Building2], ['Integrations', Plug], ['Settings', Settings]
 ];
 
 const colors = ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6'];
@@ -62,7 +62,7 @@ function App() {
     <div className="app">
       <Sidebar page={page} setPage={setPage}/>
       <main>
-        <Topbar businesses={businesses} activeBusiness={activeBusiness} onSwitch={handleSwitchBusiness}/>
+        <Topbar businesses={businesses} activeBusiness={activeBusiness} onSwitch={handleSwitchBusiness} onNavigate={setPage}/>
         <Screen page={page} dashboard={dashboard} activeBusiness={activeBusiness} setPage={setPage}/>
       </main>
     </div>
@@ -85,52 +85,74 @@ function Sidebar({page,setPage}) {
   );
 }
 
-function Topbar({ businesses, activeBusiness, onSwitch }) {
+function Topbar({ businesses, activeBusiness, onSwitch, onNavigate }) {
   const [showSwitcher, setShowSwitcher] = useState(false);
+  const dropdownRef = React.useRef(null);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClick = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowSwitcher(false);
+      }
+    };
+    if (showSwitcher) document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showSwitcher]);
 
   return (
     <header style={{position:'relative'}}>
       <div className="search"><Search size={16}/><input placeholder="Search anything..."/></div>
 
       {/* Business Switcher */}
-      {activeBusiness && (
-        <div style={{position:'relative'}}>
-          <button
-            onClick={() => setShowSwitcher(p => !p)}
-            style={{display:'flex',alignItems:'center',gap:8,padding:'6px 12px',borderRadius:8,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13,fontWeight:500,color:'#1e293b',maxWidth:220}}
-          >
-            <Building2 size={14} color="#3b82f6"/>
-            <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:140}}>{activeBusiness.name}</span>
-            <span style={{fontSize:10,color:'#94a3b8',marginLeft:2}}>▾</span>
-          </button>
+      <div style={{position:'relative'}} ref={dropdownRef}>
+        <button
+          onClick={() => setShowSwitcher(p => !p)}
+          style={{display:'flex',alignItems:'center',gap:8,padding:'6px 12px',borderRadius:8,border:'1px solid #e2e8f0',background: showSwitcher ? '#f0f9ff' : 'white',cursor:'pointer',fontSize:13,fontWeight:500,color:'#1e293b',maxWidth:220,transition:'background 0.15s'}}
+        >
+          <Building2 size={14} color="#3b82f6"/>
+          <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:140}}>
+            {activeBusiness ? activeBusiness.name : 'Select Workspace'}
+          </span>
+          <span style={{fontSize:10,color:'#94a3b8',marginLeft:2,transition:'transform 0.15s',display:'inline-block',transform: showSwitcher ? 'rotate(180deg)' : 'rotate(0deg)'}}>▾</span>
+        </button>
 
-          {showSwitcher && (
-            <div style={{position:'absolute',top:'calc(100% + 6px)',right:0,background:'white',border:'1px solid #e2e8f0',borderRadius:10,boxShadow:'0 8px 30px rgba(0,0,0,0.12)',zIndex:200,minWidth:240,overflow:'hidden'}}>
-              <div style={{padding:'10px 14px',fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.05em',borderBottom:'1px solid #f1f5f9'}}>Switch Workspace</div>
-              {businesses.map(biz => (
+        {showSwitcher && (
+          <div style={{position:'absolute',top:'calc(100% + 6px)',right:0,background:'white',border:'1px solid #e2e8f0',borderRadius:10,boxShadow:'0 8px 30px rgba(0,0,0,0.15)',zIndex:9000,minWidth:260,overflow:'hidden'}}>
+            <div style={{padding:'10px 14px',fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.05em',borderBottom:'1px solid #f1f5f9'}}>Switch Workspace</div>
+            {businesses.length === 0 && (
+              <div style={{padding:'16px 14px',fontSize:13,color:'#94a3b8',textAlign:'center'}}>No workspaces yet</div>
+            )}
+            {businesses.map(biz => {
+              const isSelected = activeBusiness && activeBusiness.id === biz.id;
+              return (
                 <button
                   key={biz.id}
                   onClick={() => { onSwitch(biz); setShowSwitcher(false); }}
-                  style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'10px 14px',background: activeBusiness.id === biz.id ? '#f0f9ff' : 'white',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'1px solid #f8fafc'}}
+                  style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'10px 14px',background: isSelected ? '#f0f9ff' : 'white',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'1px solid #f8fafc',transition:'background 0.1s'}}
                 >
-                  <div style={{width:28,height:28,borderRadius:6,background:'#3b82f6',display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:12,fontWeight:700,flexShrink:0}}>{(biz.name||'?')[0].toUpperCase()}</div>
+                  <div style={{width:30,height:30,borderRadius:7,background: isSelected ? '#3b82f6' : '#e2e8f0',display:'flex',alignItems:'center',justifyContent:'center',color: isSelected ? 'white' : '#64748b',fontSize:13,fontWeight:700,flexShrink:0,transition:'all 0.15s'}}>
+                    {(biz.name||'?')[0].toUpperCase()}
+                  </div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:13,fontWeight:600,color:'#1e293b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{biz.name}</div>
                     <div style={{fontSize:11,color:'#94a3b8'}}>{biz.industry || 'Business'}</div>
                   </div>
-                  {activeBusiness.id === biz.id && <CheckCircle size={14} color="#3b82f6"/>}
+                  {isSelected && <CheckCircle size={15} color="#3b82f6"/>}
                 </button>
-              ))}
-              <div style={{padding:'8px 14px',borderTop:'1px solid #f1f5f9'}}>
-                <button
-                  onClick={() => { setShowSwitcher(false); }}
-                  style={{width:'100%',padding:'7px',borderRadius:6,background:'#f8fafc',border:'1px solid #e2e8f0',cursor:'pointer',fontSize:12,color:'#475569',fontWeight:500}}
-                >+ Add New Business</button>
-              </div>
+              );
+            })}
+            <div style={{padding:'8px 14px',borderTop:'1px solid #f1f5f9'}}>
+              <button
+                onClick={() => { setShowSwitcher(false); onNavigate('Businesses'); }}
+                style={{width:'100%',padding:'8px',borderRadius:6,background:'#f8fafc',border:'1px solid #e2e8f0',cursor:'pointer',fontSize:12,color:'#3b82f6',fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}
+              >
+                <Plus size={13}/> Add New Business
+              </button>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
       <Bell size={18}/><HelpCircle size={18}/><div className="avatar small">A</div>
     </header>
@@ -150,6 +172,7 @@ function Screen({page, dashboard, activeBusiness, setPage}) {
       {page==='Reports'&&<Reports dashboard={dashboard}/>}
       {page==='Automation'&&<Automation/>}
       {page==='Businesses'&&<BusinessesAdmin activeBusiness={activeBusiness} setPage={setPage}/>}
+      {page==='Integrations'&&<IntegrationsPage activeBusiness={activeBusiness}/>}
       {page==='Settings'&&<SettingsPage/>}
     </>
   );
@@ -3423,4 +3446,349 @@ function KeyVals({data}) { return <div className="kv">{Object.entries(data).map(
 function LineBlock() { return <ResponsiveContainer height={240}><LineChart data={conversationData}><XAxis dataKey="day"/><YAxis/><Tooltip/><Line dataKey="total" strokeWidth={3}/><Line dataKey="ai" strokeWidth={3}/></LineChart></ResponsiveContainer>; }
 function PieBlock({data}) { return <div className="pie"><ResponsiveContainer height={230}><PieChart><Pie data={data} dataKey="value" innerRadius={58} outerRadius={88} paddingAngle={2}>{data.map((_,i)=><Cell key={i} fill={colors[i%colors.length]}/>)}</Pie><Tooltip/></PieChart></ResponsiveContainer><div>{data.map((d,i)=><p key={d.name}><i style={{background:colors[i%colors.length]}}/> {d.name} <b>{d.value}%</b></p>)}</div></div>; }
 
+// ─── INTEGRATIONS PAGE ─────────────────────────────────────────────────────
+
+const INTEGRATIONS_CONFIG = [
+  {
+    id: 'instagram',
+    name: 'Instagram DM',
+    description: 'Receive and reply to Instagram Direct Messages. Required for AI-powered DM automation.',
+    icon: '📸',
+    color: '#e1306c',
+    bg: '#fdf2f8',
+    category: 'Messaging',
+    fields: [
+      { key: 'page_access_token', label: 'Page Access Token', type: 'password', placeholder: 'EAAxxxxxxx...' },
+      { key: 'instagram_account_id', label: 'Instagram Account ID', type: 'text', placeholder: '17841xxxxxxxxx' },
+    ],
+    docs_url: 'https://developers.facebook.com/docs/messenger-platform',
+    status_note: 'Webhook must be configured on Meta Developer Portal'
+  },
+  {
+    id: 'whatsapp',
+    name: 'WhatsApp Business',
+    description: 'Send and receive WhatsApp messages via the WhatsApp Business API. Ideal for follow-up sequences.',
+    icon: '💬',
+    color: '#25d366',
+    bg: '#f0fdf4',
+    category: 'Messaging',
+    fields: [
+      { key: 'phone_number_id', label: 'Phone Number ID', type: 'text', placeholder: '1234567890' },
+      { key: 'access_token', label: 'Access Token', type: 'password', placeholder: 'EAAxxxxxxx...' },
+      { key: 'verify_token', label: 'Webhook Verify Token', type: 'text', placeholder: 'your_verify_token' },
+    ],
+    docs_url: 'https://developers.facebook.com/docs/whatsapp/cloud-api',
+    status_note: 'Requires WhatsApp Business API approval from Meta'
+  },
+  {
+    id: 'google_sheets',
+    name: 'Google Sheets',
+    description: 'Automatically export leads and conversations to a Google Sheet. Great for reporting and CRM sync.',
+    icon: '📊',
+    color: '#34a853',
+    bg: '#f0fdf4',
+    category: 'Data',
+    fields: [
+      { key: 'spreadsheet_id', label: 'Spreadsheet ID', type: 'text', placeholder: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms' },
+      { key: 'service_account_email', label: 'Service Account Email', type: 'text', placeholder: 'myapp@project.iam.gserviceaccount.com' },
+      { key: 'private_key', label: 'Private Key (JSON)', type: 'password', placeholder: '-----BEGIN PRIVATE KEY-----...' },
+    ],
+    docs_url: 'https://developers.google.com/sheets/api',
+    status_note: 'Share your Google Sheet with the service account email'
+  },
+  {
+    id: 'webhook',
+    name: 'Custom Webhook',
+    description: 'Send lead and conversation events to any external URL. Use to connect HubSpot, Zoho, Zapier, or any CRM.',
+    icon: '🔗',
+    color: '#6366f1',
+    bg: '#f5f3ff',
+    category: 'Developer',
+    fields: [
+      { key: 'url', label: 'Webhook URL', type: 'text', placeholder: 'https://hooks.zapier.com/hooks/catch/...' },
+      { key: 'secret', label: 'Secret Key (optional)', type: 'password', placeholder: 'Used to verify requests' },
+    ],
+    docs_url: null,
+    status_note: 'Events: new_lead, lead_qualified, conversation_started'
+  },
+  {
+    id: 'openai',
+    name: 'OpenAI',
+    description: 'Power the AI assistant, conversation summaries, and lead scoring with OpenAI GPT models.',
+    icon: '🤖',
+    color: '#10a37f',
+    bg: '#f0fdf9',
+    category: 'AI',
+    fields: [
+      { key: 'api_key', label: 'API Key', type: 'password', placeholder: 'sk-xxxxxxxxxxxxxxxx' },
+      { key: 'model', label: 'Model', type: 'text', placeholder: 'gpt-4o' },
+    ],
+    docs_url: 'https://platform.openai.com/docs',
+    status_note: 'Used for AI replies, summaries, and lead analysis'
+  },
+  {
+    id: 'supabase',
+    name: 'Supabase (Database)',
+    description: 'Your primary database for leads, conversations, and business rules. Already connected.',
+    icon: '🗄️',
+    color: '#3ecf8e',
+    bg: '#f0fdf4',
+    category: 'Data',
+    fields: [
+      { key: 'url', label: 'Supabase URL', type: 'text', placeholder: 'https://xxxx.supabase.co' },
+      { key: 'anon_key', label: 'Anon Key', type: 'password', placeholder: 'eyJhbGci...' },
+    ],
+    docs_url: 'https://supabase.com/docs',
+    status_note: 'Core database — always required'
+  },
+];
+
+function IntegrationsPage({ activeBusiness }) {
+  const [integrations, setIntegrations] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [activeModal, setActiveModal] = useState(null); // integration config id
+  const [formValues, setFormValues] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState('');
+  const [filter, setFilter] = useState('All');
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
+
+  const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
+
+  const fetchIntegrations = () => {
+    setLoading(true);
+    fetch(`${API_BASE}/integrations/`, {
+      headers: { 'X-Business-ID': bizId }
+    })
+      .then(r => r.json())
+      .then(d => { if (d.status === 'success') setIntegrations(d.integrations || {}); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchIntegrations(); }, [bizId]);
+
+  const openModal = (integ) => {
+    setActiveModal(integ);
+    // Pre-fill with existing saved values (masked for passwords)
+    const saved = integrations[integ.id] || {};
+    const prefilled = {};
+    integ.fields.forEach(f => { prefilled[f.key] = saved[f.key] || ''; });
+    setFormValues(prefilled);
+  };
+
+  const handleSave = () => {
+    if (!activeModal) return;
+    setSaving(true);
+    fetch(`${API_BASE}/integrations/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Business-ID': bizId },
+      body: JSON.stringify({
+        provider: activeModal.id,
+        is_connected: true,
+        credentials: formValues
+      })
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') {
+          setIntegrations(prev => ({ ...prev, [activeModal.id]: { ...prev[activeModal.id], is_connected: true } }));
+          setActiveModal(null);
+          showToast(`${activeModal.name} connected successfully!`);
+        } else showToast(d.detail || 'Failed to save');
+      })
+      .catch(() => showToast('Failed to save'))
+      .finally(() => setSaving(false));
+  };
+
+  const handleDisconnect = (integId, integName) => {
+    if (!window.confirm(`Disconnect ${integName}? This will disable the integration for this workspace.`)) return;
+    fetch(`${API_BASE}/integrations/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Business-ID': bizId },
+      body: JSON.stringify({ provider: integId, is_connected: false, credentials: {} })
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') {
+          setIntegrations(prev => ({ ...prev, [integId]: { ...prev[integId], is_connected: false } }));
+          showToast(`${integName} disconnected`);
+        }
+      })
+      .catch(() => showToast('Failed to disconnect'));
+  };
+
+  const categories = ['All', ...new Set(INTEGRATIONS_CONFIG.map(i => i.category))];
+  const filtered = filter === 'All' ? INTEGRATIONS_CONFIG : INTEGRATIONS_CONFIG.filter(i => i.category === filter);
+  const connectedCount = INTEGRATIONS_CONFIG.filter(i => integrations[i.id]?.is_connected).length;
+
+  return (
+    <section>
+      {toast && (
+        <div style={{position:'fixed',bottom:24,right:24,background:'#1e293b',color:'white',padding:'12px 20px',borderRadius:10,fontSize:13,fontWeight:500,zIndex:9999,boxShadow:'0 4px 20px rgba(0,0,0,0.2)'}}>
+          {toast}
+        </div>
+      )}
+
+      <Title
+        title="Integrations"
+        sub={`Connect channels, databases, and tools for ${activeBusiness?.name || 'your workspace'}`}
+        action={
+          <div style={{display:'flex',alignItems:'center',gap:8,padding:'6px 14px',borderRadius:8,background:'#f0fdf4',border:'1px solid #bbf7d0'}}>
+            <Wifi size={14} color="#10b981"/>
+            <span style={{fontSize:13,fontWeight:600,color:'#166534'}}>{connectedCount} of {INTEGRATIONS_CONFIG.length} connected</span>
+          </div>
+        }
+      />
+
+      {/* Category filter tabs */}
+      <div style={{display:'flex',gap:8,marginBottom:20,flexWrap:'wrap'}}>
+        {categories.map(cat => (
+          <button
+            key={cat}
+            onClick={() => setFilter(cat)}
+            style={{padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor: filter===cat ? '#3b82f6' : '#e2e8f0',background: filter===cat ? '#eff6ff' : 'white',color: filter===cat ? '#3b82f6' : '#64748b',fontSize:12,fontWeight: filter===cat ? 600 : 400,cursor:'pointer',transition:'all 0.15s'}}
+          >{cat}</button>
+        ))}
+      </div>
+
+      {/* Integration cards grid */}
+      {loading ? (
+        <div style={{textAlign:'center',padding:40,color:'#64748b'}}>Loading integrations...</div>
+      ) : (
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(340px,1fr))',gap:16}}>
+          {filtered.map(integ => {
+            const status = integrations[integ.id] || {};
+            const isConnected = status.is_connected || false;
+            return (
+              <div key={integ.id} style={{background:'white',borderRadius:12,border: isConnected ? `2px solid ${integ.color}30` : '1px solid #e2e8f0',padding:20,display:'flex',flexDirection:'column',gap:14,transition:'border-color 0.2s'}}>
+                {/* Header */}
+                <div style={{display:'flex',alignItems:'flex-start',gap:12}}>
+                  <div style={{width:46,height:46,borderRadius:10,background:integ.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>
+                    {integ.icon}
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:2}}>
+                      <span style={{fontSize:15,fontWeight:700,color:'#1e293b'}}>{integ.name}</span>
+                      <span style={{fontSize:10,fontWeight:600,padding:'2px 7px',borderRadius:10,background: isConnected ? '#f0fdf4' : '#f8fafc',color: isConnected ? '#16a34a' : '#94a3b8',border:`1px solid ${isConnected ? '#bbf7d0' : '#e2e8f0'}`}}>
+                        {isConnected ? '● Connected' : '○ Not connected'}
+                      </span>
+                    </div>
+                    <span style={{fontSize:10,padding:'1px 7px',borderRadius:8,background:'#f1f5f9',color:'#64748b',fontWeight:500}}>{integ.category}</span>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div style={{fontSize:12,color:'#64748b',lineHeight:1.6}}>{integ.description}</div>
+
+                {/* Status note */}
+                <div style={{fontSize:11,color: isConnected ? '#16a34a' : '#94a3b8',background: isConnected ? '#f0fdf4' : '#f8fafc',borderRadius:6,padding:'6px 10px',display:'flex',alignItems:'center',gap:6}}>
+                  {isConnected ? <Wifi size={11}/> : <WifiOff size={11}/>}
+                  {isConnected ? `Active — ${integ.status_note}` : integ.status_note}
+                </div>
+
+                {/* Last synced */}
+                {isConnected && status.last_synced && (
+                  <div style={{fontSize:11,color:'#94a3b8'}}>Last updated: {new Date(status.last_synced).toLocaleString()}</div>
+                )}
+
+                {/* Actions */}
+                <div style={{display:'flex',gap:8,marginTop:'auto'}}>
+                  <button
+                    onClick={() => openModal(integ)}
+                    style={{flex:1,padding:'8px',borderRadius:6,background: isConnected ? '#f8fafc' : integ.bg,color: isConnected ? '#475569' : integ.color,border:`1px solid ${isConnected ? '#e2e8f0' : integ.color+'40'}`,cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}
+                  >
+                    <Key size={12}/> {isConnected ? 'Update Credentials' : 'Connect'}
+                  </button>
+                  {isConnected && (
+                    <button
+                      onClick={() => handleDisconnect(integ.id, integ.name)}
+                      style={{padding:'8px 12px',borderRadius:6,background:'white',color:'#ef4444',border:'1px solid #fecaca',cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',gap:5}}
+                    >
+                      <WifiOff size={12}/> Disconnect
+                    </button>
+                  )}
+                  {integ.docs_url && (
+                    <a href={integ.docs_url} target="_blank" rel="noreferrer" style={{padding:'8px 10px',borderRadius:6,background:'white',color:'#94a3b8',border:'1px solid #e2e8f0',cursor:'pointer',fontSize:12,display:'flex',alignItems:'center',textDecoration:'none'}}>
+                      <ExternalLink size={12}/>
+                    </a>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Info box */}
+      <div style={{background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:10,padding:'16px 20px',marginTop:20}}>
+        <div style={{fontWeight:600,color:'#0369a1',fontSize:13,marginBottom:6}}>💡 How Integrations Work</div>
+        <div style={{fontSize:12,color:'#0c4a6e',lineHeight:1.7}}>
+          Each integration is stored per workspace — different businesses can have different channels connected.
+          Credentials are encrypted and stored securely in your Supabase database.
+          Connecting an integration here enables the relevant features across the dashboard (e.g., connecting WhatsApp enables bulk WhatsApp messaging in the Automation page).
+        </div>
+      </div>
+
+      {/* ── Credentials Modal ── */}
+      {activeModal && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
+          <div style={{background:'white',borderRadius:14,padding:28,width:520,maxWidth:'92vw',boxShadow:'0 24px 64px rgba(0,0,0,0.2)',maxHeight:'90vh',overflowY:'auto'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div style={{width:36,height:36,borderRadius:8,background:activeModal.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18}}>{activeModal.icon}</div>
+                <div>
+                  <div style={{fontSize:15,fontWeight:700,color:'#1e293b'}}>Connect {activeModal.name}</div>
+                  <div style={{fontSize:11,color:'#94a3b8'}}>{activeModal.category}</div>
+                </div>
+              </div>
+              <button onClick={() => setActiveModal(null)} style={{background:'none',border:'none',cursor:'pointer',color:'#94a3b8',padding:4}}><X size={18}/></button>
+            </div>
+
+            <div style={{background:'#fffbeb',border:'1px solid #fde68a',borderRadius:8,padding:'10px 14px',fontSize:12,color:'#92400e',marginBottom:18,display:'flex',gap:8,alignItems:'flex-start'}}>
+              <AlertTriangle size={14} style={{flexShrink:0,marginTop:1}}/>
+              <span>Credentials are stored in your Supabase database. Never share your API keys publicly.</span>
+            </div>
+
+            <div style={{display:'flex',flexDirection:'column',gap:14}}>
+              {activeModal.fields.map(field => (
+                <div key={field.key}>
+                  <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4,textTransform:'uppercase',letterSpacing:'0.04em'}}>{field.label}</label>
+                  <input
+                    type={field.type}
+                    value={formValues[field.key] || ''}
+                    onChange={e => setFormValues(p => ({...p, [field.key]: e.target.value}))}
+                    placeholder={field.placeholder}
+                    style={{width:'100%',padding:'9px 11px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,fontFamily: field.type==='password' ? 'monospace' : 'inherit',boxSizing:'border-box',color:'#1e293b'}}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {activeModal.docs_url && (
+              <a href={activeModal.docs_url} target="_blank" rel="noreferrer" style={{display:'flex',alignItems:'center',gap:6,fontSize:12,color:'#3b82f6',marginTop:14,textDecoration:'none'}}>
+                <ExternalLink size={12}/> View {activeModal.name} documentation
+              </a>
+            )}
+
+            <div style={{display:'flex',gap:10,justifyContent:'flex-end',marginTop:22}}>
+              <button onClick={() => setActiveModal(null)} style={{padding:'9px 18px',borderRadius:7,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13}}>Cancel</button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                style={{padding:'9px 20px',borderRadius:7,background: saving ? '#93c5fd' : '#3b82f6',color:'white',border:'none',cursor: saving ? 'not-allowed' : 'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',gap:7}}
+              >
+                {saving ? <RefreshCw size={13} style={{animation:'spin 1s linear infinite'}}/> : <CheckCircle size={13}/>}
+                {saving ? 'Saving...' : 'Save & Connect'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
 createRoot(document.getElementById('root')).render(<App />);
+
