@@ -2255,22 +2255,262 @@ function Customer360() {
   );
 }
 
-function Reports({dashboard}) {
-  const counts = dashboard?.counts || {};
+function Reports() {
+  const [data, setData] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState('');
+  const [days, setDays] = React.useState(30);
+
+  const fetchReports = React.useCallback(() => {
+    setLoading(true);
+    setError('');
+    fetch(`${API_BASE}/reports?days=${days}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') setData(d);
+        else setError(d.message || 'Failed to load reports');
+      })
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [days]);
+
+  React.useEffect(() => { fetchReports(); }, [fetchReports]);
+
+  const handleExport = () => {
+    window.open(`${API_BASE}/reports/export-csv`, '_blank');
+  };
+
+  const s = data?.summary || {};
+  const COLORS = ['#ef4444','#f59e0b','#3b82f6','#10b981','#8b5cf6','#f97316','#06b6d4','#84cc16'];
+
+  const windowOptions = [
+    {label:'Last 7 days', value:7},
+    {label:'Last 30 days', value:30},
+    {label:'Last 90 days', value:90},
+    {label:'Last 180 days', value:180},
+  ];
+
   return (
     <section>
-      <Title title="Reports & Analytics" sub="Deep insights into performance" action={<button><Download size={15}/> Export</button>}/>
-      <div className="grid4">
-        <Stat label="Conversations" value={counts.total_conversations ?? "Loading..."} change="Live"/>
-        <Stat label="Total Leads" value={counts.total_leads ?? "Loading..."} change="Live"/>
-        <Stat label="Qualified Leads" value={counts.qualified_leads ?? "Loading..."} change="Live"/>
-        <Stat label="Needs Human" value={counts.needs_human ?? "Loading..."} change="Live"/>
-      </div>
-      <div className="grid3">
-        <Card title="Leads by Source"><PieBlock data={[{name:'Instagram',value:62},{name:'Website',value:18},{name:'WhatsApp',value:12},{name:'Other',value:8}]}/></Card>
-        <Card title="Leads by Temperature"><PieBlock data={[{name:'Hot',value:24},{name:'Warm',value:46},{name:'Cold',value:30}]}/></Card>
-        <Card title="Lead Funnel"><ResponsiveContainer height={220}><BarChart data={[{n:'New',v:156},{n:'Contacted',v:98},{n:'Engaged',v:54},{n:'Qualified',v:38},{n:'Converted',v:12}]}><XAxis dataKey="n"/><Tooltip/><Bar dataKey="v" radius={8}/></BarChart></ResponsiveContainer></Card>
-      </div>
+      <Title
+        title="Reports & Analytics"
+        sub={`Data for the last ${days} days — ${data?.generated_at ? new Date(data.generated_at).toLocaleString() : 'loading...'}`}
+        action={
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <select
+              value={days}
+              onChange={e => setDays(Number(e.target.value))}
+              style={{padding:'6px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,background:'white',cursor:'pointer'}}
+            >
+              {windowOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+            <button onClick={fetchReports} style={{padding:'6px 12px',borderRadius:6,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13}}>↻ Refresh</button>
+            <button onClick={handleExport} style={{padding:'6px 14px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600}}>⬇ Export CSV</button>
+          </div>
+        }
+      />
+
+      {loading && <div style={{textAlign:'center',padding:40,color:'#64748b'}}>Loading report data...</div>}
+      {error && <div style={{background:'#fef2f2',border:'1px solid #fecaca',borderRadius:8,padding:16,color:'#dc2626',marginBottom:16}}>{error}</div>}
+
+      {!loading && data && (
+        <>
+          {/* Row 1 — Primary stats */}
+          <div className="grid4" style={{marginBottom:16}}>
+            <div style={{background:'white',borderRadius:10,padding:'18px 20px',border:'1px solid #e2e8f0'}}>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:4}}>Total Leads (All Time)</div>
+              <div style={{fontSize:28,fontWeight:700,color:'#1e293b'}}>{s.total_leads ?? 0}</div>
+              <div style={{fontSize:12,color:'#3b82f6',marginTop:4}}>{s.window_leads ?? 0} in last {days} days</div>
+            </div>
+            <div style={{background:'white',borderRadius:10,padding:'18px 20px',border:'1px solid #e2e8f0'}}>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:4}}>Hot Leads</div>
+              <div style={{fontSize:28,fontWeight:700,color:'#ef4444'}}>{s.hot_leads ?? 0}</div>
+              <div style={{fontSize:12,color:'#64748b',marginTop:4}}>phone + email captured</div>
+            </div>
+            <div style={{background:'white',borderRadius:10,padding:'18px 20px',border:'1px solid #e2e8f0'}}>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:4}}>Qualified Leads</div>
+              <div style={{fontSize:28,fontWeight:700,color:'#10b981'}}>{s.qualified ?? 0}</div>
+              <div style={{fontSize:12,color:'#64748b',marginTop:4}}>{s.conversion_rate ?? 0}% conversion rate</div>
+            </div>
+            <div style={{background:'white',borderRadius:10,padding:'18px 20px',border:'1px solid #e2e8f0'}}>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:4}}>Contact Rate</div>
+              <div style={{fontSize:28,fontWeight:700,color:'#8b5cf6'}}>{s.contact_rate ?? 0}%</div>
+              <div style={{fontSize:12,color:'#64748b',marginTop:4}}>{s.with_phone ?? 0} phone · {s.with_email ?? 0} email</div>
+            </div>
+          </div>
+
+          {/* Row 2 — Secondary stats */}
+          <div className="grid4" style={{marginBottom:16}}>
+            <div style={{background:'white',borderRadius:10,padding:'14px 20px',border:'1px solid #e2e8f0'}}>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:2}}>Total Conversations</div>
+              <div style={{fontSize:22,fontWeight:700,color:'#1e293b'}}>{s.total_conversations ?? 0}</div>
+            </div>
+            <div style={{background:'white',borderRadius:10,padding:'14px 20px',border:'1px solid #e2e8f0'}}>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:2}}>AI Replied</div>
+              <div style={{fontSize:22,fontWeight:700,color:'#3b82f6'}}>{s.ai_replied ?? 0}</div>
+            </div>
+            <div style={{background:'white',borderRadius:10,padding:'14px 20px',border:'1px solid #e2e8f0'}}>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:2}}>Warm Leads</div>
+              <div style={{fontSize:22,fontWeight:700,color:'#f59e0b'}}>{s.warm_leads ?? 0}</div>
+            </div>
+            <div style={{background:'white',borderRadius:10,padding:'14px 20px',border:'1px solid #e2e8f0', borderLeft: s.needs_human > 0 ? '4px solid #ef4444' : '1px solid #e2e8f0'}}>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:2}}>Needs Human</div>
+              <div style={{fontSize:22,fontWeight:700,color: s.needs_human > 0 ? '#ef4444' : '#1e293b'}}>{s.needs_human ?? 0}</div>
+            </div>
+          </div>
+
+          {/* Row 3 — Daily trend + Temperature pie */}
+          <div style={{display:'grid',gridTemplateColumns:'2fr 1fr',gap:16,marginBottom:16}}>
+            <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
+              <div style={{fontWeight:600,color:'#1e293b',marginBottom:16,fontSize:14}}>Daily Lead & Conversation Trend</div>
+              {data.daily_trend && data.daily_trend.length > 0 ? (
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={data.daily_trend} margin={{top:0,right:0,bottom:0,left:-20}}>
+                    <XAxis dataKey="label" tick={{fontSize:10,fill:'#94a3b8'}} interval={Math.floor(data.daily_trend.length/7)}/>
+                    <YAxis tick={{fontSize:10,fill:'#94a3b8'}}/>
+                    <Tooltip contentStyle={{fontSize:12}}/>
+                    <Legend wrapperStyle={{fontSize:11}}/>
+                    <Bar dataKey="leads" name="New Leads" fill="#3b82f6" radius={[3,3,0,0]}/>
+                    <Bar dataKey="conversations" name="Conversations" fill="#8b5cf6" radius={[3,3,0,0]}/>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:40}}>No trend data for this period</div>}
+              <div style={{display:'flex',gap:16,marginTop:8}}>
+                <span style={{fontSize:11,color:'#64748b'}}>■ <span style={{color:'#3b82f6'}}>New Leads</span></span>
+                <span style={{fontSize:11,color:'#64748b'}}>■ <span style={{color:'#8b5cf6'}}>Conversations</span></span>
+              </div>
+            </div>
+            <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
+              <div style={{fontWeight:600,color:'#1e293b',marginBottom:16,fontSize:14}}>Lead Temperature</div>
+              {data.temperature_split && data.temperature_split.some(t => t.value > 0) ? (
+                <>
+                  <ResponsiveContainer width="100%" height={180}>
+                    <PieChart>
+                      <Pie data={data.temperature_split} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({name,value}) => `${name}: ${value}`} labelLine={false}>
+                        {data.temperature_split.map((entry,i) => <Cell key={i} fill={entry.color}/>)}
+                      </Pie>
+                      <Tooltip/>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div style={{display:'flex',gap:12,justifyContent:'center',marginTop:4}}>
+                    {data.temperature_split.map((t,i) => (
+                      <span key={i} style={{fontSize:11,color:'#64748b'}}>
+                        <span style={{color:t.color,fontWeight:700}}>●</span> {t.name}: {t.value}
+                      </span>
+                    ))}
+                  </div>
+                </>
+              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:40}}>No temperature data</div>}
+            </div>
+          </div>
+
+          {/* Row 4 — Module breakdown + Stage funnel */}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+            <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
+              <div style={{fontWeight:600,color:'#1e293b',marginBottom:16,fontSize:14}}>Top Interested Modules / Products</div>
+              {data.module_breakdown && data.module_breakdown.length > 0 ? (
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={data.module_breakdown} layout="vertical" margin={{top:0,right:20,bottom:0,left:60}}>
+                    <XAxis type="number" tick={{fontSize:10,fill:'#94a3b8'}}/>
+                    <YAxis type="category" dataKey="module" tick={{fontSize:10,fill:'#475569'}} width={60}/>
+                    <Tooltip contentStyle={{fontSize:12}}/>
+                    <Bar dataKey="count" fill="#10b981" radius={[0,4,4,0]}/>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:40}}>No module data yet</div>}
+            </div>
+            <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
+              <div style={{fontWeight:600,color:'#1e293b',marginBottom:16,fontSize:14}}>Lead Stage Funnel</div>
+              {data.stage_funnel && data.stage_funnel.length > 0 ? (
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={data.stage_funnel} layout="vertical" margin={{top:0,right:20,bottom:0,left:80}}>
+                    <XAxis type="number" tick={{fontSize:10,fill:'#94a3b8'}}/>
+                    <YAxis type="category" dataKey="stage" tick={{fontSize:10,fill:'#475569'}} width={80}/>
+                    <Tooltip contentStyle={{fontSize:12}}/>
+                    <Bar dataKey="count" fill="#8b5cf6" radius={[0,4,4,0]}/>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:40}}>No stage data yet</div>}
+            </div>
+          </div>
+
+          {/* Row 5 — Location + Mode */}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+            <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
+              <div style={{fontWeight:600,color:'#1e293b',marginBottom:12,fontSize:14}}>Top Locations</div>
+              {data.top_locations && data.top_locations.length > 0 ? (
+                <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                  {data.top_locations.map((loc,i) => (
+                    <div key={i} style={{display:'flex',alignItems:'center',gap:8}}>
+                      <div style={{flex:1,fontSize:13,color:'#475569',fontWeight:500}}>{loc.location}</div>
+                      <div style={{width:120,background:'#f1f5f9',borderRadius:4,height:8,overflow:'hidden'}}>
+                        <div style={{width:`${Math.round(loc.count/data.top_locations[0].count*100)}%`,background:'#3b82f6',height:'100%',borderRadius:4}}/>
+                      </div>
+                      <div style={{fontSize:12,color:'#64748b',minWidth:24,textAlign:'right'}}>{loc.count}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:20}}>No location data</div>}
+            </div>
+            <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
+              <div style={{fontWeight:600,color:'#1e293b',marginBottom:12,fontSize:14}}>Online vs Offline Preference</div>
+              {data.mode_breakdown && data.mode_breakdown.some(m => m.value > 0) ? (
+                <ResponsiveContainer width="100%" height={180}>
+                  <PieChart>
+                    <Pie data={data.mode_breakdown} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={65} label={({name,value}) => value > 0 ? `${name}: ${value}` : ''} labelLine={false}>
+                      {data.mode_breakdown.map((_,i) => <Cell key={i} fill={COLORS[i % COLORS.length]}/>)}
+                    </Pie>
+                    <Tooltip/>
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:40}}>No mode data</div>}
+            </div>
+          </div>
+
+          {/* Row 6 — Top leads table */}
+          <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0',marginBottom:16}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+              <div style={{fontWeight:600,color:'#1e293b',fontSize:14}}>Top Priority Leads</div>
+              <button onClick={handleExport} style={{padding:'5px 12px',borderRadius:6,background:'#f1f5f9',border:'1px solid #e2e8f0',cursor:'pointer',fontSize:12,color:'#475569'}}>⬇ Export All as CSV</button>
+            </div>
+            <table style={{width:'100%',borderCollapse:'collapse'}}>
+              <thead>
+                <tr style={{borderBottom:'2px solid #f1f5f9'}}>
+                  {['Name','Phone','Module','Temperature','Stage','Qualified','Last Active'].map(h => (
+                    <th key={h} style={{textAlign:'left',padding:'8px 10px',fontSize:11,color:'#94a3b8',fontWeight:600,textTransform:'uppercase',letterSpacing:'0.05em'}}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {(data.top_leads || []).map((lead,i) => (
+                  <tr key={i} style={{borderBottom:'1px solid #f8fafc'}}>
+                    <td style={{padding:'10px',fontSize:13,color:'#1e293b',fontWeight:500}}>{lead.name}</td>
+                    <td style={{padding:'10px',fontSize:13,color:'#475569'}}>{lead.phone || '—'}</td>
+                    <td style={{padding:'10px',fontSize:13,color:'#475569'}}>{lead.module || '—'}</td>
+                    <td style={{padding:'10px'}}>
+                      <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,
+                        background: lead.temperature==='hot' ? '#fef2f2' : lead.temperature==='warm' ? '#fffbeb' : '#eff6ff',
+                        color: lead.temperature==='hot' ? '#ef4444' : lead.temperature==='warm' ? '#f59e0b' : '#3b82f6'
+                      }}>
+                        {lead.temperature==='hot'?'🔴':'lead.temperature==='warm'?'🟡':'🔵'} {lead.temperature}
+                      </span>
+                    </td>
+                    <td style={{padding:'10px',fontSize:12,color:'#64748b'}}>{lead.stage || '—'}</td>
+                    <td style={{padding:'10px',fontSize:12}}>
+                      {lead.is_qualified
+                        ? <span style={{color:'#10b981',fontWeight:600}}>✓ Yes</span>
+                        : <span style={{color:'#94a3b8'}}>No</span>}
+                    </td>
+                    <td style={{padding:'10px',fontSize:12,color:'#94a3b8'}}>
+                      {lead.updated_at ? new Date(lead.updated_at).toLocaleDateString() : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </section>
   );
 }
