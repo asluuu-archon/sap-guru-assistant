@@ -2716,291 +2716,317 @@ function Reports() {
 }
 
 function SettingsPage() {
-  const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState('');
+  const [toast, setToast] = useState('');
+  const [activeTab, setActiveTab] = useState('profile');
 
-  // Local form state
   const [form, setForm] = useState({
     business_name: '',
-    business_description: '',
-    reply_delay_minutes: 15,
-    ai_tone: 'friendly',
-    working_hours_start: '09:00',
-    working_hours_end: '18:00',
-    working_days: 'Mon,Tue,Wed,Thu,Fri',
-    auto_reply_enabled: false,
-    out_of_hours_message: '',
+    industry: 'Education / Training',
+    ai_enabled: true,
+    ai_tone: 'Professional & Helpful',
+    working_hours: { mon_fri: '09:00 - 18:00', sat: '10:00 - 14:00', sun: 'Closed' },
+    templates: [],
+    blacklist_keywords: []
   });
+
+  const [newKeyword, setNewKeyword] = useState('');
+  const [newTemplate, setNewTemplate] = useState({ name: '', text: '' });
+
+  const showToast = (msg, isError = false) => {
+    setToast({ msg, isError });
+    setTimeout(() => setToast(''), 3000);
+  };
 
   useEffect(() => {
     setLoading(true);
-    fetch(`${API_BASE}/settings`)
+    fetch(`${API_BASE}/settings/`)
       .then(r => r.json())
-      .then(data => {
-        if (data.status === 'success') {
-          const s = data.settings;
-          setSettings(s);
+      .then(d => {
+        if (d.status === 'success') {
+          const s = d.settings;
           setForm({
             business_name: s.business_name || '',
-            business_description: s.business_description || '',
-            reply_delay_minutes: s.reply_delay_minutes ?? 15,
-            ai_tone: s.ai_tone || 'friendly',
-            working_hours_start: s.working_hours_start || '09:00',
-            working_hours_end: s.working_hours_end || '18:00',
-            working_days: s.working_days || 'Mon,Tue,Wed,Thu,Fri',
-            auto_reply_enabled: s.auto_reply_enabled || false,
-            out_of_hours_message: s.out_of_hours_message || '',
+            industry: s.industry || 'Education / Training',
+            ai_enabled: s.ai_enabled !== undefined ? s.ai_enabled : true,
+            ai_tone: s.ai_tone || 'Professional & Helpful',
+            working_hours: s.working_hours || { mon_fri: '09:00 - 18:00', sat: '10:00 - 14:00', sun: 'Closed' },
+            templates: s.templates || [],
+            blacklist_keywords: s.blacklist_keywords || []
           });
         }
       })
-      .catch(err => console.error('Settings load error:', err))
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  const handleSave = async (section) => {
+  const handleSave = (section, payload) => {
     setSaving(section);
-    setSaved(false);
-    setError('');
-    try {
-      const res = await fetch(`${API_BASE}/settings`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (data.status === 'success') {
-        setSaved(section);
-        setTimeout(() => setSaved(false), 3000);
-      } else {
-        setError(data.message || 'Save failed');
-      }
-    } catch (e) {
-      setError('Network error — could not save');
-    }
-    setSaving(false);
+    fetch(`${API_BASE}/settings/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') showToast('Settings saved successfully');
+        else showToast(d.detail || 'Save failed', true);
+      })
+      .catch(() => showToast('Network error', true))
+      .finally(() => setSaving(false));
   };
 
-  const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const selectedDays = form.working_days ? form.working_days.split(',').map(d => d.trim()) : [];
-
-  const toggleDay = (day) => {
-    const current = selectedDays;
-    const updated = current.includes(day)
-      ? current.filter(d => d !== day)
-      : [...current, day];
-    // Keep original order
-    const ordered = DAYS.filter(d => updated.includes(d));
-    setForm({ ...form, working_days: ordered.join(',') });
+  const addKeyword = () => {
+    const kw = newKeyword.trim().toLowerCase();
+    if (!kw || form.blacklist_keywords.includes(kw)) { setNewKeyword(''); return; }
+    const updated = [...form.blacklist_keywords, kw];
+    setForm(p => ({...p, blacklist_keywords: updated}));
+    setNewKeyword('');
+    handleSave('keywords', { blacklist_keywords: updated });
   };
 
-  const SaveBtn = ({ section }) => (
-    <button
-      onClick={() => handleSave(section)}
-      disabled={saving === section}
-      style={{ marginTop: '16px' }}
-    >
-      <Save size={14}/>
-      {saving === section ? ' Saving...' : saved === section ? ' Saved ✓' : ' Save Changes'}
-    </button>
-  );
+  const removeKeyword = (kw) => {
+    const updated = form.blacklist_keywords.filter(k => k !== kw);
+    setForm(p => ({...p, blacklist_keywords: updated}));
+    handleSave('keywords', { blacklist_keywords: updated });
+  };
+
+  const addTemplate = () => {
+    if (!newTemplate.name.trim() || !newTemplate.text.trim()) return;
+    const updated = [...form.templates, { ...newTemplate, id: Date.now() }];
+    setForm(p => ({...p, templates: updated}));
+    setNewTemplate({ name: '', text: '' });
+    handleSave('templates', { templates: updated });
+  };
+
+  const removeTemplate = (idx) => {
+    const updated = form.templates.filter((_, i) => i !== idx);
+    setForm(p => ({...p, templates: updated}));
+    handleSave('templates', { templates: updated });
+  };
+
+  const TABS = [
+    { id: 'profile', label: 'Business Profile', icon: '🏢' },
+    { id: 'ai', label: 'AI Behaviour', icon: '🤖' },
+    { id: 'hours', label: 'Working Hours', icon: '🕐' },
+    { id: 'templates', label: 'Reply Templates', icon: '💬' },
+    { id: 'blacklist', label: 'Blacklist', icon: '🚫' },
+    { id: 'system', label: 'System Info', icon: 'ℹ️' },
+  ];
+
+  const INDUSTRIES = ['Education / Training','E-commerce / Retail','Real Estate','Healthcare','Finance / Banking','IT Services','Consulting','Food & Beverage','Fitness / Wellness','Travel / Hospitality','Legal Services','Other'];
+  const TONES = ['Professional & Helpful','Friendly & Casual','Formal & Structured','Concise & Direct','Empathetic & Warm'];
 
   if (loading) return (
     <section>
       <Title title="Settings" sub="Configure your AI Command Center"/>
-      <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Loading settings...</div>
+      <div style={{padding:40,textAlign:'center',color:'#64748b'}}>Loading settings...</div>
     </section>
   );
 
   return (
     <section>
-      <Title title="Settings" sub="Configure your AI Command Center — changes take effect immediately"/>
-
-      {error && (
-        <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: '#ef4444', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <AlertTriangle size={15}/> {error}
+      {toast && (
+        <div style={{position:'fixed',bottom:24,right:24,background: toast.isError ? '#ef4444' : '#1e293b',color:'white',padding:'12px 20px',borderRadius:10,fontSize:13,fontWeight:500,zIndex:9999,boxShadow:'0 4px 20px rgba(0,0,0,0.2)'}}>
+          {toast.msg}
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+      <Title title="Settings" sub="Configure your AI Command Center — changes are saved per workspace"/>
 
-        {/* Business Profile */}
-        <div className="card">
-          <h3 style={{ marginTop: 0, marginBottom: '16px', fontSize: '0.95em', color: '#e2e8f0' }}>Business Profile</h3>
-          <p style={{ fontSize: '0.82em', color: '#64748b', marginBottom: '16px', marginTop: 0 }}>
-            This information is used by the AI to understand your business and reply in context.
-          </p>
-
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
-            <span style={{ fontSize: '0.82em', color: '#94a3b8' }}>Business Name</span>
-            <input
-              placeholder="e.g. SAP Guru by Mohamed Aslam"
-              value={form.business_name}
-              onChange={e => setForm({ ...form, business_name: e.target.value })}
-            />
-          </label>
-
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
-            <span style={{ fontSize: '0.82em', color: '#94a3b8' }}>Business Description <span style={{ opacity: 0.6 }}>(used in AI prompts)</span></span>
-            <textarea
-              placeholder="Describe your business in 2-3 sentences. The AI will use this to understand what you do and reply accordingly."
-              value={form.business_description}
-              onChange={e => setForm({ ...form, business_description: e.target.value })}
-              style={{ minHeight: '80px' }}
-            />
-          </label>
-
-          <SaveBtn section="profile"/>
+      <div style={{display:'flex',gap:20}}>
+        {/* Left tab nav */}
+        <div style={{width:200,flexShrink:0}}>
+          {TABS.map(tab => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'10px 14px',borderRadius:8,border:'none',background: activeTab===tab.id ? '#eff6ff' : 'transparent',color: activeTab===tab.id ? '#3b82f6' : '#64748b',cursor:'pointer',fontSize:13,fontWeight: activeTab===tab.id ? 600 : 400,marginBottom:2,textAlign:'left',transition:'all 0.15s'}}>
+              <span style={{fontSize:15}}>{tab.icon}</span> {tab.label}
+            </button>
+          ))}
         </div>
 
-        {/* AI Behaviour */}
-        <div className="card">
-          <h3 style={{ marginTop: 0, marginBottom: '16px', fontSize: '0.95em', color: '#e2e8f0' }}>AI Behaviour</h3>
-          <p style={{ fontSize: '0.82em', color: '#64748b', marginBottom: '16px', marginTop: 0 }}>
-            Control how the AI sounds and when it sends replies.
-          </p>
+        {/* Right content panel */}
+        <div style={{flex:1,background:'white',borderRadius:12,border:'1px solid #e2e8f0',padding:24,minHeight:400}}>
 
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
-            <span style={{ fontSize: '0.82em', color: '#94a3b8' }}>AI Tone</span>
-            <select value={form.ai_tone} onChange={e => setForm({ ...form, ai_tone: e.target.value })}>
-              <option value="friendly">Friendly — warm, casual, approachable</option>
-              <option value="professional">Professional — clear, business-like</option>
-              <option value="formal">Formal — structured, respectful</option>
-            </select>
-          </label>
-
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
-            <span style={{ fontSize: '0.82em', color: '#94a3b8' }}>
-              Reply Delay — <b style={{ color: '#f59e0b' }}>{form.reply_delay_minutes} minutes</b>
-              <span style={{ opacity: 0.6, fontWeight: 400 }}> (AI waits this long before sending)</span>
-            </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <input
-                type="range" min={1} max={60} step={1}
-                value={form.reply_delay_minutes}
-                onChange={e => setForm({ ...form, reply_delay_minutes: Number(e.target.value) })}
-                style={{ flex: 1 }}
-              />
-              <input
-                type="number" min={1} max={60}
-                value={form.reply_delay_minutes}
-                onChange={e => setForm({ ...form, reply_delay_minutes: Number(e.target.value) })}
-                style={{ width: '60px' }}
-              />
-            </div>
-            <span style={{ fontSize: '0.75em', color: '#475569' }}>
-              If you reply manually within this window, the AI reply is cancelled automatically.
-            </span>
-          </label>
-
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', cursor: 'pointer' }}>
-            <div
-              onClick={() => setForm({ ...form, auto_reply_enabled: !form.auto_reply_enabled })}
-              style={{ color: form.auto_reply_enabled ? '#10b981' : '#64748b' }}
-            >
-              {form.auto_reply_enabled ? <ToggleRight size={28}/> : <ToggleLeft size={28}/>}
-            </div>
+          {/* BUSINESS PROFILE */}
+          {activeTab === 'profile' && (
             <div>
-              <div style={{ fontSize: '0.88em', color: '#e2e8f0' }}>Auto Reply</div>
-              <div style={{ fontSize: '0.75em', color: '#64748b' }}>
-                {form.auto_reply_enabled
-                  ? 'AI sends replies automatically after the delay'
-                  : 'AI generates replies but does NOT send — you review first'}
+              <div style={{fontSize:15,fontWeight:700,color:'#1e293b',marginBottom:4}}>Business Profile</div>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:20}}>This information is used by the AI to understand your business context.</div>
+
+              <div style={{display:'flex',flexDirection:'column',gap:16}}>
+                <div>
+                  <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'0.04em'}}>Business Name</label>
+                  <input value={form.business_name} onChange={e => setForm(p=>({...p,business_name:e.target.value}))} placeholder="e.g. SAP Guru by Mohamed Aslam" style={{width:'100%',padding:'9px 11px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,boxSizing:'border-box',color:'#1e293b'}}/>
+                </div>
+                <div>
+                  <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'0.04em'}}>Industry</label>
+                  <select value={form.industry} onChange={e => setForm(p=>({...p,industry:e.target.value}))} style={{width:'100%',padding:'9px 11px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,background:'white',boxSizing:'border-box',color:'#1e293b'}}>
+                    {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <button onClick={() => handleSave('profile', { business_name: form.business_name, industry: form.industry })} disabled={saving==='profile'}
+                style={{marginTop:20,padding:'9px 20px',borderRadius:7,background: saving==='profile' ? '#93c5fd' : '#3b82f6',color:'white',border:'none',cursor: saving==='profile' ? 'not-allowed' : 'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',gap:7}}>
+                <Save size={13}/> {saving==='profile' ? 'Saving...' : 'Save Profile'}
+              </button>
+            </div>
+          )}
+
+          {/* AI BEHAVIOUR */}
+          {activeTab === 'ai' && (
+            <div>
+              <div style={{fontSize:15,fontWeight:700,color:'#1e293b',marginBottom:4}}>AI Behaviour</div>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:20}}>Control how the AI responds and when it sends replies.</div>
+
+              {/* AI Enabled Toggle */}
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 16px',background: form.ai_enabled ? '#f0fdf4' : '#fef2f2',borderRadius:10,border:`1px solid ${form.ai_enabled ? '#bbf7d0' : '#fecaca'}`,marginBottom:16}}>
+                <div>
+                  <div style={{fontSize:13,fontWeight:700,color:'#1e293b'}}>AI Auto-Reply</div>
+                  <div style={{fontSize:12,color:'#64748b',marginTop:2}}>{form.ai_enabled ? 'AI is actively replying to incoming messages' : 'AI is paused — no automatic replies being sent'}</div>
+                </div>
+                <div onClick={() => setForm(p=>({...p,ai_enabled:!p.ai_enabled}))} style={{cursor:'pointer',color: form.ai_enabled ? '#10b981' : '#94a3b8'}}>
+                  {form.ai_enabled ? <ToggleRight size={36}/> : <ToggleLeft size={36}/>}
+                </div>
+              </div>
+
+              <div style={{marginBottom:16}}>
+                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'0.04em'}}>AI Tone</label>
+                <select value={form.ai_tone} onChange={e => setForm(p=>({...p,ai_tone:e.target.value}))} style={{width:'100%',padding:'9px 11px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,background:'white',color:'#1e293b'}}>
+                  {TONES.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+                <div style={{fontSize:11,color:'#94a3b8',marginTop:5}}>This tone is injected into every AI prompt for this workspace.</div>
+              </div>
+
+              <button onClick={() => handleSave('ai', { ai_enabled: form.ai_enabled, ai_tone: form.ai_tone })} disabled={saving==='ai'}
+                style={{padding:'9px 20px',borderRadius:7,background: saving==='ai' ? '#93c5fd' : '#3b82f6',color:'white',border:'none',cursor: saving==='ai' ? 'not-allowed' : 'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',gap:7}}>
+                <Save size={13}/> {saving==='ai' ? 'Saving...' : 'Save AI Settings'}
+              </button>
+            </div>
+          )}
+
+          {/* WORKING HOURS */}
+          {activeTab === 'hours' && (
+            <div>
+              <div style={{fontSize:15,fontWeight:700,color:'#1e293b',marginBottom:4}}>Working Hours</div>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:20}}>The AI uses these hours to set expectations with customers outside business hours.</div>
+
+              {['mon_fri','sat','sun'].map(day => (
+                <div key={day} style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
+                  <div style={{width:80,fontSize:12,fontWeight:600,color:'#475569',textTransform:'uppercase'}}>{day === 'mon_fri' ? 'Mon – Fri' : day === 'sat' ? 'Saturday' : 'Sunday'}</div>
+                  <input
+                    value={form.working_hours[day] || ''}
+                    onChange={e => setForm(p => ({...p, working_hours: {...p.working_hours, [day]: e.target.value}}))}
+                    placeholder={day === 'sun' ? 'Closed' : '09:00 - 18:00'}
+                    style={{flex:1,padding:'8px 11px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,color:'#1e293b'}}
+                  />
+                </div>
+              ))}
+
+              <button onClick={() => handleSave('hours', { working_hours: form.working_hours })} disabled={saving==='hours'}
+                style={{marginTop:8,padding:'9px 20px',borderRadius:7,background: saving==='hours' ? '#93c5fd' : '#3b82f6',color:'white',border:'none',cursor: saving==='hours' ? 'not-allowed' : 'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',gap:7}}>
+                <Save size={13}/> {saving==='hours' ? 'Saving...' : 'Save Hours'}
+              </button>
+            </div>
+          )}
+
+          {/* REPLY TEMPLATES */}
+          {activeTab === 'templates' && (
+            <div>
+              <div style={{fontSize:15,fontWeight:700,color:'#1e293b',marginBottom:4}}>Reply Templates</div>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:20}}>Quick-send templates for common replies. Use <code style={{background:'#f1f5f9',padding:'1px 5px',borderRadius:3}}>{'{name}'}</code> to personalise.</div>
+
+              {form.templates.length === 0 && (
+                <div style={{padding:'20px',textAlign:'center',color:'#94a3b8',fontSize:13,background:'#f8fafc',borderRadius:8,marginBottom:16}}>No templates yet. Add your first one below.</div>
+              )}
+
+              {form.templates.map((tpl, idx) => (
+                <div key={idx} style={{background:'#f8fafc',borderRadius:8,padding:'12px 14px',marginBottom:10,border:'1px solid #e2e8f0'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+                    <span style={{fontSize:13,fontWeight:600,color:'#1e293b'}}>{tpl.name}</span>
+                    <button onClick={() => removeTemplate(idx)} style={{background:'none',border:'none',cursor:'pointer',color:'#ef4444',padding:2}}><Trash2 size={13}/></button>
+                  </div>
+                  <div style={{fontSize:12,color:'#64748b',lineHeight:1.5}}>{tpl.text}</div>
+                </div>
+              ))}
+
+              <div style={{background:'#f0f9ff',borderRadius:8,padding:'14px',border:'1px solid #bae6fd',marginTop:16}}>
+                <div style={{fontSize:12,fontWeight:600,color:'#0369a1',marginBottom:10}}>Add New Template</div>
+                <input value={newTemplate.name} onChange={e => setNewTemplate(p=>({...p,name:e.target.value}))} placeholder="Template name (e.g. Greeting)" style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,marginBottom:8,boxSizing:'border-box',color:'#1e293b'}}/>
+                <textarea value={newTemplate.text} onChange={e => setNewTemplate(p=>({...p,text:e.target.value}))} placeholder="Template message... use {name} for personalisation" rows={3} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,resize:'vertical',fontFamily:'inherit',boxSizing:'border-box',color:'#1e293b',marginBottom:8}}/>
+                <button onClick={addTemplate} style={{padding:'7px 16px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:12,fontWeight:600}}>+ Add Template</button>
               </div>
             </div>
-          </label>
+          )}
 
-          <SaveBtn section="ai"/>
-        </div>
+          {/* BLACKLIST */}
+          {activeTab === 'blacklist' && (
+            <div>
+              <div style={{fontSize:15,fontWeight:700,color:'#1e293b',marginBottom:4}}>Blacklist Keywords</div>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:20}}>Messages containing these keywords will be ignored by the AI and flagged for manual review.</div>
 
-        {/* Working Hours */}
-        <div className="card">
-          <h3 style={{ marginTop: 0, marginBottom: '16px', fontSize: '0.95em', color: '#e2e8f0' }}>Working Hours</h3>
-          <p style={{ fontSize: '0.82em', color: '#64748b', marginBottom: '16px', marginTop: 0 }}>
-            The AI will use this to set expectations with customers outside working hours.
-          </p>
+              <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:20}}>
+                {form.blacklist_keywords.length === 0 && (
+                  <span style={{fontSize:12,color:'#94a3b8'}}>No keywords blacklisted yet.</span>
+                )}
+                {form.blacklist_keywords.map(kw => (
+                  <span key={kw} style={{display:'flex',alignItems:'center',gap:6,padding:'4px 10px',borderRadius:20,background:'#fef2f2',border:'1px solid #fecaca',fontSize:12,color:'#ef4444',fontWeight:500}}>
+                    {kw}
+                    <button onClick={() => removeKeyword(kw)} style={{background:'none',border:'none',cursor:'pointer',color:'#ef4444',padding:0,lineHeight:1,display:'flex'}}><X size={11}/></button>
+                  </span>
+                ))}
+              </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: '0.82em', color: '#94a3b8' }}>Start Time</span>
-              <input
-                type="time"
-                value={form.working_hours_start}
-                onChange={e => setForm({ ...form, working_hours_start: e.target.value })}
-              />
-            </label>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: '0.82em', color: '#94a3b8' }}>End Time</span>
-              <input
-                type="time"
-                value={form.working_hours_end}
-                onChange={e => setForm({ ...form, working_hours_end: e.target.value })}
-              />
-            </label>
-          </div>
-
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
-            <span style={{ fontSize: '0.82em', color: '#94a3b8' }}>Working Days</span>
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              {DAYS.map(day => (
-                <button
-                  key={day}
-                  onClick={() => toggleDay(day)}
-                  style={{
-                    padding: '5px 12px',
-                    fontSize: '0.8em',
-                    background: selectedDays.includes(day) ? '#2563eb' : 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${selectedDays.includes(day) ? '#2563eb' : '#334155'}`,
-                    borderRadius: '20px',
-                    color: selectedDays.includes(day) ? '#fff' : '#94a3b8',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {day}
-                </button>
-              ))}
+              <div style={{display:'flex',gap:8}}>
+                <input
+                  value={newKeyword}
+                  onChange={e => setNewKeyword(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && addKeyword()}
+                  placeholder="Type a keyword and press Enter or Add"
+                  style={{flex:1,padding:'8px 11px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,color:'#1e293b'}}
+                />
+                <button onClick={addKeyword} style={{padding:'8px 16px',borderRadius:7,background:'#ef4444',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600}}>Add</button>
+              </div>
+              <div style={{fontSize:11,color:'#94a3b8',marginTop:8}}>Press Enter or click Add. Keywords are saved automatically.</div>
             </div>
-          </label>
+          )}
 
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
-            <span style={{ fontSize: '0.82em', color: '#94a3b8' }}>Out-of-hours message <span style={{ opacity: 0.6 }}>(optional)</span></span>
-            <textarea
-              placeholder="e.g. Thanks for reaching out! We are currently closed. Our team will respond during working hours (Mon-Fri, 9am-6pm)."
-              value={form.out_of_hours_message}
-              onChange={e => setForm({ ...form, out_of_hours_message: e.target.value })}
-              style={{ minHeight: '70px' }}
-            />
-          </label>
+          {/* SYSTEM INFO */}
+          {activeTab === 'system' && (
+            <div>
+              <div style={{fontSize:15,fontWeight:700,color:'#1e293b',marginBottom:4}}>System Information</div>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:20}}>Read-only information about your AI Command Center setup.</div>
 
-          <SaveBtn section="hours"/>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+                {[
+                  ['Platform', 'AI Command Center v2.0'],
+                  ['Backend', 'sap-guru-assistant.onrender.com'],
+                  ['Primary Channel', 'Instagram DM'],
+                  ['Database', 'Supabase (PostgreSQL)'],
+                  ['AI Model', 'GPT-4o'],
+                  ['AI Status', form.ai_enabled ? '● Active' : '○ Paused'],
+                  ['AI Tone', form.ai_tone],
+                  ['Industry', form.industry],
+                ].map(([k,v]) => (
+                  <div key={k} style={{background:'#f8fafc',borderRadius:8,padding:'12px 14px',border:'1px solid #e2e8f0'}}>
+                    <div style={{fontSize:11,color:'#94a3b8',marginBottom:3,textTransform:'uppercase',letterSpacing:'0.04em'}}>{k}</div>
+                    <div style={{fontSize:13,fontWeight:600,color:'#1e293b'}}>{v}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{marginTop:16,padding:'12px 16px',background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:8,fontSize:12,color:'#0c4a6e',lineHeight:1.7}}>
+                <b style={{display:'block',marginBottom:4}}>Version History</b>
+                v2.0 — Multi-business SaaS, Integrations, Notifications, Settings overhaul<br/>
+                v1.5 — Reports & Analytics, Automation rules<br/>
+                v1.0 — Initial launch: Leads, Conversations, AI Playground
+              </div>
+            </div>
+          )}
+
         </div>
-
-        {/* System Info */}
-        <div className="card">
-          <h3 style={{ marginTop: 0, marginBottom: '16px', fontSize: '0.95em', color: '#e2e8f0' }}>System Info</h3>
-          <p style={{ fontSize: '0.82em', color: '#64748b', marginBottom: '16px', marginTop: 0 }}>
-            Read-only information about your AI Command Center setup.
-          </p>
-          <KeyVals data={{
-            'Platform': 'AI Command Center v1.0',
-            'Backend': 'sap-guru-assistant.onrender.com',
-            'Channel': 'Instagram DM',
-            'Organisation ID': '1 (SAP Guru)',
-            'Auto Reply Mode': form.auto_reply_enabled ? 'Enabled' : 'Disabled (Delay Mode)',
-            'Current Delay': `${form.reply_delay_minutes} minutes`,
-            'AI Tone': form.ai_tone || 'friendly',
-            'Last Updated': settings?.updated_at ? new Date(settings.updated_at).toLocaleString() : 'Never',
-          }}/>
-          <div style={{ marginTop: '16px', padding: '10px 12px', background: 'rgba(37,99,235,0.06)', borderRadius: '8px', fontSize: '0.8em', color: '#64748b', borderLeft: '3px solid #2563eb' }}>
-            <b style={{ color: '#94a3b8', display: 'block', marginBottom: '4px' }}>How delay mode works</b>
-            When a customer messages you, the AI generates a reply and waits {form.reply_delay_minutes} minutes.
-            If you reply manually in that window, the AI reply is cancelled.
-            If you don't reply, the AI sends automatically.
-          </div>
-        </div>
-
       </div>
     </section>
   );
