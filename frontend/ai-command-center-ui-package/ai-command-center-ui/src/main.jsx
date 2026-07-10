@@ -621,12 +621,12 @@ function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh }) 
               <div style={{display:'flex', justifyContent:'flex-start'}}>
                 <div style={{
                   maxWidth:'78%', padding:'10px 13px',
-                  background:'rgba(255,255,255,0.07)',
-                  border:'1px solid #334155',
+                  background:'#f1f5f9',
+                  border:'1px solid #cbd5e1',
                   borderRadius:'16px 16px 16px 4px',
-                  fontSize:'0.85em', color:'#e2e8f0', lineHeight:'1.5',
+                  fontSize:'0.88em', color:'#1e293b', lineHeight:'1.6',
                 }}>
-                  <div style={{fontSize:'0.72em', color:'#64748b', marginBottom:'4px', fontWeight:600}}>Customer</div>
+                  <div style={{fontSize:'0.75em', color:'#64748b', marginBottom:'4px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>Customer</div>
                   {item.user}
                 </div>
               </div>
@@ -635,12 +635,12 @@ function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh }) 
               <div style={{display:'flex', justifyContent:'flex-end'}}>
                 <div style={{
                   maxWidth:'78%', padding:'10px 13px',
-                  background:'rgba(37,99,235,0.15)',
-                  border:'1px solid rgba(37,99,235,0.3)',
+                  background:'#dbeafe',
+                  border:'1px solid #93c5fd',
                   borderRadius:'16px 16px 4px 16px',
-                  fontSize:'0.85em', color:'#e2e8f0', lineHeight:'1.5',
+                  fontSize:'0.88em', color:'#1e3a8a', lineHeight:'1.6',
                 }}>
-                  <div style={{fontSize:'0.72em', color:'#2563eb', marginBottom:'4px', fontWeight:600}}>AI Assistant</div>
+                  <div style={{fontSize:'0.75em', color:'#2563eb', marginBottom:'4px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>AI Assistant</div>
                   {item.assistant}
                 </div>
               </div>

@@ -20,13 +20,17 @@ router = APIRouter()
 
 
 def safe_date(val):
-    """Parse an ISO date string safely, return None on failure."""
+    """Parse an ISO date string safely, return timezone-aware datetime or None."""
     if not val:
         return None
     try:
         if val.endswith("Z"):
             val = val[:-1] + "+00:00"
-        return datetime.fromisoformat(val)
+        dt = datetime.fromisoformat(val)
+        # Always return timezone-aware datetime (assume UTC if naive)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
     except Exception:
         return None
 
