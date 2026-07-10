@@ -462,8 +462,63 @@ function Leads() {
   );
 }
 
-function LeadDetailPanel({ lead, onClose, getLeadName }) {
+function LeadDetailPanel({ lead: initialLead, onClose, getLeadName }) {
+  const [lead, setLead] = useState(initialLead);
+  const [qualifying, setQualifying] = useState(false);
+  const [qualifyDone, setQualifyDone] = useState(false);
+  const [summary, setSummary] = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState('');
+  const [showSummary, setShowSummary] = useState(false);
+
+  // Reset state when a different lead is selected
+  useEffect(() => {
+    setLead(initialLead);
+    setQualifyDone(false);
+    setSummary(null);
+    setShowSummary(false);
+    setSummaryError('');
+  }, [initialLead.id]);
+
   const name = getLeadName(lead);
+
+  const handleQualify = async () => {
+    if (!lead.id) return;
+    setQualifying(true);
+    try {
+      const res = await fetch(`${API_BASE}/leads/${lead.id}/qualify`, { method: 'PATCH' });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setLead({ ...lead, is_qualified: true, status: 'qualified', lead_stage: 'qualified', temperature: 'hot' });
+        setQualifyDone(true);
+      }
+    } catch (e) { console.error(e); }
+    setQualifying(false);
+  };
+
+  const handleViewSummary = async () => {
+    if (showSummary) { setShowSummary(false); return; }
+    if (summary) { setShowSummary(true); return; }
+    setSummaryLoading(true);
+    setSummaryError('');
+    try {
+      const res = await fetch(`${API_BASE}/leads/${lead.sender_id}/summary`);
+      const data = await res.json();
+      if (data.status === 'success') {
+        setSummary(data);
+        setShowSummary(true);
+      } else {
+        setSummaryError(data.message || 'No conversation found for this lead.');
+        setShowSummary(true);
+      }
+    } catch (e) {
+      setSummaryError('Could not load summary. Check your connection.');
+      setShowSummary(true);
+    }
+    setSummaryLoading(false);
+  };
+
+  const URGENCY_COLORS = { high: '#ef4444', medium: '#f59e0b', low: '#10b981' };
 
   return (
     <Card>
@@ -498,11 +553,6 @@ function LeadDetailPanel({ lead, onClose, getLeadName }) {
             <BookOpen size={13}/> {lead.interested_module}
           </div>
         )}
-        {lead.lead_score && (
-          <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'0.88em', color:'#94a3b8'}}>
-            <Star size={13}/> Lead Score: {lead.lead_score}
-          </div>
-        )}
         {lead.updated_at && (
           <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'0.88em', color:'#94a3b8'}}>
             <Clock size={13}/> Last updated: {new Date(lead.updated_at).toLocaleString()}
@@ -514,15 +564,14 @@ function LeadDetailPanel({ lead, onClose, getLeadName }) {
       <KeyVals data={{
         'Lead Stage': STAGE_LABELS[lead.lead_stage] || lead.lead_stage || '-',
         'Status': lead.status || '-',
-        'Channel': lead.channel || 'Instagram',
-        'Assigned To': 'Aslam',
-        ...(lead.preferred_mode ? {'Preferred Mode': lead.preferred_mode} : {}),
+        'Channel': 'Instagram',
+        ...(lead.mode ? {'Mode': lead.mode} : {}),
         ...(lead.email ? {'Email': lead.email} : {}),
       }}/>
 
       {/* Notes */}
       {lead.notes && (
-        <div style={{marginTop:'14px', padding:'10px 12px', background:'rgba(37,99,235,0.06)', borderRadius:'8px', fontSize:'0.85em', color:'#94a3b8', borderLeft:'3px solid #2563eb'}}>
+        <div style={{marginTop:'14px', padding:'10px 12px', background:'rgba(37,99,235,0.06)', borderRadius:'8px', fontSize:'0.82em', color:'#94a3b8', borderLeft:'3px solid #2563eb'}}>
           <b style={{color:'#cbd5e1', display:'block', marginBottom:'4px'}}>Notes</b>
           {lead.notes}
         </div>
@@ -530,9 +579,96 @@ function LeadDetailPanel({ lead, onClose, getLeadName }) {
 
       {/* Actions */}
       <div style={{marginTop:'16px', display:'flex', gap:'8px', flexWrap:'wrap'}}>
-        <button style={{flex:1}}>Mark Qualified</button>
-        <button className="outline" style={{flex:1}}>View Conversation</button>
+        {lead.is_qualified || qualifyDone ? (
+          <button disabled style={{flex:1, opacity:0.6, background:'#10b981'}}>
+            ✓ Qualified
+          </button>
+        ) : (
+          <button
+            style={{flex:1}}
+            onClick={handleQualify}
+            disabled={qualifying}
+          >
+            {qualifying ? 'Qualifying...' : 'Mark Qualified'}
+          </button>
+        )}
+        <button
+          className="outline"
+          style={{flex:1}}
+          onClick={handleViewSummary}
+          disabled={summaryLoading}
+        >
+          {summaryLoading ? 'Loading...' : showSummary ? 'Hide Summary' : 'View Conversation'}
+        </button>
       </div>
+
+      {/* AI Summary Panel */}
+      {showSummary && (
+        <div style={{marginTop:'16px'}}>
+          <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'12px'}}>
+            <Brain size={14} color="#8b5cf6"/>
+            <span style={{fontSize:'0.82em', fontWeight:700, color:'#8b5cf6', textTransform:'uppercase', letterSpacing:'0.05em'}}>AI Conversation Summary</span>
+          </div>
+
+          {summaryError ? (
+            <div style={{padding:'12px', background:'rgba(239,68,68,0.08)', borderRadius:'8px', fontSize:'0.83em', color:'#ef4444'}}>
+              {summaryError}
+            </div>
+          ) : summary ? (
+            <div style={{display:'flex', flexDirection:'column', gap:'10px'}}>
+
+              {/* One-liner */}
+              <div style={{padding:'10px 12px', background:'rgba(139,92,246,0.08)', borderRadius:'8px', borderLeft:'3px solid #8b5cf6', fontSize:'0.88em', color:'#e2e8f0', fontStyle:'italic'}}>
+                "{summary.summary?.one_liner}"
+              </div>
+
+              {/* Intent + Stage + Urgency row */}
+              <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'8px'}}>
+                <div style={{padding:'8px', background:'rgba(255,255,255,0.04)', borderRadius:'8px', textAlign:'center'}}>
+                  <div style={{fontSize:'0.7em', color:'#64748b', marginBottom:'3px'}}>INTENT</div>
+                  <div style={{fontSize:'0.8em', color:'#e2e8f0'}}>{summary.summary?.intent || '-'}</div>
+                </div>
+                <div style={{padding:'8px', background:'rgba(255,255,255,0.04)', borderRadius:'8px', textAlign:'center'}}>
+                  <div style={{fontSize:'0.7em', color:'#64748b', marginBottom:'3px'}}>STAGE</div>
+                  <div style={{fontSize:'0.8em', color:'#e2e8f0'}}>{summary.summary?.stage || '-'}</div>
+                </div>
+                <div style={{padding:'8px', background:'rgba(255,255,255,0.04)', borderRadius:'8px', textAlign:'center'}}>
+                  <div style={{fontSize:'0.7em', color:'#64748b', marginBottom:'3px'}}>URGENCY</div>
+                  <div style={{fontSize:'0.8em', fontWeight:700, color: URGENCY_COLORS[summary.summary?.urgency] || '#94a3b8', textTransform:'capitalize'}}>
+                    {summary.summary?.urgency || '-'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Key facts */}
+              {summary.summary?.key_facts?.length > 0 && (
+                <div>
+                  <div style={{fontSize:'0.75em', color:'#64748b', marginBottom:'6px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Key Facts</div>
+                  <ul style={{margin:0, padding:'0 0 0 16px', display:'flex', flexDirection:'column', gap:'4px'}}>
+                    {summary.summary.key_facts.map((fact, i) => (
+                      <li key={i} style={{fontSize:'0.83em', color:'#94a3b8'}}>{fact}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Recommended action */}
+              {summary.summary?.recommended_action && (
+                <div style={{padding:'10px 12px', background:'rgba(16,185,129,0.08)', borderRadius:'8px', borderLeft:'3px solid #10b981'}}>
+                  <div style={{fontSize:'0.72em', color:'#10b981', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'4px'}}>Recommended Action</div>
+                  <div style={{fontSize:'0.85em', color:'#e2e8f0'}}>{summary.summary.recommended_action}</div>
+                </div>
+              )}
+
+              {/* Meta */}
+              <div style={{fontSize:'0.75em', color:'#475569', display:'flex', gap:'12px'}}>
+                <span>{summary.message_count} messages</span>
+                {summary.last_active && <span>Last active: {new Date(summary.last_active).toLocaleDateString()}</span>}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      )}
     </Card>
   );
 }
