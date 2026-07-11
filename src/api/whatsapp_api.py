@@ -1,7 +1,7 @@
 import os
 from fastapi import APIRouter, Request, Response, BackgroundTasks
 from ..services.webhook_service import process_instagram_webhook
-from ..app import VERIFY_TOKEN
+VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN", "sap_guru_2026")
 
 router = APIRouter(tags=["WhatsApp Webhook"])
 
