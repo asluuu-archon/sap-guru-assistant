@@ -262,7 +262,7 @@ If user asks something casual like "how are you", reply casually.
 Return only valid JSON.
 """,
         "required_json_format": {
-            "category": "career_guidance | learning_lead | job_inquiry | greeting | personal | certification | general | needs_human",
+            "category": "career_guidance | learning_lead | job_inquiry | greeting | personal | certification | general | needs_human | advice_or_friend",
             "should_capture_contact": "true or false",
             "should_reply": "true or false",
             "human_reason": "reason if should_reply is false",
@@ -304,7 +304,17 @@ def _normalize_output(data: dict, message: str, context: str) -> dict:
     ]
 
     if not reply:
-        return _human_review("Empty reply from OpenAI.")
+        return {
+            "category": "general",
+            "lead_score": 30,
+            "priority": "normal",
+            "approval_status": "safe_to_send",
+            "should_capture_contact": False,
+            "should_reply": True,
+            "human_reason": "",
+            "reason": "Fallback reply used because OpenAI returned empty string.",
+            "suggested_reply": "I'll get back to you on this shortly.",
+        }
 
     if any(bad in reply.lower() for bad in bad_replies):
         return _human_review("Bad or vague reply detected.")
@@ -391,6 +401,10 @@ def suggest_reply(message: str, channel: str = "instagram", context: str = "") -
             "reason": intent.get("reason", "Greeting detected"),
             "suggested_reply": "Hi, how are you doing? How can I help you?",
         }
+
+    if intent.get("intent") == "advice_or_friend":
+        # Pass to OpenAI but with strong instruction to be friendly and helpful
+        pass
 
     if intent.get("intent") == "lead_information":
         return {

@@ -1,14 +1,17 @@
 from fastapi import APIRouter, HTTPException, Header
 from typing import Optional
 from datetime import datetime, timedelta, timezone
+import os
+from supabase import create_client, Client
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
 
-
-def _supabase():
-    from src.memory import supabase
-    return supabase
-
+def _supabase() -> Client:
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_KEY")
+    if not url or not key:
+        raise Exception("Supabase credentials not configured")
+    return create_client(url, key)
 
 @router.get("/")
 async def get_notifications(business_id: Optional[str] = Header(None, alias="X-Business-ID")):

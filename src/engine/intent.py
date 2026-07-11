@@ -125,6 +125,7 @@ def detect_intent(message: str) -> dict:
     - lead_information
     - career_guidance
     - job_inquiry
+    - advice_or_friend
     - needs_human
     - general
     """
@@ -205,6 +206,15 @@ def detect_intent(message: str) -> dict:
             "confidence": 0.35,
             "should_reply": False,
             "reason": "Short unclear or regional-language message",
+        }
+        
+    # Friend or Advice intent (casual long message, emojis, life advice)
+    if any(word in text for word in ["bro", "brother", "machan", "mate", "dude", "advice", "suggestion", "help me"]):
+        return {
+            "intent": "advice_or_friend",
+            "confidence": 0.75,
+            "should_reply": True,
+            "reason": "Casual friend or advice seeking",
         }
 
     if len(text.split()) <= 2:
