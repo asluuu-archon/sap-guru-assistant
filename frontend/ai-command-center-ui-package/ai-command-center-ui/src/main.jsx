@@ -3997,6 +3997,43 @@ function PublisherPage({ activeBusiness }) {
   const [postResult, setPostResult] = useState(null);
   const [history, setHistory] = useState([]);
   const [histLoading, setHistLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadedPreview, setUploadedPreview] = useState(null);
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadProgress(10);
+    setUploadedPreview(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => prev < 85 ? prev + 15 : prev);
+      }, 300);
+      const res = await fetch(`${API_BASE}/publisher/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+      const data = await res.json();
+      if (data.status === 'success') {
+        setMediaUrl(data.url);
+        setUploadedPreview({ url: data.url, name: file.name, type: file.type });
+        if (file.type.startsWith('video/')) setMediaType('video');
+        else setMediaType('image');
+      } else {
+        setPostResult({ ok: false, msg: `Upload failed: ${data.message}` });
+      }
+    } catch (err) {
+      setPostResult({ ok: false, msg: 'Upload error — check your connection' });
+    }
+    setUploading(false);
+    setTimeout(() => setUploadProgress(0), 1000);
+  };
 
   useEffect(() => {
     if (tab === 'history') fetchHistory();
@@ -4159,19 +4196,66 @@ function PublisherPage({ activeBusiness }) {
               </div>
               {mediaType !== 'none' && (
                 <>
+                  {/* File upload button */}
+                  <label style={{
+                    display:'flex', alignItems:'center', justifyContent:'center', gap:'8px',
+                    padding:'10px', borderRadius:'8px', cursor: uploading ? 'not-allowed' : 'pointer',
+                    background: uploading ? '#1e293b' : 'rgba(37,99,235,0.1)',
+                    border:'2px dashed #2563eb', color:'#93c5fd',
+                    fontSize:'0.85em', fontWeight:600, marginBottom:'10px',
+                    transition:'all 0.15s',
+                  }}>
+                    <input
+                      type="file"
+                      accept={mediaType === 'video' ? 'video/*' : 'image/*'}
+                      onChange={handleFileUpload}
+                      disabled={uploading}
+                      style={{display:'none'}}
+                    />
+                    {uploading ? (
+                      <><Loader size={15} style={{animation:'spin 1s linear infinite'}}/> Uploading...</>
+                    ) : (
+                      <><Image size={15}/> {uploadedPreview ? 'Replace File' : 'Upload from Computer'}</>
+                    )}
+                  </label>
+
+                  {/* Upload progress bar */}
+                  {uploadProgress > 0 && uploadProgress < 100 && (
+                    <div style={{marginBottom:'8px'}}>
+                      <div style={{height:'4px', background:'#1e293b', borderRadius:'2px', overflow:'hidden'}}>
+                        <div style={{height:'100%', width:`${uploadProgress}%`, background:'#2563eb', transition:'width 0.3s', borderRadius:'2px'}}/>
+                      </div>
+                      <div style={{fontSize:'0.72em', color:'#64748b', marginTop:'3px'}}>Uploading... {uploadProgress}%</div>
+                    </div>
+                  )}
+
+                  {/* Uploaded preview */}
+                  {uploadedPreview && (
+                    <div style={{marginBottom:'8px', padding:'8px 10px', background:'rgba(16,185,129,0.08)', border:'1px solid rgba(16,185,129,0.2)', borderRadius:'7px', display:'flex', alignItems:'center', gap:'8px'}}>
+                      {uploadedPreview.type.startsWith('image/') && (
+                        <img src={uploadedPreview.url} alt="preview" style={{width:40, height:40, objectFit:'cover', borderRadius:'5px', flexShrink:0}}/>
+                      )}
+                      <div style={{flex:1, overflow:'hidden'}}>
+                        <div style={{fontSize:'0.8em', color:'#10b981', fontWeight:600}}>✓ Uploaded successfully</div>
+                        <div style={{fontSize:'0.72em', color:'#64748b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{uploadedPreview.name}</div>
+                      </div>
+                      <button
+                        onClick={() => { setUploadedPreview(null); setMediaUrl(''); }}
+                        style={{background:'none', border:'none', color:'#64748b', cursor:'pointer', padding:'2px', flexShrink:0}}
+                      ><X size={14}/></button>
+                    </div>
+                  )}
+
+                  {/* Manual URL fallback */}
+                  <div style={{fontSize:'0.72em', color:'#64748b', marginBottom:'5px'}}>Or paste a public URL directly:</div>
                   <input
                     type="url"
-                    placeholder={mediaType === 'video' ? 'https://... (publicly accessible MP4 URL)' : 'https://... (publicly accessible image URL)'}
-                    value={mediaUrl}
-                    onChange={e => setMediaUrl(e.target.value)}
-                    style={{width:'100%', fontSize:'0.85em', boxSizing:'border-box', marginBottom:'8px'}}
+                    placeholder={mediaType === 'video' ? 'https://... (public MP4 URL)' : 'https://... (public image URL)'}
+                    value={uploadedPreview ? '' : mediaUrl}
+                    onChange={e => { setMediaUrl(e.target.value); setUploadedPreview(null); }}
+                    style={{width:'100%', fontSize:'0.82em', boxSizing:'border-box', marginBottom:'6px', opacity: uploadedPreview ? 0.4 : 1}}
+                    disabled={!!uploadedPreview}
                   />
-                  {mediaUrl && mediaType === 'image' && (
-                    <img src={mediaUrl} alt="preview" style={{width:'100%', maxHeight:'160px', objectFit:'cover', borderRadius:'8px', border:'1px solid #1e293b'}} onError={e => e.target.style.display='none'}/>
-                  )}
-                  <div style={{fontSize:'0.72em', color:'#475569', marginTop:'4px'}}>
-                    ⚠️ URL must be publicly accessible. For Instagram, image/video is required.
-                  </div>
                 </>
               )}
             </div>

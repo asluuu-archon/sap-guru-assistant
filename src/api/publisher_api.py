@@ -1,6 +1,7 @@
 import os
 import requests
-from fastapi import APIRouter, Query, Body
+import uuid
+from fastapi import APIRouter, Query, Body, UploadFile, File
 from pydantic import BaseModel
 from typing import Optional, List, Dict
 from ..memory import supabase
@@ -74,6 +75,57 @@ def create_social_post(req: PublishRequest):
 
     except Exception as e:
         print(f"PUBLISHER ERROR: {e}", flush=True)
+        return {"status": "error", "message": str(e)}
+
+
+@router.post("/publisher/upload")
+async def upload_media(file: UploadFile = File(...)):
+    """
+    Upload a media file to Supabase Storage and return its public URL.
+    """
+    try:
+        # 1. Read file
+        contents = await file.read()
+        
+        # 2. Generate unique filename
+        ext = os.path.splitext(file.filename)[1].lower() if file.filename else ""
+        if not ext and file.content_type:
+            if file.content_type.startswith("image/"):
+                ext = ".jpg"
+            elif file.content_type.startswith("video/"):
+                ext = ".mp4"
+                
+        unique_filename = f"{uuid.uuid4().hex}{ext}"
+        
+        # 3. Ensure bucket exists (or create it)
+        bucket_name = "publisher-media"
+        try:
+            supabase.storage.get_bucket(bucket_name)
+        except Exception:
+            try:
+                supabase.storage.create_bucket(bucket_name, public=True)
+            except Exception as e:
+                print(f"Bucket creation info: {e}")
+                
+        # 4. Upload to Supabase Storage
+        # We need to set content-type for proper serving
+        res = supabase.storage.from_(bucket_name).upload(
+            path=unique_filename,
+            file=contents,
+            file_options={"content-type": file.content_type or "application/octet-stream"}
+        )
+        
+        # 5. Get public URL
+        public_url = supabase.storage.from_(bucket_name).get_public_url(unique_filename)
+        
+        return {
+            "status": "success",
+            "url": public_url,
+            "filename": unique_filename
+        }
+        
+    except Exception as e:
+        print(f"UPLOAD ERROR: {e}", flush=True)
         return {"status": "error", "message": str(e)}
 
 
