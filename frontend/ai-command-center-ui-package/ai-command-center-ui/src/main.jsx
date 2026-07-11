@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Bell, HelpCircle, Search, Settings, LayoutDashboard, MessagesSquare, Users, Bug, Bot, Brain, UserRound, BarChart3, Workflow, Plus, Download, Filter, Play, X, Phone, MapPin, BookOpen, Star, Clock, ChevronRight, ToggleLeft, ToggleRight, Pencil, Trash2, Tag, Zap, Save, AlertTriangle, Building2, Globe, CheckCircle, Plug, Wifi, WifiOff, RefreshCw, ExternalLink, Key, Link, Send } from 'lucide-react';
+import { Bell, HelpCircle, Search, Settings, LayoutDashboard, MessagesSquare, Users, Bug, Bot, Brain, UserRound, BarChart3, Workflow, Plus, Download, Filter, Play, X, Phone, MapPin, BookOpen, Star, Clock, ChevronRight, ToggleLeft, ToggleRight, Pencil, Trash2, Tag, Zap, Save, AlertTriangle, Building2, Globe, CheckCircle, Plug, Wifi, WifiOff, RefreshCw, ExternalLink, Key, Link, Send, Radio, Image, Video, FileText, Calendar, CheckSquare, XCircle, Loader } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
 import './styles.css';
 
@@ -8,7 +8,7 @@ const API_BASE = "https://sap-guru-assistant.onrender.com";
 
 const nav = [
   ['Overview', LayoutDashboard], ['Conversations', MessagesSquare], ['Leads', Users], ['Pipeline Debugger', Bug],
-  ['AI Playground', Bot], ['Business Brain', Brain], ['Customer 360°', UserRound], ['Reports', BarChart3], ['Automation', Workflow], ['Businesses', Building2], ['Integrations', Plug], ['Settings', Settings]
+  ['AI Playground', Bot], ['Business Brain', Brain], ['Customer 360°', UserRound], ['Reports', BarChart3], ['Automation', Workflow], ['Publisher', Radio], ['Businesses', Building2], ['Integrations', Plug], ['Settings', Settings]
 ];
 
 const colors = ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6'];
@@ -287,6 +287,7 @@ function Screen({page, dashboard, activeBusiness, setPage}) {
       {page==='Automation'&&<Automation/>}
       {page==='Businesses'&&<BusinessesAdmin activeBusiness={activeBusiness} setPage={setPage}/>}
       {page==='Integrations'&&<IntegrationsPage activeBusiness={activeBusiness}/>}
+      {page==='Publisher'&&<PublisherPage activeBusiness={activeBusiness}/>}
       {page==='Settings'&&<SettingsPage/>}
     </>
   );
@@ -612,7 +613,11 @@ function Conversations() {
       .finally(() => setFullLoading(false));
   };
 
+  const [channelFilter, setChannelFilter] = useState('all');
   const FILTER_KEYS = ['all', 'needs_human', 'pending_reply', 'ai_replied', 'manual_replied'];
+  
+  const filteredByChannel = channelFilter === 'all' ? conversations
+    : conversations.filter(c => (c.channel || 'instagram') === channelFilter);
 
   return (
     <section>
@@ -625,6 +630,24 @@ function Conversations() {
           </div>
         }
       />
+
+      {/* Channel filter */}
+      <div style={{display:'flex', gap:'6px', marginBottom:'10px', flexWrap:'wrap', alignItems:'center'}}>
+        <span style={{fontSize:'0.75em', color:'#64748b', marginRight:'4px', fontWeight:600}}>CHANNEL:</span>
+        {[['all','All Channels'],['instagram','📸 Instagram'],['whatsapp','💬 WhatsApp']].map(([val, label]) => (
+          <button
+            key={val}
+            onClick={() => setChannelFilter(val)}
+            style={{
+              padding:'4px 12px', fontSize:'0.78em', borderRadius:'20px',
+              background: channelFilter === val ? (val === 'whatsapp' ? '#25d366' : val === 'instagram' ? '#e1306c' : '#2563eb') : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${channelFilter === val ? 'transparent' : '#334155'}`,
+              color: channelFilter === val ? '#fff' : '#94a3b8',
+              cursor:'pointer',
+            }}
+          >{label}</button>
+        ))}
+      </div>
 
       {/* Filter tabs */}
       <div style={{display:'flex', gap:'6px', marginBottom:'14px', flexWrap:'wrap'}}>
@@ -677,7 +700,7 @@ function Conversations() {
             <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>Loading conversations...</div>
           ) : conversations.length === 0 ? (
             <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>No conversations found.</div>
-          ) : conversations.map((conv, i) => {
+          ) : filteredByChannel.map((conv, i) => {
             const isSelected = selected?.sender_id === conv.sender_id;
             const stateColor = conv.needs_human ? '#ef4444' : (CONV_STATE_COLORS[conv.conversation_state] || '#475569');
             const stateLabel = conv.needs_human ? 'Needs Human' : (conv.conversation_state || 'active').replace(/_/g, ' ');
@@ -705,8 +728,12 @@ function Conversations() {
                     </div>
                     <div>
                       <div style={{fontSize:'0.9em', fontWeight:600, color:'#e2e8f0'}}>{conv.display_name}</div>
-                      <div style={{fontSize:'0.72em', color:'#475569'}}>
-                        <span className="ig" style={{fontSize:'0.85em', marginRight:'4px'}}>IG</span>
+                      <div style={{fontSize:'0.72em', color:'#475569', display:'flex', alignItems:'center', gap:'4px'}}>
+                        {(conv.channel || 'instagram') === 'whatsapp' ? (
+                          <span style={{fontSize:'0.85em', background:'#25d36620', color:'#25d366', padding:'1px 5px', borderRadius:'4px', fontWeight:700}}>WA</span>
+                        ) : (
+                          <span className="ig" style={{fontSize:'0.85em', marginRight:'2px'}}>IG</span>
+                        )}
                         {conv.message_count || 0} messages
                       </div>
                     </div>
@@ -797,7 +824,11 @@ function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh }) 
           <div>
             <div style={{fontWeight:700, color:'#e2e8f0', fontSize:'0.95em'}}>{conv.display_name}</div>
             <div style={{fontSize:'0.75em', display:'flex', alignItems:'center', gap:'6px'}}>
-              <span className="ig" style={{fontSize:'0.85em'}}>IG</span>
+              {isWhatsApp ? (
+                            <span style={{fontSize:'0.85em', background:'#25d36620', color:'#25d366', padding:'1px 5px', borderRadius:'4px', fontWeight:700}}>WA</span>
+                          ) : (
+                            <span className="ig" style={{fontSize:'0.85em'}}>IG</span>
+                          )}
               <span style={{color: stateColor, fontWeight:600}}>{stateLabel}</span>
               <span style={{color:'#475569'}}>· {history.length} messages</span>
             </div>
@@ -3938,6 +3969,402 @@ function IntegrationsPage({ activeBusiness }) {
               </button>
             </div>
           </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ─── PUBLISHER PAGE ─────────────────────────────────────────────────────────
+
+const PLATFORMS = [
+  { id: 'instagram', label: 'Instagram', icon: '📸', color: '#e1306c', bg: '#e1306c15', desc: 'Feed post with image/video' },
+  { id: 'facebook',  label: 'Facebook',  icon: '📘', color: '#1877f2', bg: '#1877f215', desc: 'Page post, photo or video' },
+  { id: 'whatsapp',  label: 'WhatsApp',  icon: '💬', color: '#25d366', bg: '#25d36615', desc: 'Broadcast to opted-in contacts' },
+];
+
+const CHAR_LIMITS = { instagram: 2200, facebook: 63206, whatsapp: 1024 };
+
+function PublisherPage({ activeBusiness }) {
+  const [tab, setTab] = useState('compose');
+  const [caption, setCaption] = useState('');
+  const [mediaUrl, setMediaUrl] = useState('');
+  const [mediaType, setMediaType] = useState('image'); // image | video | none
+  const [selectedPlatforms, setSelectedPlatforms] = useState(['instagram', 'facebook']);
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [scheduledAt, setScheduledAt] = useState('');
+  const [posting, setPosting] = useState(false);
+  const [postResult, setPostResult] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [histLoading, setHistLoading] = useState(false);
+
+  useEffect(() => {
+    if (tab === 'history') fetchHistory();
+  }, [tab]);
+
+  const fetchHistory = () => {
+    setHistLoading(true);
+    fetch(`${API_BASE}/publisher/history?limit=50`)
+      .then(r => r.json())
+      .then(d => { if (d.status === 'success') setHistory(d.posts || []); })
+      .catch(console.error)
+      .finally(() => setHistLoading(false));
+  };
+
+  const togglePlatform = (id) => {
+    setSelectedPlatforms(prev =>
+      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+    );
+  };
+
+  const handlePost = async () => {
+    if (!caption.trim() && !mediaUrl.trim()) {
+      setPostResult({ ok: false, msg: 'Please add a caption or media URL' }); return;
+    }
+    if (selectedPlatforms.length === 0) {
+      setPostResult({ ok: false, msg: 'Please select at least one platform' }); return;
+    }
+    setPosting(true);
+    setPostResult(null);
+    try {
+      const res = await fetch(`${API_BASE}/publisher/post`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: caption.trim(),
+          media_url: mediaUrl.trim() || null,
+          platforms: selectedPlatforms,
+          scheduled_at: scheduleEnabled && scheduledAt ? scheduledAt : null,
+          business_id: activeBusiness?.id || null,
+        }),
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setPostResult({ ok: true, msg: data.message || 'Posted successfully!', results: data.results });
+        if (!scheduleEnabled) { setCaption(''); setMediaUrl(''); }
+        setTimeout(() => setPostResult(null), 8000);
+      } else {
+        setPostResult({ ok: false, msg: data.message || 'Post failed' });
+      }
+    } catch (e) {
+      setPostResult({ ok: false, msg: 'Network error — check your connection' });
+    }
+    setPosting(false);
+  };
+
+  const minDate = new Date();
+  minDate.setMinutes(minDate.getMinutes() + 5);
+  const minDateStr = minDate.toISOString().slice(0, 16);
+
+  return (
+    <section>
+      <Title
+        title="Social Publisher"
+        sub="Compose once, publish to Instagram, Facebook & WhatsApp"
+        action={
+          <div style={{display:'flex', gap:'8px'}}>
+            <button
+              onClick={() => setTab(tab === 'compose' ? 'history' : 'compose')}
+              className="outline"
+              style={{padding:'6px 14px', fontSize:'0.85em'}}
+            >
+              {tab === 'compose' ? '📋 Post History' : '✏️ Compose'}
+            </button>
+          </div>
+        }
+      />
+
+      {tab === 'compose' ? (
+        <div style={{display:'grid', gridTemplateColumns:'1.4fr 1fr', gap:'20px', alignItems:'start'}}>
+
+          {/* LEFT — Composer */}
+          <div style={{display:'flex', flexDirection:'column', gap:'16px'}}>
+
+            {/* Platform toggles */}
+            <div className="card" style={{padding:'16px'}}>
+              <div style={{fontSize:'0.8em', color:'#64748b', fontWeight:700, marginBottom:'12px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Select Platforms</div>
+              <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
+                {PLATFORMS.map(p => {
+                  const active = selectedPlatforms.includes(p.id);
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => togglePlatform(p.id)}
+                      style={{
+                        display:'flex', alignItems:'center', justifyContent:'space-between',
+                        padding:'10px 14px', borderRadius:'10px', cursor:'pointer',
+                        background: active ? p.bg : 'rgba(255,255,255,0.02)',
+                        border: `1.5px solid ${active ? p.color : '#1e293b'}`,
+                        transition:'all 0.15s',
+                      }}
+                    >
+                      <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                        <span style={{fontSize:'1.3em'}}>{p.icon}</span>
+                        <div>
+                          <div style={{fontWeight:700, color: active ? p.color : '#e2e8f0', fontSize:'0.9em'}}>{p.label}</div>
+                          <div style={{fontSize:'0.72em', color:'#64748b'}}>{p.desc}</div>
+                        </div>
+                      </div>
+                      <div style={{
+                        width:22, height:22, borderRadius:'50%',
+                        background: active ? p.color : 'transparent',
+                        border: `2px solid ${active ? p.color : '#334155'}`,
+                        display:'flex', alignItems:'center', justifyContent:'center',
+                        flexShrink:0,
+                      }}>
+                        {active && <span style={{color:'#fff', fontSize:'0.7em', fontWeight:900}}>✓</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Caption */}
+            <div className="card" style={{padding:'16px'}}>
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px'}}>
+                <div style={{fontSize:'0.8em', color:'#64748b', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em'}}>Caption</div>
+                <div style={{display:'flex', gap:'10px'}}>
+                  {selectedPlatforms.map(pid => (
+                    <span key={pid} style={{fontSize:'0.72em', color: caption.length > (CHAR_LIMITS[pid] || 2200) ? '#ef4444' : '#64748b'}}>
+                      {PLATFORMS.find(p=>p.id===pid)?.icon} {caption.length}/{CHAR_LIMITS[pid] || 2200}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <textarea
+                value={caption}
+                onChange={e => setCaption(e.target.value)}
+                placeholder="Write your post caption here... Use {name} to personalise for WhatsApp broadcasts."
+                style={{width:'100%', minHeight:'120px', maxHeight:'240px', resize:'vertical', fontSize:'0.88em', boxSizing:'border-box'}}
+              />
+            </div>
+
+            {/* Media URL */}
+            <div className="card" style={{padding:'16px'}}>
+              <div style={{fontSize:'0.8em', color:'#64748b', fontWeight:700, marginBottom:'10px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Media</div>
+              <div style={{display:'flex', gap:'8px', marginBottom:'10px'}}>
+                {[['image','🖼️ Image'],['video','🎬 Video'],['none','📝 Text Only']].map(([val, label]) => (
+                  <button
+                    key={val}
+                    onClick={() => { setMediaType(val); if (val === 'none') setMediaUrl(''); }}
+                    style={{
+                      padding:'5px 12px', fontSize:'0.8em', borderRadius:'6px',
+                      background: mediaType === val ? '#2563eb' : 'rgba(255,255,255,0.05)',
+                      border: `1px solid ${mediaType === val ? '#2563eb' : '#334155'}`,
+                      color: mediaType === val ? '#fff' : '#94a3b8', cursor:'pointer',
+                    }}
+                  >{label}</button>
+                ))}
+              </div>
+              {mediaType !== 'none' && (
+                <>
+                  <input
+                    type="url"
+                    placeholder={mediaType === 'video' ? 'https://... (publicly accessible MP4 URL)' : 'https://... (publicly accessible image URL)'}
+                    value={mediaUrl}
+                    onChange={e => setMediaUrl(e.target.value)}
+                    style={{width:'100%', fontSize:'0.85em', boxSizing:'border-box', marginBottom:'8px'}}
+                  />
+                  {mediaUrl && mediaType === 'image' && (
+                    <img src={mediaUrl} alt="preview" style={{width:'100%', maxHeight:'160px', objectFit:'cover', borderRadius:'8px', border:'1px solid #1e293b'}} onError={e => e.target.style.display='none'}/>
+                  )}
+                  <div style={{fontSize:'0.72em', color:'#475569', marginTop:'4px'}}>
+                    ⚠️ URL must be publicly accessible. For Instagram, image/video is required.
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Schedule */}
+            <div className="card" style={{padding:'16px'}}>
+              <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: scheduleEnabled ? '12px' : 0}}>
+                <div>
+                  <div style={{fontSize:'0.9em', fontWeight:600, color:'#e2e8f0'}}>Schedule Post</div>
+                  <div style={{fontSize:'0.75em', color:'#64748b'}}>Post at a specific date and time</div>
+                </div>
+                <div
+                  onClick={() => setScheduleEnabled(!scheduleEnabled)}
+                  style={{
+                    width:44, height:24, borderRadius:12, cursor:'pointer',
+                    background: scheduleEnabled ? '#2563eb' : '#334155',
+                    position:'relative', transition:'background 0.2s',
+                  }}
+                >
+                  <div style={{
+                    position:'absolute', top:3, left: scheduleEnabled ? 23 : 3,
+                    width:18, height:18, borderRadius:'50%', background:'#fff',
+                    transition:'left 0.2s',
+                  }}/>
+                </div>
+              </div>
+              {scheduleEnabled && (
+                <input
+                  type="datetime-local"
+                  min={minDateStr}
+                  value={scheduledAt}
+                  onChange={e => setScheduledAt(e.target.value)}
+                  style={{width:'100%', fontSize:'0.85em', boxSizing:'border-box'}}
+                />
+              )}
+            </div>
+
+            {/* Result banner */}
+            {postResult && (
+              <div style={{
+                padding:'12px 16px', borderRadius:'10px',
+                background: postResult.ok ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                border: `1px solid ${postResult.ok ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                color: postResult.ok ? '#10b981' : '#ef4444',
+              }}>
+                <div style={{fontWeight:700, marginBottom: postResult.results ? '8px' : 0}}>
+                  {postResult.ok ? '✓' : '✗'} {postResult.msg}
+                </div>
+                {postResult.results && (
+                  <div style={{display:'flex', flexDirection:'column', gap:'4px'}}>
+                    {Object.entries(postResult.results).map(([platform, res]) => (
+                      <div key={platform} style={{fontSize:'0.82em', display:'flex', alignItems:'center', gap:'6px'}}>
+                        <span>{PLATFORMS.find(p=>p.id===platform)?.icon}</span>
+                        <span style={{color: res.error ? '#ef4444' : '#10b981', fontWeight:600}}>
+                          {res.error ? `✗ ${res.error}` : '✓ Published'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Post button */}
+            <button
+              onClick={handlePost}
+              disabled={posting || selectedPlatforms.length === 0}
+              style={{
+                padding:'12px 24px', fontSize:'0.95em', fontWeight:700,
+                background: posting ? '#334155' : '#2563eb',
+                color:'#fff', border:'none', borderRadius:'10px',
+                cursor: posting ? 'not-allowed' : 'pointer',
+                display:'flex', alignItems:'center', justifyContent:'center', gap:'8px',
+              }}
+            >
+              {posting ? (
+                <><Loader size={16} style={{animation:'spin 1s linear infinite'}}/> Publishing...</>
+              ) : scheduleEnabled ? (
+                <><Calendar size={16}/> Schedule Post</>
+              ) : (
+                <><Radio size={16}/> Publish Now to {selectedPlatforms.length} Platform{selectedPlatforms.length !== 1 ? 's' : ''}</>
+              )}
+            </button>
+          </div>
+
+          {/* RIGHT — Preview & Tips */}
+          <div style={{display:'flex', flexDirection:'column', gap:'16px'}}>
+
+            {/* Live preview */}
+            <div className="card" style={{padding:'16px'}}>
+              <div style={{fontSize:'0.8em', color:'#64748b', fontWeight:700, marginBottom:'12px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Post Preview</div>
+              <div style={{background:'rgba(255,255,255,0.03)', border:'1px solid #1e293b', borderRadius:'10px', padding:'14px'}}>
+                {mediaUrl && mediaType === 'image' && (
+                  <img src={mediaUrl} alt="preview" style={{width:'100%', maxHeight:'200px', objectFit:'cover', borderRadius:'8px', marginBottom:'10px'}} onError={e => e.target.style.display='none'}/>
+                )}
+                {mediaUrl && mediaType === 'video' && (
+                  <div style={{background:'#0f172a', borderRadius:'8px', padding:'20px', textAlign:'center', marginBottom:'10px', color:'#64748b', fontSize:'0.85em'}}>
+                    🎬 Video: {mediaUrl.split('/').pop()}
+                  </div>
+                )}
+                <div style={{fontSize:'0.88em', color:'#e2e8f0', lineHeight:'1.6', whiteSpace:'pre-wrap'}}>
+                  {caption || <span style={{color:'#475569', fontStyle:'italic'}}>Your caption will appear here...</span>}
+                </div>
+                {caption && (
+                  <div style={{marginTop:'10px', display:'flex', gap:'6px', flexWrap:'wrap'}}>
+                    {selectedPlatforms.map(pid => {
+                      const p = PLATFORMS.find(pl => pl.id === pid);
+                      return <span key={pid} style={{fontSize:'0.72em', padding:'2px 8px', borderRadius:'10px', background:p.bg, color:p.color, fontWeight:600}}>{p.icon} {p.label}</span>;
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Tips */}
+            <div className="card" style={{padding:'16px'}}>
+              <div style={{fontSize:'0.8em', color:'#64748b', fontWeight:700, marginBottom:'10px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Platform Tips</div>
+              <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
+                <div style={{fontSize:'0.8em', color:'#94a3b8', padding:'8px 10px', background:'rgba(225,48,108,0.05)', borderRadius:'7px', borderLeft:'3px solid #e1306c'}}>
+                  <strong style={{color:'#e1306c'}}>📸 Instagram</strong> — Requires image or video. Use square (1:1) or portrait (4:5) for best reach.
+                </div>
+                <div style={{fontSize:'0.8em', color:'#94a3b8', padding:'8px 10px', background:'rgba(24,119,242,0.05)', borderRadius:'7px', borderLeft:'3px solid #1877f2'}}>
+                  <strong style={{color:'#1877f2'}}>📘 Facebook</strong> — Text-only posts work. Add <code>FACEBOOK_PAGE_ID</code> in Render env vars.
+                </div>
+                <div style={{fontSize:'0.8em', color:'#94a3b8', padding:'8px 10px', background:'rgba(37,211,102,0.05)', borderRadius:'7px', borderLeft:'3px solid #25d366'}}>
+                  <strong style={{color:'#25d366'}}>💬 WhatsApp</strong> — Requires approved message templates in Meta Business Manager. Token needed after number verification.
+                </div>
+              </div>
+            </div>
+
+            {/* Env vars checklist */}
+            <div className="card" style={{padding:'16px'}}>
+              <div style={{fontSize:'0.8em', color:'#64748b', fontWeight:700, marginBottom:'10px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Required Env Variables</div>
+              <div style={{display:'flex', flexDirection:'column', gap:'6px'}}>
+                {[
+                  ['META_PAGE_ACCESS_TOKEN', 'All platforms'],
+                  ['INSTAGRAM_ACCOUNT_ID', 'Instagram only'],
+                  ['FACEBOOK_PAGE_ID', 'Facebook only'],
+                  ['WHATSAPP_PHONE_NUMBER_ID', 'WhatsApp only'],
+                ].map(([key, scope]) => (
+                  <div key={key} style={{display:'flex', justifyContent:'space-between', fontSize:'0.78em', padding:'5px 8px', background:'rgba(255,255,255,0.02)', borderRadius:'5px'}}>
+                    <code style={{color:'#93c5fd'}}>{key}</code>
+                    <span style={{color:'#64748b'}}>{scope}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* POST HISTORY */
+        <div>
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'16px'}}>
+            <div style={{fontSize:'0.85em', color:'#64748b'}}>{history.length} posts in history</div>
+            <button className="ghost" onClick={fetchHistory} style={{padding:'5px 12px', fontSize:'0.82em'}}>↻ Refresh</button>
+          </div>
+          {histLoading ? (
+            <div style={{textAlign:'center', color:'#64748b', padding:'40px'}}>Loading history...</div>
+          ) : history.length === 0 ? (
+            <div style={{textAlign:'center', color:'#64748b', padding:'60px'}}>
+              <Radio size={32} style={{opacity:0.3, marginBottom:12}}/>
+              <div>No posts yet — compose your first post above.</div>
+            </div>
+          ) : (
+            <div style={{display:'flex', flexDirection:'column', gap:'10px'}}>
+              {history.map((post, i) => {
+                const statusColor = post.status === 'published' ? '#10b981' : post.status === 'failed' ? '#ef4444' : post.status === 'scheduled' ? '#f59e0b' : '#64748b';
+                const statusIcon = post.status === 'published' ? '✓' : post.status === 'failed' ? '✗' : post.status === 'scheduled' ? '🕐' : '⟳';
+                return (
+                  <div key={i} className="card" style={{padding:'14px 16px'}}>
+                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'8px'}}>
+                      <div style={{display:'flex', gap:'6px', flexWrap:'wrap'}}>
+                        {(post.platforms || []).map(pid => {
+                          const p = PLATFORMS.find(pl => pl.id === pid);
+                          return p ? <span key={pid} style={{fontSize:'0.75em', padding:'2px 8px', borderRadius:'10px', background:p.bg, color:p.color, fontWeight:600}}>{p.icon} {p.label}</span> : null;
+                        })}
+                      </div>
+                      <div style={{display:'flex', alignItems:'center', gap:'6px', flexShrink:0}}>
+                        <span style={{fontSize:'0.78em', color:statusColor, fontWeight:700}}>{statusIcon} {post.status}</span>
+                        <span style={{fontSize:'0.72em', color:'#475569'}}>{post.created_at ? new Date(post.created_at).toLocaleString() : ''}</span>
+                      </div>
+                    </div>
+                    <div style={{fontSize:'0.85em', color:'#94a3b8', overflow:'hidden', textOverflow:'ellipsis', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical'}}>
+                      {post.text || <span style={{fontStyle:'italic'}}>No caption</span>}
+                    </div>
+                    {post.media_url && (
+                      <div style={{marginTop:'6px', fontSize:'0.75em', color:'#475569'}}>📎 {post.media_url.split('/').pop()}</div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </section>

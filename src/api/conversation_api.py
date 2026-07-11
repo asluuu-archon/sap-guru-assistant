@@ -25,6 +25,7 @@ router = APIRouter()
 class ManualReplyRequest(BaseModel):
     sender_id: str
     message: str
+    channel: Optional[str] = "instagram"
 
 
 @router.get("/conversation/{sender_id}")
@@ -53,8 +54,9 @@ def send_manual_reply_from_dashboard(req: ManualReplyRequest):
                 "message": "sender_id and message are required",
             }
 
+        channel = req.channel or "instagram"
         result = send_reply(
-            channel="instagram",
+            channel=channel,
             recipient_id=req.sender_id,
             message=req.message.strip(),
         )
@@ -64,7 +66,7 @@ def send_manual_reply_from_dashboard(req: ManualReplyRequest):
         if result.get("status") == "error":
             return {
                 "status": "error",
-                "message": result.get("message", "Failed to send to Instagram")
+                "message": result.get("message", f"Failed to send to {channel}")
             }
             
         mark_manual_replied(req.sender_id, req.message.strip())

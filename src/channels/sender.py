@@ -1,4 +1,5 @@
 from ..instagram import send_instagram_reply
+from ..whatsapp import send_whatsapp_reply
 
 def send_channel_reply(
     channel: str,
@@ -45,6 +46,22 @@ def send_channel_reply(
         return {
             "status": "success",
             "channel": "instagram",
+            "provider_result": result,
+        }
+
+    if clean_channel == "whatsapp":
+        result = send_whatsapp_reply(recipient_id, message.strip())
+        
+        if result.get("error"):
+            return {
+                "status": "error",
+                "message": result["error"],
+                "channel": "whatsapp"
+            }
+
+        return {
+            "status": "success",
+            "channel": "whatsapp",
             "provider_result": result,
         }
 
