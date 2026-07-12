@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Bell, HelpCircle, Search, Settings, LayoutDashboard, MessagesSquare, Users, Bug, Bot, Brain, UserRound, BarChart3, Workflow, Plus, Download, Filter, Play, X, Phone, MapPin, BookOpen, Star, Clock, ChevronRight, ToggleLeft, ToggleRight, Pencil, Trash2, Tag, Zap, Save, AlertTriangle, Building2, Globe, CheckCircle, Plug, Wifi, WifiOff, RefreshCw, ExternalLink, Key, Link, Send, Radio, Image, Video, FileText, Calendar, CheckSquare, XCircle, Loader } from 'lucide-react';
+import { Bell, HelpCircle, Search, Settings, LayoutDashboard, MessagesSquare, Users, Bug, Bot, Brain, UserRound, BarChart3, Workflow, Plus, Download, Filter, Play, X, Phone, MapPin, BookOpen, Star, Clock, ChevronRight, ToggleLeft, ToggleRight, Pencil, Trash2, Tag, Zap, Save, AlertTriangle, Building2, Globe, CheckCircle, Plug, Wifi, WifiOff, RefreshCw, ExternalLink, Key, Link, Send, Radio, Image, Video, FileText, Calendar, CheckSquare, XCircle, Loader, MessageSquare, ThumbsUp, ThumbsDown, Flame, Mail } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
 import './styles.css';
 
 const API_BASE = "https://sap-guru-assistant.onrender.com";
 
 const nav = [
-  ['Overview', LayoutDashboard], ['Conversations', MessagesSquare], ['Leads', Users], ['Pipeline Debugger', Bug],
-  ['AI Playground', Bot], ['Business Brain', Brain], ['Customer 360°', UserRound], ['Reports', BarChart3], ['Automation', Workflow], ['Publisher', Radio], ['Businesses', Building2], ['Integrations', Plug], ['Settings', Settings]
+  ['Overview', LayoutDashboard], ['Conversations', MessagesSquare], ['Leads', Users], ['Hot Lead Queue', Flame], ['Pipeline Debugger', Bug],
+  ['AI Playground', Bot], ['Business Brain', Brain], ['Customer 360°', UserRound], ['Reports', BarChart3], ['Automation', Workflow], ['Publisher', Radio], ['Google Reviews', Star], ['Businesses', Building2], ['Integrations', Plug], ['Settings', Settings]
 ];
 
 const colors = ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6'];
@@ -81,7 +81,7 @@ function App() {
 
   return (
     <div className="app">
-      <Sidebar page={page} setPage={setPage}/>
+      <Sidebar page={page} setPage={setPage} activeBusiness={activeBusiness}/>
       <main>
         <Topbar businesses={businesses} activeBusiness={activeBusiness} onSwitch={handleSwitchBusiness} onNavigate={setPage} notifications={notifications} unreadCount={unreadCount} onMarkAllRead={() => setUnreadCount(0)}/>
         <Screen page={page} dashboard={dashboard} activeBusiness={activeBusiness} setPage={setPage}/>
@@ -90,18 +90,20 @@ function App() {
   );
 }
 
-function Sidebar({page,setPage}) {
+function Sidebar({page,setPage,activeBusiness}) {
+  const bizName = activeBusiness?.name || 'Admin';
+  const initials = bizName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   return (
     <aside>
       <div className="brand"><div className="logo">AI</div><b>AI COMMAND CENTER</b></div>
       <nav>
-        {nav.map(([n,Icon])=>
+        {nav.map(([n,Icon])=>(
           <button key={n} onClick={()=>setPage(n)} className={page===n?'active':''}>
             <Icon size={17}/>{n}
           </button>
-        )}
+        ))}
       </nav>
-      <div className="profile"><div className="avatar">A</div><span><b>Aslam</b><small>Administrator</small></span></div>
+      <div className="profile"><div className="avatar">{initials}</div><span><b>{bizName}</b><small>Administrator</small></span></div>
     </aside>
   );
 }
@@ -276,7 +278,7 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notification
 function Screen({page, dashboard, activeBusiness, setPage}) {
   return (
     <>
-      {page==='Overview'&&<Overview dashboard={dashboard}/>}
+      {page==='Overview'&&<Overview dashboard={dashboard} setPage={setPage}/>}
       {page==='Conversations'&&<Conversations dashboard={dashboard}/>}
       {page==='Leads'&&<Leads/>}
       {page==='Pipeline Debugger'&&<Debugger/>}
@@ -288,6 +290,8 @@ function Screen({page, dashboard, activeBusiness, setPage}) {
       {page==='Businesses'&&<BusinessesAdmin activeBusiness={activeBusiness} setPage={setPage}/>}
       {page==='Integrations'&&<IntegrationsPage activeBusiness={activeBusiness}/>}
       {page==='Publisher'&&<PublisherPage activeBusiness={activeBusiness}/>}
+      {page==='Hot Lead Queue'&&<HotLeadQueue activeBusiness={activeBusiness} setPage={setPage}/>}
+      {page==='Google Reviews'&&<GoogleReviewsPage activeBusiness={activeBusiness}/>}
       {page==='Settings'&&<SettingsPage/>}
     </>
   );
@@ -301,7 +305,7 @@ function Stat({label,value,change}) {
   return <div className="card stat"><p>{label}</p><h2>{value}</h2><span>{change}</span><small>live data</small></div>;
 }
 
-function Overview() {
+function Overview({ setPage }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(null);
@@ -514,6 +518,26 @@ function Overview() {
           )}
         </Card>
       </div>
+
+      {/* Hot Lead Queue shortcut banner */}
+      {(s.hot_leads > 0 || s.needs_human > 0) && (
+        <div style={{marginTop:'20px',background:'linear-gradient(135deg,#fef2f2,#fff7ed)',border:'1px solid #fecaca',borderRadius:12,padding:'16px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <div style={{fontSize:28}}>🔥</div>
+            <div>
+              <div style={{fontWeight:700,color:'#991b1b',fontSize:15}}>Action Required</div>
+              <div style={{fontSize:13,color:'#b91c1c'}}>
+                {s.hot_leads > 0 && <span>{s.hot_leads} hot lead{s.hot_leads>1?'s':''} need attention</span>}
+                {s.hot_leads > 0 && s.needs_human > 0 && <span> · </span>}
+                {s.needs_human > 0 && <span>{s.needs_human} conversation{s.needs_human>1?'s':''} need human reply</span>}
+              </div>
+            </div>
+          </div>
+          <button onClick={() => setPage('Hot Lead Queue')} style={{display:'flex',alignItems:'center',gap:6,padding:'10px 20px',borderRadius:8,background:'#ef4444',color:'white',border:'none',fontWeight:700,fontSize:13,cursor:'pointer'}}>
+            <Flame size={15}/>Open Hot Lead Queue
+          </button>
+        </div>
+      )}
 
       {/* Row 5 — Recent Leads */}
       <div style={{marginTop:'20px'}}>
@@ -3682,6 +3706,22 @@ const INTEGRATIONS_CONFIG = [
     status_note: 'Share your Google Sheet with the service account email'
   },
   {
+    id: 'google_my_business',
+    name: 'Google My Business',
+    description: 'Connect your Google Business Profile to fetch reviews, auto-respond with AI, and boost your local SEO.',
+    icon: '⭐',
+    color: '#4285f4',
+    bg: '#eff6ff',
+    category: 'Reviews',
+    fields: [
+      { key: 'account_id', label: 'GMB Account ID', type: 'text', placeholder: 'accounts/1234567890' },
+      { key: 'location_id', label: 'Location ID', type: 'text', placeholder: 'locations/1234567890' },
+      { key: 'oauth_token', label: 'OAuth Access Token', type: 'password', placeholder: 'ya29.xxxxxxx' },
+    ],
+    docs_url: 'https://developers.google.com/my-business/content/review-data',
+    status_note: 'Requires Google Business Profile API access and OAuth 2.0 setup'
+  },
+  {
     id: 'webhook',
     name: 'Custom Webhook',
     description: 'Send lead and conversation events to any external URL. Use to connect HubSpot, Zoho, Zapier, or any CRM.',
@@ -4449,6 +4489,642 @@ function PublisherPage({ activeBusiness }) {
               })}
             </div>
           )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ─── HOT LEAD QUEUE ──────────────────────────────────────────────────────────
+
+const URGENCY_CONFIG = {
+  critical: { label: 'CRITICAL', color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
+  high:     { label: 'HIGH',     color: '#f97316', bg: '#fff7ed', border: '#fed7aa' },
+  medium:   { label: 'MEDIUM',   color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
+  low:      { label: 'LOW',      color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' },
+};
+
+const STAGE_OPTIONS = [
+  { value: 'new',            label: 'New' },
+  { value: 'contacted',      label: 'Contacted' },
+  { value: 'demo_scheduled', label: 'Demo Scheduled' },
+  { value: 'qualified',      label: 'Qualified' },
+  { value: 'enrolled',       label: 'Enrolled' },
+  { value: 'lost',           label: 'Lost' },
+];
+
+function HotLeadQueue({ activeBusiness, setPage }) {
+  const [queue, setQueue] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [filter, setFilter] = useState('all'); // all | critical | high | medium
+  const [expandedId, setExpandedId] = useState(null);
+  const [noteEditing, setNoteEditing] = useState({}); // leadId -> text
+  const [savingNote, setSavingNote] = useState(null);
+  const [stageSaving, setStageSaving] = useState(null);
+  const [toast, setToast] = useState('');
+  const [lastRefresh, setLastRefresh] = useState(null);
+
+  const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
+
+  const fetchQueue = () => {
+    setLoading(true);
+    fetch(`${API_BASE}/hot-leads/queue?limit=50`, { headers: { 'X-Business-ID': bizId } })
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') {
+          setQueue(d.queue || []);
+          setTotal(d.total || 0);
+          setLastRefresh(new Date());
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchQueue(); }, [bizId]);
+
+  // Auto-refresh every 2 minutes
+  useEffect(() => {
+    const t = setInterval(fetchQueue, 120000);
+    return () => clearInterval(t);
+  }, [bizId]);
+
+  const handleSaveNote = async (lead) => {
+    setSavingNote(lead.id);
+    const notes = noteEditing[lead.id] ?? lead.notes;
+    try {
+      const res = await fetch(`${API_BASE}/hot-leads/note`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: lead.id, notes })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setQueue(prev => prev.map(l => l.id === lead.id ? { ...l, notes } : l));
+        showToast('Note saved!');
+      }
+    } catch(e) { showToast('Failed to save note'); }
+    setSavingNote(null);
+  };
+
+  const handleStageChange = async (lead, newStage) => {
+    setStageSaving(lead.id);
+    try {
+      const res = await fetch(`${API_BASE}/hot-leads/stage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: lead.id, stage: newStage })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setQueue(prev => prev.map(l => l.id === lead.id ? { ...l, lead_stage: newStage } : l));
+        showToast(`Stage updated to ${newStage}`);
+      }
+    } catch(e) { showToast('Failed to update stage'); }
+    setStageSaving(null);
+  };
+
+  const filtered = filter === 'all' ? queue : queue.filter(l => l.urgency === filter);
+  const critCount = queue.filter(l => l.urgency === 'critical').length;
+  const highCount = queue.filter(l => l.urgency === 'high').length;
+
+  return (
+    <section>
+      {toast && (
+        <div style={{position:'fixed',bottom:24,right:24,background:'#1e293b',color:'white',padding:'12px 20px',borderRadius:10,fontSize:13,fontWeight:500,zIndex:9999,boxShadow:'0 4px 20px rgba(0,0,0,0.2)'}}>
+          {toast}
+        </div>
+      )}
+
+      <Title
+        title="Hot Lead Queue"
+        sub={`${total} leads ranked by urgency — take action before they go cold`}
+        action={
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            {lastRefresh && <span style={{fontSize:11,color:'#94a3b8'}}>Updated {lastRefresh.toLocaleTimeString()}</span>}
+            <button onClick={fetchQueue} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:8,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13,color:'#475569'}}>
+              <RefreshCw size={14}/>Refresh
+            </button>
+          </div>
+        }
+      />
+
+      {/* Stats row */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:20}}>
+        {[
+          { label: 'Total in Queue', value: total, icon: '📋', color: '#3b82f6' },
+          { label: 'Critical', value: critCount, icon: '🔴', color: '#ef4444' },
+          { label: 'High Priority', value: highCount, icon: '🟠', color: '#f97316' },
+          { label: 'Showing', value: filtered.length, icon: '👁', color: '#10b981' },
+        ].map(s => (
+          <div key={s.label} className="card" style={{padding:'16px 20px',display:'flex',alignItems:'center',gap:14}}>
+            <div style={{fontSize:24}}>{s.icon}</div>
+            <div>
+              <div style={{fontSize:11,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.05em',fontWeight:600}}>{s.label}</div>
+              <div style={{fontSize:26,fontWeight:700,color:s.color,lineHeight:1.2}}>{s.value}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filter tabs */}
+      <div style={{display:'flex',gap:8,marginBottom:16}}>
+        {[['all','All'],['critical','Critical'],['high','High'],['medium','Medium']].map(([k,l]) => (
+          <button key={k} onClick={() => setFilter(k)}
+            style={{padding:'6px 16px',borderRadius:20,border:'1px solid',borderColor:filter===k?'#ef4444':'#e2e8f0',background:filter===k?'#fef2f2':'white',color:filter===k?'#ef4444':'#64748b',fontSize:12,fontWeight:filter===k?600:400,cursor:'pointer'}}>
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div style={{display:'flex',justifyContent:'center',padding:'60px 0',color:'#94a3b8',gap:10}}>
+          <Loader size={20} className="spin"/>Loading queue...
+        </div>
+      ) : filtered.length === 0 ? (
+        <div style={{textAlign:'center',padding:'60px 0',color:'#94a3b8'}}>
+          <Flame size={40} style={{marginBottom:12,opacity:0.3}}/>
+          <p>No leads in this category right now.</p>
+          <p style={{fontSize:13}}>Check back later or adjust your filter.</p>
+        </div>
+      ) : (
+        <div style={{display:'flex',flexDirection:'column',gap:12}}>
+          {filtered.map((lead, idx) => {
+            const urg = URGENCY_CONFIG[lead.urgency] || URGENCY_CONFIG.low;
+            const isExpanded = expandedId === lead.id;
+            const noteVal = noteEditing[lead.id] !== undefined ? noteEditing[lead.id] : (lead.notes || '');
+
+            return (
+              <div key={lead.id} className="card"
+                style={{padding:'0',border:`1px solid ${urg.border}`,overflow:'hidden',transition:'box-shadow 0.15s'}}
+              >
+                {/* Card header — always visible */}
+                <div style={{display:'flex',alignItems:'center',gap:14,padding:'16px 20px',cursor:'pointer',background:isExpanded?urg.bg:'white'}}
+                  onClick={() => setExpandedId(isExpanded ? null : lead.id)}
+                >
+                  {/* Rank badge */}
+                  <div style={{width:32,height:32,borderRadius:'50%',background:urg.bg,border:`2px solid ${urg.border}`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:13,color:urg.color,flexShrink:0}}>
+                    {idx+1}
+                  </div>
+
+                  {/* Name + urgency */}
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+                      <span style={{fontWeight:700,fontSize:15,color:'#1e293b'}}>{lead.name}</span>
+                      <span style={{padding:'2px 8px',borderRadius:10,fontSize:11,fontWeight:700,background:urg.bg,color:urg.color,border:`1px solid ${urg.border}`}}>{urg.label}</span>
+                      {lead.temperature === 'hot' && <span style={{fontSize:11}}>🔥 Hot</span>}
+                      {lead.is_qualified && <span style={{fontSize:11,color:'#10b981',fontWeight:600}}>✓ Qualified</span>}
+                    </div>
+                    <div style={{fontSize:12,color:'#64748b',marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                      {lead.interested_module && <span style={{marginRight:10}}>📚 {lead.interested_module}</span>}
+                      {lead.last_message && <span>💬 "{lead.last_message.slice(0,60)}{lead.last_message.length>60?'...':''}"</span>}
+                    </div>
+                  </div>
+
+                  {/* Quick actions */}
+                  <div style={{display:'flex',gap:6,flexShrink:0}} onClick={e => e.stopPropagation()}>
+                    {lead.phone && (
+                      <a href={`tel:${lead.phone}`}
+                        style={{display:'flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:8,background:'#f0fdf4',color:'#16a34a',border:'1px solid #bbf7d0',fontSize:12,fontWeight:600,textDecoration:'none'}}
+                        title={`Call ${lead.phone}`}
+                      >
+                        <Phone size={13}/>Call
+                      </a>
+                    )}
+                    {lead.phone && (
+                      <a href={`https://wa.me/${lead.phone.replace(/[^0-9]/g,'')}`} target="_blank" rel="noreferrer"
+                        style={{display:'flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:8,background:'#f0fdf4',color:'#15803d',border:'1px solid #bbf7d0',fontSize:12,fontWeight:600,textDecoration:'none'}}
+                        title="Open WhatsApp"
+                      >
+                        💬 WhatsApp
+                      </a>
+                    )}
+                    {lead.email && (
+                      <a href={`mailto:${lead.email}`}
+                        style={{display:'flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:8,background:'#eff6ff',color:'#2563eb',border:'1px solid #bfdbfe',fontSize:12,fontWeight:600,textDecoration:'none'}}
+                        title={`Email ${lead.email}`}
+                      >
+                        <Mail size={13}/>Email
+                      </a>
+                    )}
+                    <button
+                      onClick={() => { setPage('Conversations'); }}
+                      style={{display:'flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:8,background:'#f5f3ff',color:'#7c3aed',border:'1px solid #ddd6fe',fontSize:12,fontWeight:600,cursor:'pointer'}}
+                      title="View conversation"
+                    >
+                      <MessagesSquare size={13}/>Chat
+                    </button>
+                  </div>
+
+                  <ChevronRight size={16} color="#94a3b8" style={{transform:isExpanded?'rotate(90deg)':'none',transition:'transform 0.2s',flexShrink:0}}/>
+                </div>
+
+                {/* Expanded detail panel */}
+                {isExpanded && (
+                  <div style={{borderTop:`1px solid ${urg.border}`,padding:'16px 20px',background:'#fafafa',display:'flex',flexDirection:'column',gap:14}}>
+                    {/* Contact + meta row */}
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:10}}>
+                      {[
+                        { icon: '📞', label: 'Phone', value: lead.phone || '—' },
+                        { icon: '📧', label: 'Email', value: lead.email || '—' },
+                        { icon: '🕐', label: 'Last Active', value: lead.last_active ? new Date(lead.last_active).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—' },
+                        { icon: '💬', label: 'Conv. State', value: lead.conversation_state || '—' },
+                        { icon: '🌡️', label: 'Temperature', value: lead.temperature || '—' },
+                        { icon: '⭐', label: 'Score', value: lead.score },
+                      ].map(item => (
+                        <div key={item.label} style={{background:'white',borderRadius:8,padding:'10px 14px',border:'1px solid #e2e8f0'}}>
+                          <div style={{fontSize:11,color:'#94a3b8',fontWeight:600,marginBottom:2}}>{item.icon} {item.label}</div>
+                          <div style={{fontSize:13,color:'#1e293b',fontWeight:500}}>{item.value}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Stage selector */}
+                    <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+                      <span style={{fontSize:12,fontWeight:600,color:'#475569'}}>STAGE:</span>
+                      {STAGE_OPTIONS.map(opt => (
+                        <button key={opt.value}
+                          onClick={() => handleStageChange(lead, opt.value)}
+                          disabled={stageSaving === lead.id}
+                          style={{padding:'5px 12px',borderRadius:20,border:'1px solid',borderColor:lead.lead_stage===opt.value?'#3b82f6':'#e2e8f0',background:lead.lead_stage===opt.value?'#eff6ff':'white',color:lead.lead_stage===opt.value?'#3b82f6':'#64748b',fontSize:12,fontWeight:lead.lead_stage===opt.value?700:400,cursor:'pointer'}}
+                        >
+                          {stageSaving===lead.id&&lead.lead_stage===opt.value ? '...' : opt.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Notes */}
+                    <div>
+                      <div style={{fontSize:12,fontWeight:600,color:'#475569',marginBottom:6}}>NOTES</div>
+                      <div style={{display:'flex',gap:8}}>
+                        <textarea
+                          value={noteVal}
+                          onChange={e => setNoteEditing(prev => ({...prev, [lead.id]: e.target.value}))}
+                          placeholder="Add a note about this lead..."
+                          rows={2}
+                          style={{flex:1,padding:'8px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,resize:'vertical',fontFamily:'inherit',outline:'none'}}
+                        />
+                        <button
+                          onClick={() => handleSaveNote(lead)}
+                          disabled={savingNote === lead.id}
+                          style={{padding:'8px 16px',borderRadius:8,background:'#3b82f6',color:'white',border:'none',fontWeight:600,fontSize:13,cursor:'pointer',alignSelf:'flex-start',opacity:savingNote===lead.id?0.6:1}}
+                        >
+                          {savingNote===lead.id ? <Loader size={14}/> : <Save size={14}/>}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ─── STAR RATING ─────────────────────────────────────────────────────────────
+
+function StarRating({ rating, size = 16 }) {
+  return (
+    <div style={{display:'flex',gap:2}}>
+      {[1,2,3,4,5].map(i => (
+        <Star key={i} size={size} fill={i<=rating?'#f59e0b':'none'} color={i<=rating?'#f59e0b':'#cbd5e1'}/>
+      ))}
+    </div>
+  );
+}
+
+function GoogleReviewsPage({ activeBusiness }) {
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [tab, setTab] = useState('all'); // all | pending | replied
+  const [settings, setSettings] = useState({ is_enabled: false, delay_minutes: 60, min_rating_to_reply: 4, auto_reply_to_text_only: false });
+  const [settingsTab, setSettingsTab] = useState('reviews'); // reviews | settings
+  const [replyDrafts, setReplyDrafts] = useState({});
+  const [generatingFor, setGeneratingFor] = useState(null);
+  const [postingFor, setPostingFor] = useState(null);
+  const [toast, setToast] = useState('');
+  const [filter, setFilter] = useState('all'); // all | 5 | 4 | 3 | 2 | 1
+
+  const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3500); };
+
+  const fetchReviews = () => {
+    setLoading(true);
+    fetch(`${API_BASE}/google-reviews/`, { headers: { 'X-Business-ID': bizId } })
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') {
+          setIsConnected(d.is_connected !== false);
+          const reviewList = d.reviews || [];
+          // Inject AI suggested replies into draft state
+          const drafts = {};
+          reviewList.forEach(r => {
+            if (r.ai_suggested_reply) drafts[r.id] = r.ai_suggested_reply;
+          });
+          setReplyDrafts(prev => ({ ...drafts, ...prev }));
+          setReviews(reviewList);
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  };
+
+  const fetchSettings = () => {
+    fetch(`${API_BASE}/google-reviews/settings`, { headers: { 'X-Business-ID': bizId } })
+      .then(r => r.json())
+      .then(d => { if (d.status === 'success') setSettings(d.settings); })
+      .catch(console.error);
+  };
+
+  useEffect(() => { fetchReviews(); fetchSettings(); }, [bizId]);
+
+  const handleGenerateReply = async (review) => {
+    setGeneratingFor(review.id);
+    try {
+      const res = await fetch(`${API_BASE}/google-reviews/generate-reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Business-ID': bizId },
+        body: JSON.stringify({
+          reviewer_name: review.reviewer_name,
+          star_rating: review.star_rating,
+          comment: review.comment
+        })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setReplyDrafts(prev => ({ ...prev, [review.id]: data.reply }));
+        showToast('AI reply generated!');
+      } else showToast('Failed to generate reply');
+    } catch (e) { showToast('Error generating reply'); }
+    setGeneratingFor(null);
+  };
+
+  const handlePostReply = async (reviewId) => {
+    const replyText = replyDrafts[reviewId];
+    if (!replyText?.trim()) { showToast('Please write or generate a reply first'); return; }
+    setPostingFor(reviewId);
+    try {
+      const res = await fetch(`${API_BASE}/google-reviews/reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Business-ID': bizId },
+        body: JSON.stringify({ review_id: reviewId, reply_text: replyText })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, reply_text: replyText, status: 'replied' } : r));
+        showToast('Reply posted successfully!');
+      } else showToast('Failed to post reply');
+    } catch (e) { showToast('Error posting reply'); }
+    setPostingFor(null);
+  };
+
+  const handleSaveSettings = () => {
+    fetch(`${API_BASE}/google-reviews/settings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Business-ID': bizId },
+      body: JSON.stringify(settings)
+    })
+      .then(r => r.json())
+      .then(d => { if (d.status === 'success') showToast('Auto-responder settings saved!'); else showToast('Failed to save settings'); })
+      .catch(() => showToast('Error saving settings'));
+  };
+
+  const filteredReviews = reviews.filter(r => {
+    if (tab === 'pending' && r.status === 'replied') return false;
+    if (tab === 'replied' && r.status !== 'replied') return false;
+    if (filter !== 'all' && r.star_rating !== parseInt(filter)) return false;
+    return true;
+  });
+
+  const pendingCount = reviews.filter(r => r.status !== 'replied').length;
+  const repliedCount = reviews.filter(r => r.status === 'replied').length;
+  const avgRating = reviews.length > 0 ? (reviews.reduce((s, r) => s + r.star_rating, 0) / reviews.length).toFixed(1) : '—';
+
+  return (
+    <section>
+      {toast && (
+        <div style={{position:'fixed',bottom:24,right:24,background:'#1e293b',color:'white',padding:'12px 20px',borderRadius:10,fontSize:13,fontWeight:500,zIndex:9999,boxShadow:'0 4px 20px rgba(0,0,0,0.2)'}}>
+          {toast}
+        </div>
+      )}
+
+      <Title
+        title="Google Reviews"
+        sub="Monitor, respond to, and auto-reply to Google Business reviews with AI"
+        action={
+          <div style={{display:'flex',gap:8}}>
+            <button onClick={fetchReviews} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:8,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13,color:'#475569'}}>
+              <RefreshCw size={14}/>Refresh
+            </button>
+          </div>
+        }
+      />
+
+      {/* Top tabs */}
+      <div style={{display:'flex',gap:8,marginBottom:20}}>
+        {[['reviews','Reviews'], ['settings','Auto-Responder Settings']].map(([k,l]) => (
+          <button key={k} onClick={() => setSettingsTab(k)} style={{padding:'8px 18px',borderRadius:8,border:'1px solid',borderColor:settingsTab===k?'#3b82f6':'#e2e8f0',background:settingsTab===k?'#eff6ff':'white',color:settingsTab===k?'#3b82f6':'#64748b',fontWeight:settingsTab===k?600:400,fontSize:13,cursor:'pointer'}}>{l}</button>
+        ))}
+      </div>
+
+      {settingsTab === 'reviews' && (
+        <>
+          {/* Stats row */}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:20}}>
+            {[
+              { label: 'Total Reviews', value: reviews.length, icon: '⭐', color: '#f59e0b' },
+              { label: 'Avg Rating', value: avgRating, icon: '📊', color: '#3b82f6' },
+              { label: 'Awaiting Reply', value: pendingCount, icon: '⏳', color: '#f97316' },
+              { label: 'Replied', value: repliedCount, icon: '✅', color: '#10b981' },
+            ].map(s => (
+              <div key={s.label} className="card" style={{padding:'16px 20px',display:'flex',alignItems:'center',gap:14}}>
+                <div style={{fontSize:24}}>{s.icon}</div>
+                <div>
+                  <div style={{fontSize:11,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.05em',fontWeight:600}}>{s.label}</div>
+                  <div style={{fontSize:26,fontWeight:700,color:s.color,lineHeight:1.2}}>{s.value}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Filter tabs */}
+          <div style={{display:'flex',gap:8,marginBottom:16,flexWrap:'wrap',alignItems:'center'}}>
+            <div style={{display:'flex',gap:6}}>
+              {[['all','All'],['pending','Needs Reply'],['replied','Replied']].map(([k,l]) => (
+                <button key={k} onClick={() => setTab(k)} style={{padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor:tab===k?'#3b82f6':'#e2e8f0',background:tab===k?'#eff6ff':'white',color:tab===k?'#3b82f6':'#64748b',fontSize:12,fontWeight:tab===k?600:400,cursor:'pointer'}}>{l}</button>
+              ))}
+            </div>
+            <div style={{marginLeft:'auto',display:'flex',gap:6,alignItems:'center'}}>
+              <span style={{fontSize:12,color:'#94a3b8'}}>Filter by stars:</span>
+              {['all','5','4','3','2','1'].map(s => (
+                <button key={s} onClick={() => setFilter(s)} style={{padding:'4px 10px',borderRadius:20,border:'1px solid',borderColor:filter===s?'#f59e0b':'#e2e8f0',background:filter===s?'#fffbeb':'white',color:filter===s?'#d97706':'#64748b',fontSize:12,fontWeight:filter===s?600:400,cursor:'pointer'}}>
+                  {s === 'all' ? 'All' : `${s}★`}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {!isConnected && (
+            <div style={{background:'#fffbeb',border:'1px solid #fde68a',borderRadius:12,padding:'20px 24px',marginBottom:20,display:'flex',alignItems:'center',gap:16}}>
+              <div style={{fontSize:32}}>⚠️</div>
+              <div>
+                <div style={{fontWeight:700,color:'#92400e',marginBottom:4}}>Google My Business not connected</div>
+                <div style={{fontSize:13,color:'#78350f'}}>Go to <strong>Integrations</strong> and connect your Google My Business account to start fetching real reviews. Showing sample data below.</div>
+              </div>
+            </div>
+          )}
+
+          {loading ? (
+            <div style={{display:'flex',justifyContent:'center',padding:'60px 0',color:'#94a3b8'}}><Loader size={24} className="spin"/>  Loading reviews...</div>
+          ) : filteredReviews.length === 0 ? (
+            <div style={{textAlign:'center',padding:'60px 0',color:'#94a3b8'}}>
+              <Star size={40} style={{marginBottom:12,opacity:0.3}}/>
+              <p>No reviews found for this filter.</p>
+            </div>
+          ) : (
+            <div style={{display:'flex',flexDirection:'column',gap:16}}>
+              {filteredReviews.map(review => (
+                <div key={review.id} className="card" style={{padding:'20px 24px',border: review.status !== 'replied' ? '1px solid #fed7aa' : '1px solid #e2e8f0'}}>
+                  {/* Review header */}
+                  <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:12}}>
+                    <div style={{display:'flex',alignItems:'center',gap:12}}>
+                      <div style={{width:40,height:40,borderRadius:'50%',background:'#f1f5f9',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:700,color:'#475569'}}>
+                        {(review.reviewer_name || 'A')[0].toUpperCase()}
+                      </div>
+                      <div>
+                        <div style={{fontWeight:700,fontSize:15,color:'#1e293b'}}>{review.reviewer_name || 'Anonymous'}</div>
+                        <div style={{display:'flex',alignItems:'center',gap:8,marginTop:2}}>
+                          <StarRating rating={review.star_rating}/>
+                          <span style={{fontSize:12,color:'#94a3b8'}}>{review.create_time ? new Date(review.create_time).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : ''}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <span style={{padding:'4px 12px',borderRadius:20,fontSize:12,fontWeight:600,background:review.status==='replied'?'#f0fdf4':'#fff7ed',color:review.status==='replied'?'#166534':'#9a3412',border:'1px solid',borderColor:review.status==='replied'?'#bbf7d0':'#fed7aa'}}>
+                      {review.status === 'replied' ? '✅ Replied' : '⏳ Needs Reply'}
+                    </span>
+                  </div>
+
+                  {/* Review comment */}
+                  {review.comment ? (
+                    <div style={{background:'#f8fafc',borderRadius:8,padding:'12px 16px',marginBottom:14,fontSize:14,color:'#334155',lineHeight:1.6,borderLeft:'3px solid #e2e8f0'}}>
+                      "{review.comment}"
+                    </div>
+                  ) : (
+                    <div style={{marginBottom:14,fontSize:13,color:'#94a3b8',fontStyle:'italic'}}>No text comment — rating only.</div>
+                  )}
+
+                  {/* Existing reply */}
+                  {review.reply_text && (
+                    <div style={{background:'#f0fdf4',borderRadius:8,padding:'12px 16px',marginBottom:14,fontSize:13,color:'#166534',borderLeft:'3px solid #86efac'}}>
+                      <div style={{fontWeight:600,marginBottom:4,fontSize:12,color:'#15803d'}}>YOUR REPLY</div>
+                      {review.reply_text}
+                    </div>
+                  )}
+
+                  {/* Reply area — only show if not replied */}
+                  {review.status !== 'replied' && (
+                    <div>
+                      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+                        <span style={{fontSize:12,fontWeight:600,color:'#475569'}}>REPLY DRAFT</span>
+                        <button
+                          onClick={() => handleGenerateReply(review)}
+                          disabled={generatingFor === review.id}
+                          style={{display:'flex',alignItems:'center',gap:5,padding:'4px 12px',borderRadius:6,border:'1px solid #c7d2fe',background:'#eff6ff',color:'#4338ca',fontSize:12,fontWeight:600,cursor:'pointer',opacity:generatingFor===review.id?0.6:1}}
+                        >
+                          {generatingFor === review.id ? <Loader size={12}/> : <Bot size={12}/>}
+                          {generatingFor === review.id ? 'Generating...' : 'Generate AI Reply'}
+                        </button>
+                      </div>
+                      <textarea
+                        value={replyDrafts[review.id] || ''}
+                        onChange={e => setReplyDrafts(prev => ({ ...prev, [review.id]: e.target.value }))}
+                        placeholder="Write your reply here, or click 'Generate AI Reply' above..."
+                        rows={3}
+                        style={{width:'100%',padding:'10px 14px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,color:'#334155',resize:'vertical',fontFamily:'inherit',boxSizing:'border-box',outline:'none'}}
+                      />
+                      <div style={{display:'flex',justifyContent:'flex-end',marginTop:8}}>
+                        <button
+                          onClick={() => handlePostReply(review.id)}
+                          disabled={postingFor === review.id || !replyDrafts[review.id]?.trim()}
+                          style={{display:'flex',alignItems:'center',gap:6,padding:'8px 18px',borderRadius:8,background:'#3b82f6',color:'white',border:'none',fontWeight:600,fontSize:13,cursor:'pointer',opacity:(postingFor===review.id||!replyDrafts[review.id]?.trim())?0.6:1}}
+                        >
+                          {postingFor === review.id ? <Loader size={14}/> : <Send size={14}/>}
+                          {postingFor === review.id ? 'Posting...' : 'Post Reply'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {settingsTab === 'settings' && (
+        <div className="card" style={{padding:'28px 32px',maxWidth:600}}>
+          <h3 style={{marginBottom:6,fontSize:16,fontWeight:700,color:'#1e293b'}}>Auto-Responder Configuration</h3>
+          <p style={{fontSize:13,color:'#64748b',marginBottom:24}}>When enabled, the AI will automatically generate and post replies to new Google Reviews based on the rules below.</p>
+
+          <div style={{display:'flex',flexDirection:'column',gap:20}}>
+            {/* Enable toggle */}
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px',background:'#f8fafc',borderRadius:10,border:'1px solid #e2e8f0'}}>
+              <div>
+                <div style={{fontWeight:600,fontSize:14,color:'#1e293b'}}>Enable Auto-Responder</div>
+                <div style={{fontSize:12,color:'#64748b',marginTop:2}}>Automatically reply to new reviews without manual approval</div>
+              </div>
+              <button onClick={() => setSettings(s => ({...s, is_enabled: !s.is_enabled}))} style={{background:'none',border:'none',cursor:'pointer',padding:0}}>
+                {settings.is_enabled ? <ToggleRight size={36} color="#3b82f6"/> : <ToggleLeft size={36} color="#cbd5e1"/>}
+              </button>
+            </div>
+
+            {/* Delay */}
+            <div>
+              <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Reply Delay (minutes)</label>
+              <input
+                type="number" min={0} max={1440}
+                value={settings.delay_minutes}
+                onChange={e => setSettings(s => ({...s, delay_minutes: parseInt(e.target.value)||0}))}
+                style={{padding:'8px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:14,width:'100%',boxSizing:'border-box'}}
+              />
+              <p style={{fontSize:11,color:'#94a3b8',marginTop:4}}>Set to 0 for instant replies. Recommended: 30–120 minutes for a natural feel.</p>
+            </div>
+
+            {/* Min rating */}
+            <div>
+              <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Minimum Star Rating to Auto-Reply</label>
+              <div style={{display:'flex',gap:8}}>
+                {[1,2,3,4,5].map(n => (
+                  <button key={n} onClick={() => setSettings(s => ({...s, min_rating_to_reply: n}))}
+                    style={{flex:1,padding:'8px',borderRadius:8,border:'1px solid',borderColor:settings.min_rating_to_reply===n?'#f59e0b':'#e2e8f0',background:settings.min_rating_to_reply===n?'#fffbeb':'white',color:settings.min_rating_to_reply===n?'#d97706':'#64748b',fontWeight:settings.min_rating_to_reply===n?700:400,cursor:'pointer',fontSize:14}}
+                  >{n}★</button>
+                ))}
+              </div>
+              <p style={{fontSize:11,color:'#94a3b8',marginTop:4}}>Only auto-reply to reviews with this rating or higher. Low ratings need human attention.</p>
+            </div>
+
+            {/* Text only toggle */}
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px',background:'#f8fafc',borderRadius:10,border:'1px solid #e2e8f0'}}>
+              <div>
+                <div style={{fontWeight:600,fontSize:14,color:'#1e293b'}}>Only Auto-Reply to Reviews with Text</div>
+                <div style={{fontSize:12,color:'#64748b',marginTop:2}}>Skip rating-only reviews (no written comment)</div>
+              </div>
+              <button onClick={() => setSettings(s => ({...s, auto_reply_to_text_only: !s.auto_reply_to_text_only}))} style={{background:'none',border:'none',cursor:'pointer',padding:0}}>
+                {settings.auto_reply_to_text_only ? <ToggleRight size={36} color="#3b82f6"/> : <ToggleLeft size={36} color="#cbd5e1"/>}
+              </button>
+            </div>
+
+            <button onClick={handleSaveSettings} style={{display:'flex',alignItems:'center',gap:8,padding:'10px 20px',borderRadius:8,background:'#3b82f6',color:'white',border:'none',fontWeight:600,fontSize:14,cursor:'pointer',width:'fit-content'}}>
+              <Save size={15}/>Save Settings
+            </button>
+          </div>
         </div>
       )}
     </section>

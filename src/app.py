@@ -23,6 +23,7 @@ from .api.notifications_api import router as notifications_router
 from .api.whatsapp_api import router as whatsapp_router
 from .api.publisher_api import router as publisher_router
 from .api.google_reviews_api import router as google_reviews_router
+from .api.hot_leads_api import router as hot_leads_router
 from .services.webhook_service import process_instagram_webhook
 
 
@@ -73,6 +74,7 @@ app.include_router(notifications_router)
 app.include_router(whatsapp_router)
 app.include_router(publisher_router)
 app.include_router(google_reviews_router)
+app.include_router(hot_leads_router)
 
 VERIFY_TOKEN = "sap_guru_2026"
 AUTO_REPLY = os.getenv("AUTO_REPLY", "false").lower() == "true"
