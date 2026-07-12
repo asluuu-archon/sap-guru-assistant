@@ -7,7 +7,7 @@ import './styles.css';
 const API_BASE = "https://sap-guru-assistant.onrender.com";
 
 const nav = [
-  ['Overview', LayoutDashboard], ['Conversations', MessagesSquare], ['Leads', Users], ['Hot Lead Queue', Flame], ['Pipeline Debugger', Bug],
+  ['Overview', LayoutDashboard], ['Conversations', MessagesSquare], ['Leads', Users], ['Hot Lead Queue', Flame], ['Import & Export', Download], ['Pipeline Debugger', Bug],
   ['AI Playground', Bot], ['Business Brain', Brain], ['Customer 360°', UserRound], ['Reports', BarChart3], ['Automation', Workflow], ['Publisher', Radio], ['Google Reviews', Star], ['Businesses', Building2], ['Integrations', Plug], ['Settings', Settings]
 ];
 
@@ -291,6 +291,7 @@ function Screen({page, dashboard, activeBusiness, setPage}) {
       {page==='Integrations'&&<IntegrationsPage activeBusiness={activeBusiness}/>}
       {page==='Publisher'&&<PublisherPage activeBusiness={activeBusiness}/>}
       {page==='Hot Lead Queue'&&<HotLeadQueue activeBusiness={activeBusiness} setPage={setPage}/>}
+      {page==='Import & Export'&&<LeadImportExport activeBusiness={activeBusiness}/>}
       {page==='Google Reviews'&&<GoogleReviewsPage activeBusiness={activeBusiness}/>}
       {page==='Settings'&&<SettingsPage/>}
     </>
@@ -4489,6 +4490,411 @@ function PublisherPage({ activeBusiness }) {
               })}
             </div>
           )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ─── LEAD IMPORT & EXPORT ───────────────────────────────────────────────────
+
+function LeadImportExport({ activeBusiness }) {
+  const [tab, setTab] = useState('import'); // import | export
+  const [dragOver, setDragOver] = useState(false);
+  const [file, setFile] = useState(null);
+  const [previewing, setPreviewing] = useState(false);
+  const [preview, setPreview] = useState(null); // { total_rows, headers, mapping, preview, warnings, unmapped_columns }
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState(null);
+  const [skipDuplicates, setSkipDuplicates] = useState(true);
+  const [toast, setToast] = useState('');
+
+  // Export filters
+  const [expTemp, setExpTemp] = useState('');
+  const [expStage, setExpStage] = useState('');
+  const [expFormat, setExpFormat] = useState('csv'); // csv | excel
+  const [exporting, setExporting] = useState(false);
+
+  const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3500); };
+
+  // ── File handling ──
+  const handleFileDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const f = e.dataTransfer?.files?.[0] || e.target.files?.[0];
+    if (f) { setFile(f); setPreview(null); setImportResult(null); }
+  };
+
+  const handlePreview = async () => {
+    if (!file) return;
+    setPreviewing(true);
+    setPreview(null);
+    setImportResult(null);
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch(`${API_BASE}/leads/import/preview`, { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.status === 'success') setPreview(data);
+      else showToast(data.detail || 'Failed to parse file');
+    } catch(e) { showToast('Error reading file'); }
+    setPreviewing(false);
+  };
+
+  const handleConfirmImport = async () => {
+    if (!preview) return;
+    setImporting(true);
+    // Re-parse file to get all rows (preview only has first 10)
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      // Get full preview (all rows)
+      const previewRes = await fetch(`${API_BASE}/leads/import/preview`, { method: 'POST', body: formData });
+      const previewData = await previewRes.json();
+
+      // Build all rows using the mapping
+      const allRows = previewData.preview || [];
+      // For full import we need all rows — backend handles this via confirm endpoint
+      const confirmRes = await fetch(`${API_BASE}/leads/import/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rows: allRows,
+          skip_duplicates: skipDuplicates,
+          business_id: bizId
+        })
+      });
+      const result = await confirmRes.json();
+      if (result.status === 'success') {
+        setImportResult(result);
+        showToast(result.message);
+      } else showToast(result.detail || 'Import failed');
+    } catch(e) { showToast('Import error'); }
+    setImporting(false);
+  };
+
+  // ── Export ──
+  const handleExport = async () => {
+    setExporting(true);
+    const params = new URLSearchParams();
+    if (expTemp) params.set('temperature', expTemp);
+    if (expStage) params.set('lead_stage', expStage);
+    const endpoint = expFormat === 'excel' ? 'excel' : 'csv';
+    try {
+      const res = await fetch(`${API_BASE}/leads/export/${endpoint}?${params}`);
+      if (!res.ok) { showToast('Export failed'); setExporting(false); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `leads_export.${expFormat === 'excel' ? 'xlsx' : 'csv'}`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Export downloaded!');
+    } catch(e) { showToast('Export error'); }
+    setExporting(false);
+  };
+
+  const handleDownloadTemplate = async () => {
+    const res = await fetch(`${API_BASE}/leads/export/template`);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'lead_import_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Template downloaded!');
+  };
+
+  const TEMP_OPTS = [['', 'All Temperatures'], ['hot', '🔥 Hot'], ['warm', '⭐ Warm'], ['cold', '❄️ Cold']];
+  const STAGE_OPTS = [['', 'All Stages'], ['new', 'New'], ['contacted', 'Contacted'], ['qualified', 'Qualified'], ['demo_scheduled', 'Demo Scheduled'], ['enrolled', 'Enrolled'], ['lost', 'Lost']];
+
+  return (
+    <section>
+      {toast && (
+        <div style={{position:'fixed',bottom:24,right:24,background:'#1e293b',color:'white',padding:'12px 20px',borderRadius:10,fontSize:13,fontWeight:500,zIndex:9999,boxShadow:'0 4px 20px rgba(0,0,0,0.2)'}}>
+          {toast}
+        </div>
+      )}
+
+      <Title
+        title="Import & Export"
+        sub="Bulk import leads from CSV/Excel, or export your entire lead database"
+      />
+
+      {/* Tab switcher */}
+      <div style={{display:'flex',gap:8,marginBottom:24}}>
+        {[['import','⬆️ Import Leads'],['export','⬇️ Export Leads']].map(([k,l]) => (
+          <button key={k} onClick={() => setTab(k)}
+            style={{padding:'10px 24px',borderRadius:8,border:'1px solid',borderColor:tab===k?'#3b82f6':'#e2e8f0',background:tab===k?'#eff6ff':'white',color:tab===k?'#3b82f6':'#64748b',fontWeight:tab===k?700:400,fontSize:14,cursor:'pointer'}}>
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {/* ── IMPORT TAB ── */}
+      {tab === 'import' && (
+        <div style={{display:'flex',flexDirection:'column',gap:20,maxWidth:800}}>
+
+          {/* Download template */}
+          <div className="card" style={{padding:'16px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#f0fdf4',border:'1px solid #bbf7d0'}}>
+            <div>
+              <div style={{fontWeight:600,color:'#166534',fontSize:14}}>📋 Download Import Template</div>
+              <div style={{fontSize:12,color:'#15803d',marginTop:2}}>Use this CSV template to prepare your leads for import. Includes a sample row.</div>
+            </div>
+            <button onClick={handleDownloadTemplate}
+              style={{display:'flex',alignItems:'center',gap:6,padding:'8px 16px',borderRadius:8,background:'#16a34a',color:'white',border:'none',fontWeight:600,fontSize:13,cursor:'pointer'}}>
+              <Download size={14}/>Download Template
+            </button>
+          </div>
+
+          {/* Drop zone */}
+          <div
+            onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleFileDrop}
+            style={{border:`2px dashed ${dragOver?'#3b82f6':'#cbd5e1'}`,borderRadius:12,padding:'40px 20px',textAlign:'center',background:dragOver?'#eff6ff':'#f8fafc',transition:'all 0.2s',cursor:'pointer'}}
+            onClick={() => document.getElementById('file-input').click()}
+          >
+            <input id="file-input" type="file" accept=".csv,.xlsx,.xls" onChange={handleFileDrop} style={{display:'none'}}/>
+            <div style={{fontSize:36,marginBottom:8}}>📂</div>
+            {file ? (
+              <div>
+                <div style={{fontWeight:700,color:'#1e293b',fontSize:15}}>{file.name}</div>
+                <div style={{fontSize:12,color:'#64748b',marginTop:4}}>{(file.size/1024).toFixed(1)} KB — click to change</div>
+              </div>
+            ) : (
+              <div>
+                <div style={{fontWeight:600,color:'#475569',fontSize:15}}>Drag & drop your CSV or Excel file here</div>
+                <div style={{fontSize:12,color:'#94a3b8',marginTop:4}}>or click to browse — supports .csv, .xlsx, .xls</div>
+              </div>
+            )}
+          </div>
+
+          {/* Options + preview button */}
+          {file && !preview && (
+            <div style={{display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
+              <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13,color:'#475569',cursor:'pointer'}}>
+                <input type="checkbox" checked={skipDuplicates} onChange={e => setSkipDuplicates(e.target.checked)}/>
+                Skip duplicate phone/email entries
+              </label>
+              <button onClick={handlePreview} disabled={previewing}
+                style={{display:'flex',alignItems:'center',gap:6,padding:'10px 20px',borderRadius:8,background:'#3b82f6',color:'white',border:'none',fontWeight:600,fontSize:13,cursor:'pointer',opacity:previewing?0.6:1}}>
+                {previewing ? <Loader size={14}/> : <FileText size={14}/>}
+                {previewing ? 'Parsing...' : 'Preview Import'}
+              </button>
+            </div>
+          )}
+
+          {/* Preview results */}
+          {preview && (
+            <div style={{display:'flex',flexDirection:'column',gap:16}}>
+
+              {/* Summary */}
+              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
+                {[
+                  { label: 'Total Rows', value: preview.total_rows, color: '#3b82f6' },
+                  { label: 'Columns Mapped', value: Object.keys(preview.mapping).length, color: '#10b981' },
+                  { label: 'Unmapped Columns', value: preview.unmapped_columns?.length || 0, color: '#f59e0b' },
+                ].map(s => (
+                  <div key={s.label} className="card" style={{padding:'14px 18px',textAlign:'center'}}>
+                    <div style={{fontSize:11,color:'#94a3b8',textTransform:'uppercase',fontWeight:600}}>{s.label}</div>
+                    <div style={{fontSize:28,fontWeight:700,color:s.color,lineHeight:1.3}}>{s.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Warnings */}
+              {preview.warnings?.length > 0 && (
+                <div style={{background:'#fffbeb',border:'1px solid #fde68a',borderRadius:10,padding:'12px 16px'}}>
+                  {preview.warnings.map((w,i) => (
+                    <div key={i} style={{fontSize:13,color:'#92400e',display:'flex',gap:8,alignItems:'flex-start'}}>
+                      <span>⚠️</span><span>{w}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Column mapping */}
+              <div className="card" style={{padding:'16px 20px'}}>
+                <div style={{fontWeight:700,fontSize:13,color:'#1e293b',marginBottom:10}}>Column Mapping Detected</div>
+                <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                  {Object.entries(preview.mapping).map(([csv,db]) => (
+                    <div key={csv} style={{padding:'4px 12px',borderRadius:20,background:'#f0fdf4',border:'1px solid #bbf7d0',fontSize:12,color:'#166534'}}>
+                      <b>{csv}</b> → {db}
+                    </div>
+                  ))}
+                  {(preview.unmapped_columns||[]).map(col => (
+                    <div key={col} style={{padding:'4px 12px',borderRadius:20,background:'#f8fafc',border:'1px solid #e2e8f0',fontSize:12,color:'#94a3b8'}}>
+                      {col} (ignored)
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Preview table */}
+              <div className="card" style={{padding:'16px 20px',overflowX:'auto'}}>
+                <div style={{fontWeight:700,fontSize:13,color:'#1e293b',marginBottom:10}}>Preview (first {preview.preview?.length} rows)</div>
+                <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+                  <thead>
+                    <tr style={{background:'#f1f5f9'}}>
+                      {['Name','Phone','Email','Module','Temperature','Stage','Source'].map(h => (
+                        <th key={h} style={{padding:'8px 12px',textAlign:'left',fontWeight:600,color:'#475569',whiteSpace:'nowrap'}}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(preview.preview||[]).map((row,i) => (
+                      <tr key={i} style={{borderTop:'1px solid #f1f5f9'}}>
+                        <td style={{padding:'7px 12px',color:'#1e293b'}}>{row.name||'—'}</td>
+                        <td style={{padding:'7px 12px',color:'#475569'}}>{row.phone||'—'}</td>
+                        <td style={{padding:'7px 12px',color:'#475569'}}>{row.email||'—'}</td>
+                        <td style={{padding:'7px 12px',color:'#475569'}}>{row.interested_module||'—'}</td>
+                        <td style={{padding:'7px 12px'}}>
+                          <span style={{padding:'2px 8px',borderRadius:10,fontSize:11,fontWeight:600,background:row.temperature==='hot'?'#fef2f2':row.temperature==='warm'?'#fffbeb':'#f0f9ff',color:row.temperature==='hot'?'#ef4444':row.temperature==='warm'?'#d97706':'#0369a1'}}>
+                            {row.temperature||'cold'}
+                          </span>
+                        </td>
+                        <td style={{padding:'7px 12px',color:'#475569'}}>{row.lead_stage||'new'}</td>
+                        <td style={{padding:'7px 12px',color:'#475569'}}>{row.source||'—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {preview.total_rows > 10 && (
+                  <div style={{fontSize:12,color:'#94a3b8',marginTop:8}}>Showing 10 of {preview.total_rows} rows — all rows will be imported.</div>
+                )}
+              </div>
+
+              {/* Import result */}
+              {importResult ? (
+                <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:10,padding:'16px 20px'}}>
+                  <div style={{fontWeight:700,color:'#166534',fontSize:15,marginBottom:6}}>✅ Import Complete</div>
+                  <div style={{fontSize:13,color:'#15803d'}}>{importResult.message}</div>
+                  {importResult.errors?.length > 0 && (
+                    <div style={{marginTop:8,fontSize:12,color:'#dc2626'}}>
+                      {importResult.errors.map((e,i) => <div key={i}>{e}</div>)}
+                    </div>
+                  )}
+                  <button onClick={() => { setFile(null); setPreview(null); setImportResult(null); }}
+                    style={{marginTop:12,padding:'8px 16px',borderRadius:8,background:'#16a34a',color:'white',border:'none',fontWeight:600,fontSize:13,cursor:'pointer'}}>
+                    Import Another File
+                  </button>
+                </div>
+              ) : (
+                <div style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}}>
+                  <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13,color:'#475569',cursor:'pointer'}}>
+                    <input type="checkbox" checked={skipDuplicates} onChange={e => setSkipDuplicates(e.target.checked)}/>
+                    Skip duplicate phone/email entries
+                  </label>
+                  <button onClick={handleConfirmImport} disabled={importing}
+                    style={{display:'flex',alignItems:'center',gap:6,padding:'10px 24px',borderRadius:8,background:'#10b981',color:'white',border:'none',fontWeight:700,fontSize:14,cursor:'pointer',opacity:importing?0.6:1}}>
+                    {importing ? <Loader size={15}/> : <CheckCircle size={15}/>}
+                    {importing ? `Importing ${preview.total_rows} leads...` : `Import All ${preview.total_rows} Leads`}
+                  </button>
+                  <button onClick={() => { setFile(null); setPreview(null); }}
+                    style={{padding:'10px 16px',borderRadius:8,border:'1px solid #e2e8f0',background:'white',color:'#64748b',fontSize:13,cursor:'pointer'}}>
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── EXPORT TAB ── */}
+      {tab === 'export' && (
+        <div style={{display:'flex',flexDirection:'column',gap:20,maxWidth:600}}>
+          <div className="card" style={{padding:'24px 28px'}}>
+            <h3 style={{marginBottom:6,fontSize:16,fontWeight:700,color:'#1e293b'}}>Export Lead Database</h3>
+            <p style={{fontSize:13,color:'#64748b',marginBottom:20}}>Download your leads as CSV or Excel. Apply filters to export a specific segment.</p>
+
+            <div style={{display:'flex',flexDirection:'column',gap:16}}>
+              {/* Format selector */}
+              <div>
+                <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:8}}>Export Format</label>
+                <div style={{display:'flex',gap:8}}>
+                  {[['csv','📄 CSV'],['excel','📊 Excel (.xlsx)']].map(([k,l]) => (
+                    <button key={k} onClick={() => setExpFormat(k)}
+                      style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid',borderColor:expFormat===k?'#3b82f6':'#e2e8f0',background:expFormat===k?'#eff6ff':'white',color:expFormat===k?'#3b82f6':'#64748b',fontWeight:expFormat===k?700:400,fontSize:13,cursor:'pointer'}}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Temperature filter */}
+              <div>
+                <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Filter by Temperature</label>
+                <select value={expTemp} onChange={e => setExpTemp(e.target.value)}
+                  style={{width:'100%',padding:'9px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,color:'#1e293b',background:'white'}}>
+                  {TEMP_OPTS.map(([v,l]) => <option key={v} value={v}>{l}</option>)}
+                </select>
+              </div>
+
+              {/* Stage filter */}
+              <div>
+                <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Filter by Stage</label>
+                <select value={expStage} onChange={e => setExpStage(e.target.value)}
+                  style={{width:'100%',padding:'9px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,color:'#1e293b',background:'white'}}>
+                  {STAGE_OPTS.map(([v,l]) => <option key={v} value={v}>{l}</option>)}
+                </select>
+              </div>
+
+              {/* Export fields info */}
+              <div style={{background:'#f8fafc',borderRadius:8,padding:'12px 16px',fontSize:12,color:'#64748b'}}>
+                <div style={{fontWeight:600,marginBottom:4,color:'#475569'}}>Exported columns:</div>
+                ID, Name, Phone, Email, Module, Temperature, Stage, Qualified, Source, Location, Experience, Education, Notes, Sender ID, Created At, Updated At
+              </div>
+
+              <button onClick={handleExport} disabled={exporting}
+                style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:'12px',borderRadius:8,background:'#3b82f6',color:'white',border:'none',fontWeight:700,fontSize:14,cursor:'pointer',opacity:exporting?0.6:1}}>
+                {exporting ? <Loader size={16}/> : <Download size={16}/>}
+                {exporting ? 'Preparing export...' : `Download ${expFormat.toUpperCase()}`}
+              </button>
+            </div>
+          </div>
+
+          {/* Quick export shortcuts */}
+          <div className="card" style={{padding:'20px 24px'}}>
+            <div style={{fontWeight:700,fontSize:13,color:'#1e293b',marginBottom:12}}>Quick Exports</div>
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              {[
+                { label: '🔥 Hot Leads Only', temp: 'hot', stage: '' },
+                { label: '⭐ Warm Leads Only', temp: 'warm', stage: '' },
+                { label: '✅ Qualified Leads', temp: '', stage: 'qualified' },
+                { label: '📋 All Leads (Full Export)', temp: '', stage: '' },
+              ].map(opt => (
+                <button key={opt.label}
+                  onClick={async () => {
+                    setExporting(true);
+                    const params = new URLSearchParams();
+                    if (opt.temp) params.set('temperature', opt.temp);
+                    if (opt.stage) params.set('lead_stage', opt.stage);
+                    try {
+                      const res = await fetch(`${API_BASE}/leads/export/csv?${params}`);
+                      const blob = await res.blob();
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `leads_${opt.label.replace(/[^a-z0-9]/gi,'_').toLowerCase()}.csv`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                      showToast('Downloaded!');
+                    } catch(e) { showToast('Export failed'); }
+                    setExporting(false);
+                  }}
+                  style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',borderRadius:8,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13,color:'#1e293b',fontWeight:500}}
+                >
+                  <span>{opt.label}</span>
+                  <Download size={13} color="#94a3b8"/>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </section>
