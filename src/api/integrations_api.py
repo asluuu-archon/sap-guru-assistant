@@ -41,6 +41,7 @@ async def get_integrations(business_id: Optional[str] = Header(None, alias="X-Bu
             "instagram": {"is_connected": False, "last_synced": None},
             "whatsapp": {"is_connected": False, "last_synced": None},
             "google_sheets": {"is_connected": False, "last_synced": None},
+            "google_my_business": {"is_connected": False, "last_synced": None},
             "webhook": {"is_connected": False, "webhook_url": ""}
         }
 
