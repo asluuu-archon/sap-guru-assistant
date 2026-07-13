@@ -93,17 +93,41 @@ function App() {
 function Sidebar({page,setPage,activeBusiness}) {
   const bizName = activeBusiness?.name || 'Admin';
   const initials = bizName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  
+  const navGroups = [
+    { label: 'Overview', items: [['Overview', LayoutDashboard]] },
+    { label: 'Inbox', items: [['Conversations', MessagesSquare]] },
+    { label: 'Sales & CRM', items: [['Leads', Users], ['Hot Lead Queue', Flame], ['Import & Export', Download], ['Customer 360°', UserRound]] },
+    { label: 'Marketing', items: [['Publisher', Radio], ['Google Reviews', Star]] },
+    { label: 'Intelligence', items: [['Business Brain', Brain], ['Pipeline Debugger', Bug], ['AI Playground', Bot], ['Reports', BarChart3]] },
+    { label: 'Settings', items: [['Automation', Workflow], ['Businesses', Building2], ['Integrations', Plug], ['Settings', Settings]] }
+  ];
+
   return (
-    <aside>
+    <aside style={{display:'flex',flexDirection:'column'}}>
       <div className="brand"><div className="logo">AI</div><b>AI COMMAND CENTER</b></div>
-      <nav>
-        {nav.map(([n,Icon])=>(
-          <button key={n} onClick={()=>setPage(n)} className={page===n?'active':''}>
-            <Icon size={17}/>{n}
-          </button>
+      <nav style={{flex:1,overflowY:'auto',padding:'10px 0'}}>
+        {navGroups.map(group => (
+          <div key={group.label} style={{marginBottom:16}}>
+            <div style={{padding:'0 16px',fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>
+              {group.label}
+            </div>
+            {group.items.map(([n,Icon])=>(
+              <button key={n} onClick={()=>setPage(n)} className={page===n?'active':''} style={{width:'100%',display:'flex',alignItems:'center',gap:10,padding:'8px 16px',background:'none',border:'none',cursor:'pointer',textAlign:'left',fontSize:13,color:page===n?'#3b82f6':'#64748b',fontWeight:page===n?600:500,transition:'all 0.15s'}}>
+                <Icon size={16} color={page===n?'#3b82f6':'#94a3b8'}/>
+                {n}
+              </button>
+            ))}
+          </div>
         ))}
       </nav>
-      <div className="profile"><div className="avatar">{initials}</div><span><b>{bizName}</b><small>Administrator</small></span></div>
+      <div className="profile" style={{marginTop:'auto',borderTop:'1px solid #f1f5f9',padding:'16px'}}>
+        <div className="avatar" style={{width:32,height:32,borderRadius:8,background:'#3b82f6',color:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700}}>{initials}</div>
+        <div style={{marginLeft:10,overflow:'hidden'}}>
+          <div style={{fontSize:13,fontWeight:700,color:'#1e293b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{bizName}</div>
+          <div style={{fontSize:11,color:'#94a3b8'}}>Administrator</div>
+        </div>
+      </div>
     </aside>
   );
 }
@@ -154,7 +178,10 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notification
 
   return (
     <header style={{position:'relative'}}>
-      <div className="search"><Search size={16}/><input placeholder="Search anything..."/></div>
+      <div style={{display:'flex',alignItems:'center',gap:10,background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:10,padding:'6px 14px',width:320}}>
+        <Search size={16} color="#94a3b8"/>
+        <input placeholder="Search anything..." style={{border:'none',background:'none',fontSize:13,color:'#1e293b',outline:'none',width:'100%'}}/>
+      </div>
 
       {/* Business Switcher */}
       <div style={{position:'relative'}} ref={dropdownRef}>

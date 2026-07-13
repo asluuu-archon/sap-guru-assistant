@@ -97,6 +97,12 @@ def process_pending_replies():
             # This prevents sending meaningless replies when AI has no good answer
             if not reply_text:
                 print(f"DELAYED REPLY SKIPPED EMPTY AI REPLY FOR {sender_id}", flush=True)
+                # CRITICAL FIX: Even if we skip the reply, we MUST clear the pending flag 
+                # to prevent the cron job from looping on this lead forever.
+                supabase.table("conversations").update({
+                    "pending_reply": False,
+                    "updated_at": datetime.utcnow().isoformat(),
+                }).eq("sender_id", sender_id).execute()
                 skipped_count += 1
                 continue
 

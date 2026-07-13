@@ -260,7 +260,10 @@ async def receive_webhook(request: Request):
             print(f"PIPELINE_LOGS: {pipeline_result.get('logs')}", flush=True)
 
             if should_ignore_manual_reply(manual_reply_text):
-                print("Manual echo ignored. Not useful for learning.", flush=True)
+                print("Manual echo ignored for learning, but clearing pending flag.", flush=True)
+                # CRITICAL FIX: Even if we ignore the reply for "learning", we MUST clear the pending flag
+                # so the AI doesn't reply after Mohamed has already sent a short/manual message.
+                mark_manual_replied(target_user_id, manual_reply_text)
                 return {"status": "manual_reply_ignored"}
 
             conversation = get_conversation(target_user_id)
@@ -289,6 +292,20 @@ async def receive_webhook(request: Request):
 
         message_id = message.get("mid")
         message_text = message.get("text") or ""
+
+        # VOICE NOTE DETECTION
+        attachments = message.get("attachments", [])
+        for attachment in attachments:
+            if attachment.get("type") == "audio":
+                audio_url = attachment.get("payload", {}).get("url")
+                if audio_url:
+                    print(f"VOICE_NOTE_DETECTED: {audio_url}", flush=True)
+                    from .services.voice_transcriber import transcribe_voice_note
+                    transcribed_text = transcribe_voice_note(audio_url)
+                    if transcribed_text:
+                        # Append transcription to message text so the AI can read it
+                        message_text = (message_text + " " + transcribed_text).strip()
+                        print(f"VOICE_NOTE_TRANSCRIBED: {message_text}", flush=True)
 
         pipeline_result = process_incoming_message(
             organization_id=1,
