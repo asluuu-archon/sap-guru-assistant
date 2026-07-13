@@ -8,7 +8,7 @@ router = APIRouter(prefix="/notifications", tags=["Notifications"])
 
 def _supabase() -> Client:
     url = os.getenv("SUPABASE_URL")
-    key = os.getenv("SUPABASE_KEY")
+    key = os.getenv("SUPABASE_SERVICE_KEY")
     if not url or not key:
         raise Exception("Supabase credentials not configured")
     return create_client(url, key)

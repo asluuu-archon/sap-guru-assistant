@@ -113,8 +113,8 @@ function Sidebar({page,setPage,activeBusiness}) {
               {group.label}
             </div>
             {group.items.map(([n,Icon])=>(
-              <button key={n} onClick={()=>setPage(n)} className={page===n?'active':''} style={{width:'100%',display:'flex',alignItems:'center',gap:10,padding:'8px 16px',background:'none',border:'none',cursor:'pointer',textAlign:'left',fontSize:13,color:page===n?'#3b82f6':'#64748b',fontWeight:page===n?600:500,transition:'all 0.15s'}}>
-                <Icon size={16} color={page===n?'#3b82f6':'#94a3b8'}/>
+              <button key={n} onClick={()=>setPage(n)} className={page===n?'active':''} style={{width:'100%',display:'flex',alignItems:'center',gap:10,padding:'8px 16px',background:page===n?'rgba(59,130,246,0.1)':'none',border:'none',cursor:'pointer',textAlign:'left',fontSize:13,color:page===n?'#60a5fa':'#cbd5e1',fontWeight:page===n?600:500,transition:'all 0.15s',borderRadius:'0 20px 20px 0',marginRight:'10px'}}>
+                <Icon size={16} color={page===n?'#60a5fa':'#94a3b8'}/>
                 {n}
               </button>
             ))}
@@ -124,7 +124,7 @@ function Sidebar({page,setPage,activeBusiness}) {
       <div className="profile" style={{marginTop:'auto',borderTop:'1px solid #f1f5f9',padding:'16px'}}>
         <div className="avatar" style={{width:32,height:32,borderRadius:8,background:'#3b82f6',color:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700}}>{initials}</div>
         <div style={{marginLeft:10,overflow:'hidden'}}>
-          <div style={{fontSize:13,fontWeight:700,color:'#1e293b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{bizName}</div>
+          <div style={{fontSize:13,fontWeight:700,color:'#f8fafc',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{bizName}</div>
           <div style={{fontSize:11,color:'#94a3b8'}}>Administrator</div>
         </div>
       </div>
@@ -3748,6 +3748,22 @@ const INTEGRATIONS_CONFIG = [
     ],
     docs_url: 'https://developers.google.com/my-business/content/review-data',
     status_note: 'Requires Google Business Profile API access and OAuth 2.0 setup'
+  },
+  {
+    id: 'website_chat',
+    name: 'Website Chat Widget',
+    description: 'Add an AI-powered chat widget to your company website. Works on any site (WordPress, Wix, Custom HTML).',
+    icon: '🌐',
+    color: '#3b82f6',
+    bg: '#eff6ff',
+    category: 'Channels',
+    fields: [
+      { key: 'welcome_message', label: 'Welcome Message', type: 'text', placeholder: 'Hi! How can I help you today?' },
+      { key: 'primary_color', label: 'Widget Color (Hex)', type: 'text', placeholder: '#3b82f6' },
+      { key: 'position', label: 'Position', type: 'text', placeholder: 'right' },
+    ],
+    docs_url: '#',
+    status_note: 'After saving, copy the generated script from the widget tab'
   },
   {
     id: 'webhook',

@@ -65,6 +65,15 @@ def send_channel_reply(
             "provider_result": result,
         }
 
+    if clean_channel == "website_chat":
+        # For website chat, we return the reply immediately in the HTTP response
+        # rather than calling an external API.
+        return {
+            "status": "success",
+            "channel": "website_chat",
+            "message": message.strip()
+        }
+
     return {
         "status": "error",
         "message": f"Unsupported channel: {clean_channel}",

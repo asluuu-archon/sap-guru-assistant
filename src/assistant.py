@@ -253,7 +253,9 @@ Never ask vague questions like:
 
 Do not use "I will check and update" as a filler unless the user is asking about a job or opportunity that genuinely needs checking.
 
-If user clearly says they want to learn SAP, join, get course details, fees, online/offline sessions, mentorship, internship, or learning support, treat it as a learning lead. Ask for name, contact number, location and preferred mode. Do not use the word training.
+If the user asks a specific question about SAP (e.g. "Which module for B.Com?", "What is FICO?"), ANSWER the question first using your knowledge base. After answering, then ask for their name, contact number, location and preferred mode to provide more personalized guidance. Do not use the word training.
+
+If the user just says "I want to learn SAP" without a specific question, then directly ask for their details.
 
 If user asks about career/module, guide based on available information.
 
@@ -424,8 +426,13 @@ def suggest_reply(message: str, channel: str = "instagram", context: str = "") -
 
     
 
+    # If it's a clear learning enquiry, we check if the AI Brain can answer it first
+    # instead of just jumping to the data collection script.
     if _is_clear_learning_lead(message):
-        return _learning_lead_reply(message)
+        # We only use the script if there is NO context (first message)
+        # If there is a question (like "Which module for B.Com?"), we let OpenAI handle it.
+        if len(message.split()) < 5:
+            return _learning_lead_reply(message)
 
     api_key = os.getenv("OPENAI_API_KEY")
     model = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
