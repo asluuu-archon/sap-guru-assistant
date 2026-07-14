@@ -26,6 +26,7 @@ from .api.google_reviews_api import router as google_reviews_router
 from .api.hot_leads_api import router as hot_leads_router
 from .api.lead_import_export_api import router as lead_import_export_router
 from .api.website_chat_api import router as website_chat_router
+from .api.whatsapp_broadcast_api import router as whatsapp_broadcast_router
 from .services.webhook_service import process_instagram_webhook
 
 
@@ -79,6 +80,7 @@ app.include_router(google_reviews_router)
 app.include_router(hot_leads_router)
 app.include_router(lead_import_export_router)
 app.include_router(website_chat_router)
+app.include_router(whatsapp_broadcast_router)
 
 VERIFY_TOKEN = "sap_guru_2026"
 AUTO_REPLY = os.getenv("AUTO_REPLY", "false").lower() == "true"

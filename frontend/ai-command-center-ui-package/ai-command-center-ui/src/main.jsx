@@ -25,6 +25,181 @@ const intents = [
   {name:'Other', value:13}
 ];
 
+function BroadcastsPage({ activeBusiness }) {
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [templateLanguage, setTemplateLanguage] = useState("en_US");
+  const [templateComponents, setTemplateComponents] = useState({});
+  const [audienceFilter, setAudienceFilter] = useState("all");
+  const [sending, setSending] = useState(false);
+  const [sendResult, setSendResult] = useState(null);
+
+  useEffect(() => {
+    if (activeBusiness) {
+      fetchTemplates();
+    }
+  }, [activeBusiness]);
+
+  const fetchTemplates = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${API_BASE}/whatsapp/templates?business_id=${activeBusiness.id}`);
+      const data = await response.json();
+      if (data.status === "success") {
+        setTemplates(data.templates);
+      } else {
+        setError(data.message || "Failed to fetch templates.");
+      }
+    } catch (err) {
+      setError("Network error fetching templates.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendBroadcast = async () => {
+    if (!selectedTemplate) {
+      alert("Please select a template.");
+      return;
+    }
+    setSending(true);
+    setSendResult(null);
+    try {
+      const response = await fetch(`${API_BASE}/whatsapp/broadcast`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          business_id: activeBusiness.id,
+          template_name: selectedTemplate.name,
+          language: templateLanguage,
+          components: Object.values(templateComponents),
+          audience_filter: audienceFilter,
+        }),
+      });
+      const data = await response.json();
+      if (data.status === "success") {
+        setSendResult({ success: true, message: data.message });
+      } else {
+        setSendResult({ success: false, message: data.message || "Failed to send broadcast." });
+      }
+    } catch (err) {
+      setSendResult({ success: false, message: "Network error sending broadcast." });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <section>
+      <header className="page-header">
+        <h2>WhatsApp Broadcast Campaigns</h2>
+        <p>Send personalized, template-based messages to segmented leads on WhatsApp.</p>
+      </header>
+
+      <div className="grid2">
+        <div className="card">
+          <h3>1. Select Template</h3>
+          {loading && <p>Loading templates...</p>}
+          {error && <p className="error-message">{error}</p>}
+          {!loading && templates.length === 0 && <p>No templates found. Create one in WhatsApp Manager.</p>}
+          {!loading && templates.length > 0 && (
+            <select
+              value={selectedTemplate ? selectedTemplate.name : ""}
+              onChange={(e) => setSelectedTemplate(templates.find(t => t.name === e.target.value))}
+              className="input-field"
+            >
+              <option value="">-- Select a Template --</option>
+              {templates.map((template) => (
+                <option key={template.name} value={template.name}>
+                  {template.name} ({template.language})
+                </option>
+              ))}
+            </select>
+          )}
+
+          {selectedTemplate && (
+            <div style={{ marginTop: 20, borderTop: "1px solid #eee", paddingTop: 20 }}>
+              <h4>Template Preview: {selectedTemplate.name}</h4>
+              <p style={{ fontSize: 12, color: "#666" }}>Language: {selectedTemplate.language}</p>
+              <div className="template-preview" style={{ background: "#e6f7ff", padding: 15, borderRadius: 8, border: "1px solid #b3e0ff" }}>
+                {selectedTemplate.components.map((comp, idx) => (
+                  <div key={idx} style={{ marginBottom: 10 }}>
+                    {comp.type === "HEADER" && comp.format === "TEXT" && (
+                      <p style={{ fontWeight: "bold", marginBottom: 5 }}>{comp.text}</p>
+                    )}
+                    {comp.type === "BODY" && <p>{comp.text}</p>}
+                    {comp.type === "FOOTER" && <p style={{ fontSize: 11, color: "#888" }}>{comp.text}</p>}
+                    {comp.type === "BUTTONS" && (
+                      <div style={{ display: "flex", gap: 5, marginTop: 10 }}>
+                        {comp.buttons.map((btn, bIdx) => (
+                          <button key={bIdx} className="button-secondary" style={{ padding: "5px 10px", fontSize: 12 }}>{btn.text}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p style={{ fontSize: 11, color: "#999", marginTop: 10 }}>Note: Variables like {"{{1}}"} will be replaced with lead data.</p>
+            </div>
+          )}
+        </div>
+
+        <div className="card">
+          <h3>2. Configure & Send</h3>
+          <div style={{ marginBottom: 20 }}>
+            <label className="form-label">Audience Filter</label>
+            <select value={audienceFilter} onChange={(e) => setAudienceFilter(e.target.value)} className="input-field">
+              <option value="all">All Leads</option>
+              <option value="hot">Hot Leads Only</option>
+              <option value="warm">Warm Leads Only</option>
+              <option value="qualified">Qualified Leads Only</option>
+              {/* Add more filters as needed */}
+            </select>
+          </div>
+
+          {selectedTemplate && selectedTemplate.components.some(c => c.text && c.text.includes("{{1}}")) && (
+            <div style={{ marginBottom: 20 }}>
+              <label className="form-label">Template Variables (e.g., {"{{1}}"}, {"{{2}}"})</label>
+              {selectedTemplate.components.map((comp, compIdx) => {
+                const matches = comp.text ? [...comp.text.matchAll(/\{\{(\d+)\}\}/g)] : [];
+                return matches.map((match, varIdx) => {
+                  const varNumber = match[1];
+                  return (
+                    <input
+                      key={`${compIdx}-${varNumber}`}
+                      type="text"
+                      placeholder={`Value for {{${varNumber}}}`}
+                      value={templateComponents[varNumber] || ""}
+                      onChange={(e) => setTemplateComponents(prev => ({ ...prev, [varNumber]: e.target.value }))}
+                      className="input-field"
+                      style={{ marginBottom: 10 }}
+                    />
+                  );
+                });
+              })}
+            </div>
+          )}
+
+          <button onClick={handleSendBroadcast} disabled={sending || !selectedTemplate} className="button-primary">
+            {sending ? "Sending..." : "Send Broadcast"}
+          </button>
+
+          {sendResult && (
+            <div className={sendResult.success ? "success-message" : "error-message"} style={{ marginTop: 20 }}>
+              {sendResult.message}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function App() {
   const [page, setPage] = useState("Overview");
   const [dashboard, setDashboard] = useState(null);
@@ -98,7 +273,7 @@ function Sidebar({page,setPage,activeBusiness}) {
     { label: 'Overview', items: [['Overview', LayoutDashboard]] },
     { label: 'Inbox', items: [['Conversations', MessagesSquare]] },
     { label: 'Sales & CRM', items: [['Leads', Users], ['Hot Lead Queue', Flame], ['Import & Export', Download], ['Customer 360°', UserRound]] },
-    { label: 'Marketing', items: [['Publisher', Radio], ['Google Reviews', Star]] },
+    { label: 'Marketing', items: [['Publisher', Radio], ['Broadcasts', Radio], ['Google Reviews', Star]] },
     { label: 'Intelligence', items: [['Business Brain', Brain], ['Pipeline Debugger', Bug], ['AI Playground', Bot], ['Reports', BarChart3]] },
     { label: 'Settings', items: [['Automation', Workflow], ['Businesses', Building2], ['Integrations', Plug], ['Settings', Settings]] }
   ];
@@ -320,6 +495,7 @@ function Screen({page, dashboard, activeBusiness, setPage}) {
       {page==='Hot Lead Queue'&&<HotLeadQueue activeBusiness={activeBusiness} setPage={setPage}/>}
       {page==='Import & Export'&&<LeadImportExport activeBusiness={activeBusiness}/>}
       {page==='Google Reviews'&&<GoogleReviewsPage activeBusiness={activeBusiness}/>}
+      {page==='Broadcasts'&&<BroadcastsPage activeBusiness={activeBusiness}/>}
       {page==='Settings'&&<SettingsPage/>}
     </>
   );
