@@ -50,6 +50,16 @@ def enrich_customer_with_instagram_profile(customer: dict, channel_user_id: str)
     return customer
 
 
+def get_customer_by_id(customer_id: str) -> dict:
+    """Fetch a customer by their primary UUID."""
+    try:
+        res = supabase.table("customers").select("*").eq("id", customer_id).limit(1).execute()
+        return res.data[0] if res.data else None
+    except Exception as e:
+        print(f"Error fetching customer by ID: {e}")
+        return None
+
+
 def get_or_create_customer(
     channel_user_id: str,
     primary_channel: str = "instagram",
