@@ -41,7 +41,7 @@ def get_reply_delay_minutes(organization_id: int) -> int:
     return DEFAULT_DELAY_MINUTES
 
 
-def process_pending_replies():
+async def process_pending_replies():
     try:
         result = (
             supabase.table("conversations")
@@ -89,7 +89,7 @@ def process_pending_replies():
                 continue
 
             context = build_context(conversation)
-            reply = suggest_reply(last_user_message, "instagram", context)
+            reply = await suggest_reply(last_user_message, "instagram", context)
 
             reply_text = (reply.get("suggested_reply") or "").strip()
 

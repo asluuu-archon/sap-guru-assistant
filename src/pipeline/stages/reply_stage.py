@@ -8,13 +8,13 @@ that it is safe to respond.
 from ..engines.reply_engine import generate_reply
 
 
-def run_reply_stage(
+async def run_reply_stage(
     message_text: str,
     channel: str,
     context: str,
 ) -> dict:
 
-    reply = generate_reply(
+    reply = await generate_reply(
         message_text=message_text,
         channel=channel,
         context=context,

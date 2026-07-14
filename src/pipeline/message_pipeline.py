@@ -33,7 +33,7 @@ def build_message_context(
     )
 
 
-def run_pipeline(context: MessageContext) -> MessageContext:
+async def run_pipeline(context: MessageContext) -> MessageContext:
     if not context.sender_id:
         context.add_log("Pipeline stopped: sender_id missing")
         context.add_log(f"Pipeline Timings: {context.timings}")
@@ -159,7 +159,7 @@ def run_pipeline(context: MessageContext) -> MessageContext:
             )
 
         timer = context.start_timer("Reply Stage")
-        reply_result = run_reply_stage(
+        reply_result = await run_reply_stage(
             message_text=context.message_text,
             channel=context.channel,
             context=reply_context,
@@ -179,7 +179,7 @@ def run_pipeline(context: MessageContext) -> MessageContext:
     return context
 
 
-def process_incoming_message(
+async def process_incoming_message(
     organization_id: int,
     channel: str,
     sender_id: str,
@@ -201,7 +201,7 @@ def process_incoming_message(
             "logs": context.logs,
         }
 
-    context = run_pipeline(context)
+    context = await run_pipeline(context)
 
     result = context.to_dict()
     result["status"] = "success"

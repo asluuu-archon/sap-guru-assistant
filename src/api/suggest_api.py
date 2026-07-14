@@ -13,5 +13,5 @@ class SuggestRequest(BaseModel):
 
 
 @router.post("/suggest")
-def suggest(req: SuggestRequest):
-    return suggest_reply(req.message, req.channel, req.context)
+async def suggest(req: SuggestRequest):
+    return await suggest_reply(req.message, req.channel, req.context)

@@ -80,7 +80,7 @@ async def receive_whatsapp_webhook(request: Request, background_tasks: Backgroun
         return Response(content="EVENT_RECEIVED", status_code=200)
 
 
-def process_whatsapp_message(sender_id: str, text: str, customer_name: str):
+async def process_whatsapp_message(sender_id: str, text: str, customer_name: str):
     """
     Process the incoming WhatsApp message using the existing memory and assistant tools.
     """
@@ -107,7 +107,7 @@ def process_whatsapp_message(sender_id: str, text: str, customer_name: str):
     
     # Generate reply
     auto_reply_enabled = os.getenv("AUTO_REPLY", "false").lower() == "true"
-    reply_text = suggest_reply(sender_id)
+    reply_text = await suggest_reply(sender_id)
     
     if auto_reply_enabled and reply_text:
         send_reply(

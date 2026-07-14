@@ -99,8 +99,8 @@ def health():
 
 
 @app.get("/run-delayed-replies")
-def run_delayed_replies():
-    return process_pending_replies()
+async def run_delayed_replies():
+    return await process_pending_replies()
 
 
 
@@ -257,7 +257,7 @@ async def receive_webhook(request: Request):
             manual_reply_text = message.get("text", "")
             target_user_id = recipient_id
 
-            pipeline_result = process_incoming_message(
+            pipeline_result = await process_incoming_message(
                 organization_id=1,
                 channel="instagram",
                 sender_id=sender_id,
@@ -315,7 +315,7 @@ async def receive_webhook(request: Request):
                         message_text = (message_text + " " + transcribed_text).strip()
                         print(f"VOICE_NOTE_TRANSCRIBED: {message_text}", flush=True)
 
-        pipeline_result = process_incoming_message(
+        pipeline_result = await process_incoming_message(
             organization_id=1,
             channel="instagram",
             sender_id=sender_id,

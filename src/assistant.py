@@ -345,7 +345,7 @@ def _normalize_output(data: dict, message: str, context: str) -> dict:
     }
 
 
-def suggest_reply(message: str, channel: str = "instagram", context: str = "") -> dict:
+async def suggest_reply(message: str, channel: str = "instagram", context: str = "") -> dict:
     # Determine if this is a returning customer based on context
     # If context has conversation history, we skip greeting shortcuts
     has_prior_conversation = bool(

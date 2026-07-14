@@ -10,12 +10,12 @@ Later this engine will become channel-agnostic and organization-aware.
 from ...assistant import suggest_reply
 
 
-def generate_reply(
+async def generate_reply(
     message_text: str,
     channel: str,
     context: str,
 ) -> dict:
-    return suggest_reply(
+    return await suggest_reply(
         message=message_text,
         channel=channel,
         context=context,
