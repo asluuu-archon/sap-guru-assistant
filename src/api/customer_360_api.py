@@ -25,7 +25,17 @@ def get_customer_360(sender_id: str):
     Combines lead record + conversation record + AI-generated profile summary.
     """
     try:
-        # ── 1. Fetch lead record ──────────────────────────────────────────────
+        # ── 1. Fetch customer profile (Source of Truth) ────────────────────────
+        cust_res = (
+            supabase.table("customers")
+            .select("*")
+            .eq("channel_user_id", sender_id)
+            .limit(1)
+            .execute()
+        )
+        cust = cust_res.data[0] if cust_res.data else {}
+
+        # ── 2. Fetch lead record ──────────────────────────────────────────────
         lead_res = (
             supabase.table("leads")
             .select("*")
@@ -36,7 +46,7 @@ def get_customer_360(sender_id: str):
         )
         lead = lead_res.data[0] if lead_res.data else None
 
-        # ── 2. Fetch conversation record ──────────────────────────────────────
+        # ── 3. Fetch conversation record ──────────────────────────────────────
         conv_res = (
             supabase.table("conversations")
             .select("*")
@@ -46,15 +56,15 @@ def get_customer_360(sender_id: str):
         )
         conv = conv_res.data[0] if conv_res.data else None
 
-        if not lead and not conv:
+        if not lead and not conv and not cust:
             return {"status": "not_found", "message": "No customer found with this sender_id"}
 
-        # ── 3. Build display name and profile ─────────────────────────────────
-        # Try name fields in priority order: name > customer_name > instagram_username > sender_id
+        # ── 4. Build display name and profile ─────────────────────────────────
+        # Try name fields in priority order: manual lead name > customer profile name > instagram username > sender_id
         display_name = (
             (lead.get("name") if lead and lead.get("name") else None)
-            or (lead.get("customer_name") if lead and lead.get("customer_name") else None)
-            or (lead.get("instagram_username") if lead and lead.get("instagram_username") else None)
+            or cust.get("name")
+            or cust.get("attributes", {}).get("instagram_username")
             or sender_id
         )
         instagram_username = (
@@ -165,13 +175,14 @@ Return only valid JSON, no markdown."""
 
             # Identity
             "identity": {
-                "name": (lead.get("name") or lead.get("customer_name") or lead.get("instagram_username")) if lead else None,
-                "phone": lead.get("phone") if lead else None,
-                "email": lead.get("email") if lead else None,
-                "location": lead.get("location") if lead else None,
+                "name": display_name,
+                "phone": (lead.get("phone") or cust.get("phone")) if lead or cust else None,
+                "email": (lead.get("email") or cust.get("email")) if lead or cust else None,
+                "location": (lead.get("location") or cust.get("location")) if lead or cust else None,
                 "education": lead.get("education") if lead else None,
                 "experience": lead.get("experience") if lead else None,
-                "source": lead.get("source") if lead else "instagram",
+                "source": (lead.get("source") or cust.get("primary_channel")) if lead or cust else "instagram",
+                "instagram_username": cust.get("attributes", {}).get("instagram_username")
             },
 
             # Lead data
@@ -240,12 +251,21 @@ def search_customers(q: str = "", limit: int = 20):
             query = query.ilike("name", f"%{q}%")
 
         res = query.order("updated_at", desc=True).limit(limit).execute()
+        
+        # Fetch matching customers for these leads to get better names
+        sender_ids = [r["sender_id"] for r in (res.data or [])]
+        cust_map = {}
+        if sender_ids:
+            cust_res = supabase.table("customers").select("channel_user_id, name, attributes").in_("channel_user_id", sender_ids).execute()
+            cust_map = {c["channel_user_id"]: c for c in (cust_res.data or [])}
 
         customers = []
         for row in (res.data or []):
+            sid = row.get("sender_id")
+            cust = cust_map.get(sid, {})
             customers.append({
-                "sender_id": row.get("sender_id"),
-                "name": row.get("name") or row.get("customer_name") or row.get("instagram_username") or row.get("sender_id"),
+                "sender_id": sid,
+                "name": row.get("name") or cust.get("name") or cust.get("attributes", {}).get("instagram_username") or sid,
                 "phone": row.get("phone"),
                 "email": row.get("email"),
                 "location": row.get("location"),

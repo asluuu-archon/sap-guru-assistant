@@ -92,6 +92,7 @@ def save_lead(
     experience: str = "",
     interested_module: str = "",
     notes: str = "",
+    source: str = "instagram",
 ):
     try:
         existing = (
@@ -106,6 +107,12 @@ def save_lead(
         old = existing.data[0] if existing.data else {}
 
         final_name = name or old.get("name", "")
+        
+        # If name is still missing, try to fetch from customer profile
+        if not final_name:
+            cust_res = supabase.table("customers").select("name").eq("channel_user_id", sender_id).limit(1).execute()
+            if cust_res.data and cust_res.data[0].get("name"):
+                final_name = cust_res.data[0].get("name")
         final_phone = phone or old.get("phone", "")
         final_email = email or old.get("email", "")
         final_location = location or old.get("location", "")
@@ -165,7 +172,7 @@ def save_lead(
             "experience": final_experience,
             "interested_module": final_module,
             "notes": final_notes,
-            "source": "instagram_dm",
+            "source": source,
             "status": status,
             "lead_stage": lead_stage,
             "is_qualified": is_qualified,

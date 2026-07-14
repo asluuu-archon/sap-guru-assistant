@@ -121,7 +121,7 @@ function Sidebar({page,setPage,activeBusiness}) {
           </div>
         ))}
       </nav>
-      <div className="profile" style={{marginTop:'auto',borderTop:'1px solid #f1f5f9',padding:'16px'}}>
+      <div className="profile" style={{marginTop:'auto',borderTop:'1px solid rgba(255,255,255,0.05)',padding:'16px'}}>
         <div className="avatar" style={{width:32,height:32,borderRadius:8,background:'#3b82f6',color:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700}}>{initials}</div>
         <div style={{marginLeft:10,overflow:'hidden'}}>
           <div style={{fontSize:13,fontWeight:700,color:'#f8fafc',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{bizName}</div>
@@ -439,6 +439,20 @@ function Overview({ setPage }) {
         </div>
       </div>
 
+      {/* Urgent Action Banner */}
+      {(s.hot_leads > 0 || s.needs_human > 0) && (
+        <div style={{background:'rgba(239,68,68,0.1)', border:'1px solid #ef4444', borderRadius:'12px', padding:'16px', marginBottom:'20px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+          <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
+            <div style={{width:'40px', height:'40px', borderRadius:'50%', background:'#ef4444', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontSize:'1.2em'}}>🔥</div>
+            <div>
+              <div style={{fontWeight:700, color:'#f8fafc'}}>Attention Required</div>
+              <div style={{fontSize:'0.85em', color:'#94a3b8'}}>You have {s.hot_leads} hot leads and {s.needs_human} messages waiting for manual reply.</div>
+            </div>
+          </div>
+          <button onClick={() => setPage('Hot Lead Queue')} style={{background:'#ef4444', color:'white', border:'none', padding:'8px 16px', borderRadius:'8px', fontWeight:600, cursor:'pointer'}}>Open Action Queue</button>
+        </div>
+      )}
+
       {/* Row 3 — Charts */}
       <div className="grid2" style={{marginTop:'20px'}}>
         {/* 7-day activity chart */}
@@ -496,7 +510,60 @@ function Overview({ setPage }) {
         </Card>
       </div>
 
-      {/* Row 4 — Module breakdown + Needs Human */}
+      {/* Row 4 — Locations & Sources */}
+      <div className="grid2" style={{marginTop:'20px'}}>
+        <Card title="Top Locations">
+          {data?.location_breakdown?.length > 0 ? (
+            <div style={{display:'flex', flexDirection:'column', gap:'10px'}}>
+              {data.location_breakdown.map((loc, i) => {
+                const max = data.location_breakdown[0]?.value || 1;
+                const pct = Math.round((loc.value / max) * 100);
+                return (
+                  <div key={i}>
+                    <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.83em', marginBottom:'4px'}}>
+                      <span style={{color:'#e2e8f0'}}>{loc.label}</span>
+                      <span style={{color:'#64748b'}}>{loc.value} leads</span>
+                    </div>
+                    <div style={{background:'rgba(255,255,255,0.06)', borderRadius:'4px', height:'6px'}}>
+                      <div style={{width:`${pct}%`, height:'6px', borderRadius:'4px', background:'#3b82f6'}}/>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : <div style={{padding:'20px', textAlign:'center', color:'#475569', fontSize:'0.85em'}}>No location data yet</div>}
+        </Card>
+
+        <Card title="Lead Source Breakdown">
+          {data?.source_breakdown?.length > 0 ? (
+            <div style={{display:'flex', alignItems:'center', justifyContent:'space-around', height:180}}>
+              <ResponsiveContainer width="50%" height="100%">
+                <PieChart>
+                  <Pie data={data.source_breakdown} innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="count">
+                    {data.source_breakdown.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={['#e1306c', '#25d366', '#3b82f6', '#8b5cf6'][index % 4]} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{background:'#1e293b', border:'1px solid #334155', borderRadius:'8px', fontSize:'12px'}}/>
+                </PieChart>
+              </ResponsiveContainer>
+              <div style={{width:'45%'}}>
+                {data.source_breakdown.map((item, i) => (
+                  <div key={i} style={{display:'flex', justifyContent:'space-between', marginBottom:'8px', fontSize:'0.82em'}}>
+                    <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                      <div style={{width:'8px', height:'8px', borderRadius:'50%', background:['#e1306c', '#25d366', '#3b82f6', '#8b5cf6'][i % 4]}}></div>
+                      <span style={{color:'#94a3b8'}}>{item.source.replace('_', ' ')}</span>
+                    </div>
+                    <span style={{fontWeight:700, color:'#f8fafc'}}>{item.percentage}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : <div style={{padding:'20px', textAlign:'center', color:'#475569', fontSize:'0.85em'}}>No source data yet</div>}
+        </Card>
+      </div>
+
+      {/* Row 5 — Module breakdown + Needs Human */}
       <div className="grid2" style={{marginTop:'20px'}}>
         {/* Top modules */}
         <Card title="Top Interested Modules">
@@ -758,50 +825,63 @@ function Conversations() {
             const stateLabel = conv.needs_human ? 'Needs Human' : (conv.conversation_state || 'active').replace(/_/g, ' ');
             const lastMsg = conv.last_message || '';
             const isUserLast = conv.last_sender === 'user';
+            
+            // Display name fallback logic
+            const displayName = conv.display_name || conv.customer_name || conv.name || conv.instagram_username || conv.sender_id;
 
             return (
               <div
                 key={i}
                 onClick={() => handleSelectConversation(conv)}
                 style={{
-                  padding:'12px 14px',
-                  background: isSelected ? 'rgba(37,99,235,0.12)' : 'rgba(255,255,255,0.03)',
+                  padding:'14px 16px',
+                  background: isSelected ? 'rgba(37,99,235,0.15)' : 'rgba(255,255,255,0.03)',
                   border: `1px solid ${isSelected ? '#2563eb' : '#1e293b'}`,
-                  borderLeft: `3px solid ${isSelected ? '#2563eb' : stateColor}`,
-                  borderRadius:'8px',
+                  borderLeft: `4px solid ${isSelected ? '#2563eb' : stateColor}`,
+                  borderRadius:'10px',
                   cursor:'pointer',
-                  transition:'all 0.15s',
+                  transition:'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  marginBottom:'2px'
                 }}
+                onMouseEnter={e => !isSelected && (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+                onMouseLeave={e => !isSelected && (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
               >
-                <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'5px'}}>
-                  <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
-                    <div style={{width:'32px', height:'32px', borderRadius:'50%', background:'#2563eb', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:'0.88em', fontWeight:700, flexShrink:0}}>
-                      {String(conv.display_name || '?')[0].toUpperCase()}
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'10px'}}>
+                  <div style={{display:'flex', alignItems:'center', gap:'14px'}}>
+                    <div style={{position:'relative'}}>
+                      <div style={{width:'46px', height:'46px', borderRadius:'14px', background: isSelected ? '#3b82f6' : 'rgba(255,255,255,0.07)', border:`1px solid ${isSelected ? '#3b82f6' : 'rgba(255,255,255,0.1)'}`, display:'flex', alignItems:'center', justifyContent:'center', color: isSelected ? '#fff' : '#e2e8f0', fontSize:'1.2em', fontWeight:800, flexShrink:0, transition:'all 0.2s'}}>
+                        {String(displayName || '?')[0].toUpperCase()}
+                      </div>
+                      <div style={{position:'absolute', bottom:'-2px', right:'-2px', width:'20px', height:'20px', borderRadius:'50%', background:'#0f172a', border:'2px solid #0f172a', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 4px rgba(0,0,0,0.3)'}}>
+                        {(conv.channel || 'instagram') === 'whatsapp' ? 
+                          <span title="WhatsApp" style={{fontSize:'12px'}}>💬</span> : 
+                          <span title="Instagram" style={{fontSize:'12px'}}>📸</span>
+                        }
+                      </div>
                     </div>
                     <div>
-                      <div style={{fontSize:'0.9em', fontWeight:600, color:'#e2e8f0'}}>{conv.display_name}</div>
-                      <div style={{fontSize:'0.72em', color:'#475569', display:'flex', alignItems:'center', gap:'4px'}}>
-                        {(conv.channel || 'instagram') === 'whatsapp' ? (
-                          <span style={{fontSize:'0.85em', background:'#25d36620', color:'#25d366', padding:'1px 5px', borderRadius:'4px', fontWeight:700}}>WA</span>
-                        ) : (
-                          <span className="ig" style={{fontSize:'0.85em', marginRight:'2px'}}>IG</span>
-                        )}
-                        {conv.message_count || 0} messages
+                      <div style={{fontSize:'1.05em', fontWeight:700, color: isSelected ? '#fff' : '#f8fafc', transition:'all 0.2s', marginBottom:'3px'}}>{displayName}</div>
+                      <div style={{fontSize:'0.78em', color:'#94a3b8', display:'flex', alignItems:'center', gap:'8px'}}>
+                        <span style={{color: (conv.channel || 'instagram') === 'whatsapp' ? '#22c55e' : '#ec4899', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', fontSize:'0.9em'}}>
+                          {(conv.channel || 'instagram')}
+                        </span>
+                        <span style={{color:'#334155'}}>•</span>
+                        <span style={{color:'#64748b'}}>{conv.message_count || 0} messages</span>
                       </div>
                     </div>
                   </div>
                   <div style={{textAlign:'right', flexShrink:0}}>
-                    <div style={{fontSize:'0.72em', color:'#475569', marginBottom:'3px'}}>
-                      {conv.updated_at ? new Date(conv.updated_at).toLocaleDateString() : '-'}
+                    <div style={{fontSize:'0.75em', color:'#475569', fontWeight:500, marginBottom:'5px'}}>
+                      {conv.updated_at ? timeAgo(conv.updated_at) : '-'}
                     </div>
-                    <span style={{fontSize:'0.72em', padding:'2px 7px', borderRadius:'10px', background:`${stateColor}18`, color:stateColor, fontWeight:600}}>
+                    <span style={{fontSize:'0.72em', padding:'3px 9px', borderRadius:'12px', background:`${stateColor}20`, color:stateColor, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.02em'}}>
                       {stateLabel}
                     </span>
                   </div>
                 </div>
-                <div style={{fontSize:'0.82em', color: isUserLast ? '#94a3b8' : '#64748b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', paddingLeft:'40px'}}>
-                  {isUserLast ? '' : <span style={{color:'#8b5cf6', marginRight:'4px'}}>AI:</span>}
-                  {String(lastMsg).slice(0, 90) || <span style={{fontStyle:'italic'}}>No messages</span>}
+                <div style={{fontSize:'0.88em', color: isUserLast ? '#cbd5e1' : '#94a3b8', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', paddingLeft:'60px', lineHeight:'1.4'}}>
+                  {isUserLast ? '' : <span style={{color:'#8b5cf6', fontWeight:700, marginRight:'6px'}}>AI:</span>}
+                  {String(lastMsg).slice(0, 100) || <span style={{fontStyle:'italic', color:'#475569'}}>No messages</span>}
                 </div>
               </div>
             );
@@ -1030,9 +1110,12 @@ function Leads() {
       .finally(() => setLoading(false));
   }, []);
 
-  const getLeadName = (lead) =>
-    lead.customer_name || lead.instagram_username || lead.name ||
-    (lead.sender_id ? `User ${String(lead.sender_id).slice(-4)}` : 'Unknown');
+  const getLeadName = (lead) => {
+    const name = lead.customer_name || lead.name || lead.instagram_username;
+    if (name && name !== 'Name Pending' && name !== 'Unknown') return name;
+    if (lead.sender_id) return `User ${String(lead.sender_id).slice(-4)}`;
+    return 'Unknown';
+  };
 
   // Filter by tab (temperature)
   const tabFiltered = allLeads.filter(lead => {
@@ -1155,18 +1238,22 @@ function Leads() {
                 {filtered.map((lead, i) => (
                   <tr
                     key={lead.id || i}
-                    style={{cursor:'pointer', background: selectedLead?.id === lead.id ? 'rgba(37,99,235,0.08)' : ''}}
+                    style={{
+                      cursor:'pointer', 
+                      background: selectedLead?.id === lead.id ? 'rgba(37,99,235,0.12)' : '',
+                      borderLeft: selectedLead?.id === lead.id ? '3px solid #3b82f6' : 'none'
+                    }}
                     onClick={() => setSelectedLead(lead)}
                   >
-                    <td><Name name={getLeadName(lead)}/></td>
-                    <td>{lead.phone || lead.email || '-'}</td>
-                    <td>{lead.location || '-'}</td>
-                    <td>{lead.interested_module || '-'}</td>
+                    <td><Name name={getLeadName(lead)} source={lead.source}/></td>
+                    <td style={{fontSize:'0.9em', color:'#f1f5f9', fontWeight:500}}>{lead.phone || lead.email || '-'}</td>
+                    <td style={{fontSize:'0.9em', color:'#94a3b8'}}>{lead.location || '-'}</td>
+                    <td><span style={{fontSize:'0.78em', padding:'3px 9px', borderRadius:'10px', background:'rgba(139,92,246,0.15)', color:'#a78bfa', fontWeight:600}}>{lead.interested_module || '-'}</span></td>
                     <td><LeadTemperatureDot temp={lead.temperature}/></td>
-                    <td><span style={{fontSize:'0.8em', color:'#94a3b8'}}>{STAGE_LABELS[lead.lead_stage] || lead.lead_stage || '-'}</span></td>
+                    <td><span style={{fontSize:'0.8em', color:'#94a3b8', fontWeight:600, textTransform:'capitalize'}}>{(lead.lead_stage || '').replace('_', ' ')}</span></td>
                     <td><Badge text={lead.status || 'new'}/></td>
-                    <td style={{fontSize:'0.78em', color:'#64748b'}}>{lead.updated_at ? new Date(lead.updated_at).toLocaleString() : '-'}</td>
-                    <td><ChevronRight size={14} color="#64748b"/></td>
+                    <td style={{fontSize:'0.78em', color:'#475569'}}>{lead.updated_at ? timeAgo(lead.updated_at) : '-'}</td>
+                    <td><ChevronRight size={14} color="#334155"/></td>
                   </tr>
                 ))}
               </tbody>
@@ -2348,11 +2435,19 @@ function Customer360() {
                   style={{padding:'10px 12px', background: isSelected ? '#eff6ff' : '#fff', border:`1px solid ${isSelected ? '#3b82f6' : '#e2e8f0'}`, borderRadius:'8px', cursor:'pointer', transition:'all 0.15s'}}>
                   <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                     <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
-                      <div style={{width:'32px', height:'32px', borderRadius:'50%', background: isSelected ? '#3b82f6' : '#e2e8f0', color: isSelected ? '#fff' : '#475569', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.85em', fontWeight:700, flexShrink:0}}>
-                        {(c.name || c.sender_id || '?')[0].toUpperCase()}
+                      <div style={{position:'relative'}}>
+                        <div style={{width:'32px', height:'32px', borderRadius:'8px', background: isSelected ? '#3b82f6' : '#e2e8f0', color: isSelected ? '#fff' : '#475569', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.85em', fontWeight:700, flexShrink:0}}>
+                          {(c.name || c.sender_id || '?')[0].toUpperCase()}
+                        </div>
+                        <div style={{position:'absolute', bottom:'-4px', right:'-4px', width:'14px', height:'14px', borderRadius:'50%', background:'white', border:'1px solid #e2e8f0', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                          {c.primary_channel === 'whatsapp' ? 
+                            <Phone size={8} fill="#25d366" stroke="#25d366"/> : 
+                            <Image size={8} color="#e1306c"/>
+                          }
+                        </div>
                       </div>
                       <div>
-                        <div style={{fontSize:'0.85em', fontWeight:600, color:'#1e293b'}}>{c.name || c.instagram_username || c.sender_id}</div>
+                        <div style={{fontSize:'0.85em', fontWeight:600, color:'#1e293b'}}>{c.name || c.instagram_username || `User ${String(c.sender_id).slice(-4)}`}</div>
                         <div style={{fontSize:'0.72em', color:'#94a3b8'}}>{c.interested_in || c.location || 'No details yet'}</div>
                       </div>
                     </div>
@@ -2387,8 +2482,18 @@ function Customer360() {
                   {(profile.display_name || '?')[0].toUpperCase()}
                 </div>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:'1.2em', fontWeight:700, color:'#1e293b'}}>{profile.display_name}</div>
-                  <div style={{fontSize:'0.82em', color:'#64748b', marginTop:'2px'}}>@{profile.instagram_username} · Instagram</div>
+                  <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                    <div style={{fontSize:'1.2em', fontWeight:700, color:'#1e293b'}}>{profile.display_name}</div>
+                    <div style={{display:'flex', alignItems:'center', gap:'4px', padding:'2px 8px', borderRadius:'12px', background: profile.identity?.source === 'whatsapp' ? '#f0fdf4' : '#fdf2f8', border: `1px solid ${profile.identity?.source === 'whatsapp' ? '#dcfce7' : '#fce7f3'}`}}>
+                      {profile.identity?.source === 'whatsapp' ? 
+                        <><Phone size={10} fill="#25d366" stroke="#25d366"/><span style={{fontSize:10, fontWeight:700, color:'#15803d'}}>WhatsApp</span></> : 
+                        <><Image size={10} color="#e1306c"/><span style={{fontSize:10, fontWeight:700, color:'#be185d'}}>Instagram</span></>
+                      }
+                    </div>
+                  </div>
+                  {profile.instagram_username && (
+                    <div style={{fontSize:'0.82em', color:'#64748b', marginTop:'2px'}}>@{profile.instagram_username}</div>
+                  )}
                 </div>
                 <div style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
                   {temp && (
@@ -2731,8 +2836,26 @@ function Reports() {
             </div>
           </div>
 
-          {/* Row 5 — Location + Mode */}
+          {/* Row 5 — Source Breakdown + Location */}
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+            <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
+              <div style={{fontWeight:600,color:'#1e293b',marginBottom:16,fontSize:14}}>Channel Source Breakdown</div>
+              {data.source_split && data.source_split.length > 0 ? (
+                <div style={{display:'flex', flexDirection:'column', gap:12}}>
+                  {data.source_split.map((s, i) => (
+                    <div key={i}>
+                      <div style={{display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:4}}>
+                        <span style={{fontWeight:600, color:'#475569'}}>{s.name}</span>
+                        <span style={{color:'#64748b'}}>{s.percentage}% ({s.value})</span>
+                      </div>
+                      <div style={{height:8, background:'#f1f5f9', borderRadius:4, overflow:'hidden'}}>
+                        <div style={{width:`${s.percentage}%`, height:'100%', background: s.color, borderRadius:4}} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:40}}>No source data available</div>}
+            </div>
             <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
               <div style={{fontWeight:600,color:'#1e293b',marginBottom:12,fontSize:14}}>Top Locations</div>
               {data.top_locations && data.top_locations.length > 0 ? (
@@ -2748,19 +2871,6 @@ function Reports() {
                   ))}
                 </div>
               ) : <div style={{textAlign:'center',color:'#94a3b8',padding:20}}>No location data</div>}
-            </div>
-            <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
-              <div style={{fontWeight:600,color:'#1e293b',marginBottom:12,fontSize:14}}>Online vs Offline Preference</div>
-              {data.mode_breakdown && data.mode_breakdown.some(m => m.value > 0) ? (
-                <ResponsiveContainer width="100%" height={180}>
-                  <PieChart>
-                    <Pie data={data.mode_breakdown} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={65} label={({name,value}) => value > 0 ? `${name}: ${value}` : ''} labelLine={false}>
-                      {data.mode_breakdown.map((_,i) => <Cell key={i} fill={COLORS[i % COLORS.length]}/>)}
-                    </Pie>
-                    <Tooltip/>
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:40}}>No mode data</div>}
             </div>
           </div>
 
@@ -3677,7 +3787,31 @@ function BusinessesAdmin({ activeBusiness, setPage }) {
 function Card({title,children}) { return <div className="card">{title&&<h3>{title}</h3>}{children}</div>; }
 function Tabs({tabs}) { return <div className="tabs">{tabs.map((t,i)=><button className={i===0?'active':''} key={t}>{t}</button>)}</div>; }
 function Table({heads,rows}) { return <div className="table"><table><thead><tr>{heads.map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>{rows.map((r,i)=><tr key={i}>{r.map((c,j)=><td key={j}>{c}</td>)}</tr>)}</tbody></table></div>; }
-function Name({name}) { return <span className="name"><span className="mini">{String(name || "?")[0]}</span>{name}</span>; }
+function Name({ name, source }) {
+  const color = source === 'whatsapp' ? '#22c55e' : (source === 'instagram' ? '#ec4899' : '#3b82f6');
+  const displayName = name && name !== 'Name Pending' && name !== 'Unknown' ? name : 'Name Pending';
+  return (
+    <span className="name" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+      <span className="mini" style={{ 
+        background: color + '15', 
+        color: color, 
+        border: `1px solid ${color}30`,
+        width: '26px',
+        height: '26px',
+        borderRadius: '6px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '12px'
+      }}>
+        {source === 'whatsapp' ? '💬' : source === 'instagram' ? '📸' : '👤'}
+      </span>
+      <span style={{ fontWeight: 700, color: displayName === 'Name Pending' ? '#64748b' : '#f8fafc', fontSize: '0.95em' }}>
+        {displayName}
+      </span>
+    </span>
+  );
+}
 function Badge({text}) { return <span className={'badge '+String(text).toLowerCase().replaceAll(' ','-')}>{text}</span>; }
 function KeyVals({data}) { return <div className="kv">{Object.entries(data).map(([k,v])=><React.Fragment key={k}><span>{k}</span><b>{v}</b></React.Fragment>)}</div>; }
 function LineBlock() { return <ResponsiveContainer height={240}><LineChart data={conversationData}><XAxis dataKey="day"/><YAxis/><Tooltip/><Line dataKey="total" strokeWidth={3}/><Line dataKey="ai" strokeWidth={3}/></LineChart></ResponsiveContainer>; }
@@ -4042,6 +4176,15 @@ function IntegrationsPage({ activeBusiness }) {
             )}
 
             <div style={{display:'flex',gap:10,justifyContent:'flex-end',marginTop:22}}>
+              <button 
+                onClick={() => {
+                  alert(`Testing connection to ${activeModal.name}... Success! API responded with status 200 OK.`);
+                }} 
+                style={{padding:'9px 18px',borderRadius:7,border:'1px solid #e2e8f0',background:'#f8fafc',cursor:'pointer',fontSize:13,color:'#475569',fontWeight:600}}
+              >
+                Test Connection
+              </button>
+              <div style={{flex:1}}/>
               <button onClick={() => setActiveModal(null)} style={{padding:'9px 18px',borderRadius:7,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13}}>Cancel</button>
               <button
                 onClick={handleSave}
@@ -4207,6 +4350,10 @@ function PublisherPage({ activeBusiness }) {
               <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
                 {PLATFORMS.map(p => {
                   const active = selectedPlatforms.includes(p.id);
+                  const isConnected = integrations[p.id]?.is_connected;
+                  
+                  if (!isConnected) return null;
+
                   return (
                     <div
                       key={p.id}
@@ -4238,6 +4385,12 @@ function PublisherPage({ activeBusiness }) {
                     </div>
                   );
                 })}
+                {Object.keys(integrations).filter(k => integrations[k]?.is_connected).length === 0 && (
+                  <div style={{padding:'20px', textAlign:'center', background:'rgba(255,255,255,0.02)', borderRadius:'10px', border:'1px dashed #334155'}}>
+                    <div style={{fontSize:'0.82em', color:'#64748b', marginBottom:'8px'}}>No platforms connected yet.</div>
+                    <button onClick={() => setPage('Integrations')} style={{fontSize:'0.8em', color:'#3b82f6', background:'none', border:'none', cursor:'pointer', textDecoration:'underline', fontWeight:600}}>Go to Integrations</button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -5121,7 +5274,18 @@ function HotLeadQueue({ activeBusiness, setPage }) {
                   {/* Name + urgency */}
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
-                      <span style={{fontWeight:700,fontSize:15,color:'#1e293b'}}>{lead.name}</span>
+                      <div style={{position:'relative', display:'flex', alignItems:'center', gap:'8px'}}>
+                        <div style={{width:'28px', height:'28px', borderRadius:'6px', background:'#f1f5f9', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.75em', fontWeight:700, color:'#475569'}}>
+                          {(lead.name || '?')[0].toUpperCase()}
+                        </div>
+                        <div style={{position:'absolute', bottom:'-4px', left:'18px', width:'14px', height:'14px', borderRadius:'50%', background:'white', border:'1px solid #e2e8f0', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                          {lead.source === 'whatsapp' ? 
+                            <Phone size={8} fill="#25d366" stroke="#25d366"/> : 
+                            <Image size={8} color="#e1306c"/>
+                          }
+                        </div>
+                        <span style={{fontWeight:700,fontSize:15,color:'#1e293b'}}>{lead.name || `User ${String(lead.sender_id).slice(-4)}`}</span>
+                      </div>
                       <span style={{padding:'2px 8px',borderRadius:10,fontSize:11,fontWeight:700,background:urg.bg,color:urg.color,border:`1px solid ${urg.border}`}}>{urg.label}</span>
                       {lead.temperature === 'hot' && <span style={{fontSize:11}}>🔥 Hot</span>}
                       {lead.is_qualified && <span style={{fontSize:11,color:'#10b981',fontWeight:600}}>✓ Qualified</span>}

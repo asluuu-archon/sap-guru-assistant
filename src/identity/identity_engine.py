@@ -22,13 +22,28 @@ def build_basic_identity(
     - Email sender identity
     """
 
+    username = ""
+    display_name = ""
+    avatar_url = ""
+    
+    # Try to extract from common webhook formats
+    if raw_payload:
+        # Instagram/Facebook common fields
+        username = raw_payload.get("username") or raw_payload.get("user_id") or ""
+        display_name = raw_payload.get("name") or raw_payload.get("display_name") or ""
+        
+        # WhatsApp contact info
+        contacts = raw_payload.get("contacts") or []
+        if contacts:
+            display_name = contacts[0].get("profile", {}).get("name") or ""
+            
     return {
         "channel": channel or "instagram",
         "channel_user_id": channel_user_id,
-        "username": "",
-        "display_name": "",
-        "avatar_url": "",
-        "identity_source": "webhook_basic",
+        "username": username,
+        "display_name": display_name,
+        "avatar_url": avatar_url,
+        "identity_source": "webhook_enriched",
         "identity_payload": raw_payload or {},
     }
 

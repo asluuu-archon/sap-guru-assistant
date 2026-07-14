@@ -33,8 +33,8 @@ def build_customer_lookup():
 def enrich_with_customer_profile(row: dict, customer_lookup: dict) -> dict:
     customer = customer_lookup.get(row.get("sender_id"), {})
 
-    row["customer_name"] = customer.get("customer_name", "")
-    row["instagram_username"] = customer.get("instagram_username", "")
+    row["customer_name"] = customer.get("customer_name") or row.get("name") or ""
+    row["instagram_username"] = customer.get("instagram_username") or row.get("instagram_username") or ""
     row["profile_pic"] = customer.get("profile_pic", "")
     row["customer_status"] = customer.get("customer_status", "")
     row["customer_lead_score"] = customer.get("lead_score", 0)

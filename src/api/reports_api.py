@@ -166,7 +166,19 @@ def get_reports(days: int = 30):
         for l in all_leads:
             src = l.get("source") or "unknown"
             source_counts[src] += 1
-        source_breakdown = [{"name": k, "value": v} for k, v in source_counts.items()]
+        
+        source_split = []
+        source_colors = {"instagram": "#e1306c", "whatsapp": "#25d366", "facebook": "#1877f2", "website": "#3b82f6", "unknown": "#94a3b8"}
+        total_leads_val = len(all_leads)
+        
+        for k, v in sorted(source_counts.items(), key=lambda x: x[1], reverse=True):
+            pct = round((v / total_leads_val * 100), 1) if total_leads_val else 0
+            source_split.append({
+                "name": k.capitalize(),
+                "value": v,
+                "percentage": pct,
+                "color": source_colors.get(k.lower(), "#64748b")
+            })
 
         # ── 10. Location breakdown ─────────────────────────────────────────────
         location_counts = defaultdict(int)
@@ -228,7 +240,7 @@ def get_reports(days: int = 30):
             "module_breakdown": module_breakdown,
             "temperature_split": temperature_split,
             "stage_funnel": stage_funnel,
-            "source_breakdown": source_breakdown,
+            "source_split": source_split,
             "top_locations": top_locations,
             "mode_breakdown": mode_breakdown,
             "top_leads": top_leads,

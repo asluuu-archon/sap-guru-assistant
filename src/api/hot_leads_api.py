@@ -107,12 +107,20 @@ async def get_hot_lead_queue(
                     if sid not in conv_map or (c.get("updated_at", "") > conv_map[sid].get("updated_at", "")):
                         conv_map[sid] = c
 
+        # Fetch customer names for these leads to fix "Unknown" names
+        cust_res = supabase.table("customers").select("channel_user_id, name, attributes").in_("channel_user_id", sender_ids).execute()
+        cust_map = {c["channel_user_id"]: c for c in (cust_res.data or [])}
+
         # Score and build queue
         scored = []
         for lead in leads:
             sid = lead.get("sender_id", "")
             conv = conv_map.get(sid, {})
             score = score_lead(lead, conv)
+            
+            # Better name fallback
+            cust = cust_map.get(sid, {})
+            display_name = lead.get("name") or cust.get("name") or cust.get("attributes", {}).get("instagram_username") or "Unknown"
 
             # Only include leads with meaningful score
             if score < 10:
@@ -143,7 +151,7 @@ async def get_hot_lead_queue(
             scored.append({
                 "id": lead.get("id"),
                 "sender_id": sid,
-                "name": lead.get("name") or "Unknown",
+                "name": display_name,
                 "phone": lead.get("phone") or "",
                 "email": lead.get("email") or "",
                 "temperature": lead.get("temperature") or "cold",
@@ -151,11 +159,12 @@ async def get_hot_lead_queue(
                 "is_qualified": lead.get("is_qualified") or False,
                 "conversation_state": conv_state,
                 "last_message": last_message,
-                "last_active": updated_at,
-                "score": score,
-                "urgency": urgency,
-                "notes": lead.get("notes") or "",
-            })
+	                "last_active": updated_at,
+	                "score": score,
+	                "urgency": urgency,
+	                "notes": lead.get("notes") or "",
+	                "source": lead.get("source") or "instagram",
+	            })
 
         # Sort by score descending
         scored.sort(key=lambda x: x["score"], reverse=True)

@@ -67,6 +67,44 @@ def get_or_create_customer(
         .execute()
     )
 
+    # Cross-channel merging: if not found by ID, try by phone/email from recent lead info
+    if not existing.data:
+        lead_res = supabase.table("leads").select("phone, email, name").eq("sender_id", channel_user_id).order("id", desc=True).limit(1).execute()
+        if lead_res.data:
+            phone = lead_res.data[0].get("phone")
+            email = lead_res.data[0].get("email")
+            lead_name = lead_res.data[0].get("name")
+            
+            if phone or email:
+                # 1. Search by phone/email to find if this person exists on another channel
+                q = supabase.table("customers").select("*").eq("organization_id", organization_id)
+                if phone: 
+                    q = q.eq("phone", phone)
+                elif email: 
+                    q = q.eq("email", email)
+                
+                merged = q.limit(1).execute()
+                
+                if merged.data:
+                    # Found existing person, link this new channel ID to their profile
+                    customer = merged.data[0]
+                    
+                    # Update profile with new channel info if not already set
+                    update_payload = {"updated_at": now}
+                    if not customer.get("name") and lead_name:
+                        update_payload["name"] = lead_name
+                    
+                    # Store the new channel ID in attributes if it's different
+                    attributes = customer.get("attributes") or {}
+                    if primary_channel == "instagram":
+                        attributes["instagram_id"] = channel_user_id
+                    elif primary_channel == "whatsapp":
+                        attributes["whatsapp_id"] = channel_user_id
+                    update_payload["attributes"] = attributes
+                    
+                    supabase.table("customers").update(update_payload).eq("id", customer["id"]).execute()
+                    return customer
+
     if existing.data:
         customer = existing.data[0]
 
