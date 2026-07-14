@@ -8,7 +8,7 @@ const API_BASE = "https://sap-guru-assistant.onrender.com";
 
 const nav = [
   ['Overview', LayoutDashboard], ['Conversations', MessagesSquare], ['Leads', Users], ['Hot Lead Queue', Flame], ['Import & Export', Download], ['Pipeline Debugger', Bug],
-  ['AI Playground', Bot], ['Business Brain', Brain], ['Customer 360°', UserRound], ['Reports', BarChart3], ['Automation', Workflow], ['Publisher', Radio], ['Google Reviews', Star], ['Businesses', Building2], ['Integrations', Plug], ['Settings', Settings]
+  ['AI Playground', Bot], ['Business Brain', Brain], ['Appointments', Calendar], ['Customer 360°', UserRound], ['Reports', BarChart3], ['Automation', Workflow], ['Publisher', Radio], ['Google Reviews', Star], ['Businesses', Building2], ['Integrations', Plug], ['Settings', Settings]
 ];
 
 const colors = ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6'];
@@ -486,6 +486,7 @@ function Screen({page, dashboard, activeBusiness, setPage}) {
       {page==='Pipeline Debugger'&&<Debugger/>}
       {page==='AI Playground'&&<Playground/>}
       {page==='Business Brain'&&<BusinessBrain/>}
+      {page==='Appointments'&&<AppointmentsPage/>}
       {page==='Customer 360°'&&<Customer360/>}
       {page==='Reports'&&<Reports dashboard={dashboard}/>}
       {page==='Automation'&&<Automation/>}
@@ -2263,6 +2264,100 @@ const CATEGORY_LABELS = {
 
 const EMPTY_RULE = { rule_name: '', category: 'business_rule', trigger_keywords: '', response_template: '', priority: 10, notes: '' };
 
+function AppointmentsPage() {
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
+
+  const fetchAppointments = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // This is a placeholder. In a real app, we'd fetch appointments for the active customer/business.
+      // For now, we'll fetch all appointments or a dummy list.
+      const response = await fetch(`${API_BASE}/appointments/dummy_customer_id`); // TODO: Replace dummy_customer_id
+      const data = await response.json();
+      if (data.status === "success") {
+        setAppointments(data.appointments);
+      } else {
+        setError(data.message || "Failed to fetch appointments.");
+      }
+    } catch (err) {
+      setError("Network error fetching appointments.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <section>
+      <Title
+        title="Appointments"
+        sub="Manage your scheduled meetings and calls"
+        action={
+          <button onClick={fetchAppointments} disabled={loading} className="ghost">
+            {loading ? 'Refreshing...' : '↻ Refresh'}
+          </button>
+        }
+      />
+
+      {loading && <div style={{padding:
+'40px', textAlign:
+'center', color:
+'#64748b'}}>Loading appointments...</div>}
+      {error && <div style={{padding:
+'40px', textAlign:
+'center', color:
+'#ef4444'}}>Error: {error}</div>}
+
+      {!loading && !error && appointments.length === 0 && (
+        <div style={{padding:
+'40px', textAlign:
+'center', color:
+'#64748b'}}>No appointments found.</div>
+      )}
+
+      {!loading && !error && appointments.length > 0 && (
+        <div className="grid" style={{gridTemplateColumns:
+'1fr', gap:
+'16px'}}>
+          {appointments.map(app => (
+            <div key={app.id} className="card" style={{display:
+'flex', flexDirection:
+'column', gap:
+'10px'}}>
+              <div style={{display:
+'flex', justifyContent:
+'space-between', alignItems:
+'center'}}>
+                <h3 style={{margin:
+'0', fontSize:
+'1.1em'}}>{app.summary}</h3>
+                <span style={{fontSize:
+'0.8em', color:
+'#94a3b8'}}>{new Date(app.start_time).toLocaleString()}</span>
+              </div>
+              <p style={{fontSize:
+'0.9em', color:
+'#e2e8f0'}}>{app.description}</p>
+              {app.location && <div style={{fontSize:
+'0.85em', color:
+'#94a3b8'}}><MapPin size={14}/> {app.location}</div>}
+              {app.google_event_id && <div style={{fontSize:
+'0.85em', color:
+'#94a3b8'}}><ExternalLink size={14}/> <a href={`https://calendar.google.com/event?eid=${app.google_event_id}`} target="_blank" rel="noopener noreferrer">View in Google Calendar</a></div>}
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function BusinessBrain() {
   const [rules, setRules] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -2272,6 +2367,7 @@ function BusinessBrain() {
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [activeCategory, setActiveCategory] = useState('All');
+  const [showTemplates, setShowTemplates] = useState(false);
 
   const loadRules = () => {
     setLoading(true);
@@ -2347,15 +2443,57 @@ function BusinessBrain() {
   const filtered = activeCategory === 'All' ? rules : rules.filter(r => r.category === activeCategory);
   const activeCount = rules.filter(r => r.is_active).length;
 
+  const templates = [
+    { name: 'Course Enquiry', category: 'lead_collection', keywords: 'course, training, batch, program', response: 'Thanks for your interest! We have several programs available. Can you tell me which area interests you most?' },
+    { name: 'Pricing Question', category: 'faq', keywords: 'price, cost, fee, payment', response: 'Our pricing varies based on the program. What specific course are you interested in?' },
+    { name: 'Job Opportunity', category: 'job', keywords: 'job, career, hiring, position', response: 'Great! We are always looking for talented people. Can you share your background and what role interests you?' },
+    { name: 'Appointment Request', category: 'appointment', keywords: 'appointment, meeting, call, schedule', response: 'I would be happy to schedule a call with you. What time works best for you?' },
+    { name: 'Support Request', category: 'business_rule', keywords: 'help, support, issue, problem', response: 'I am here to help! Can you describe what you need assistance with?' },
+  ];
+
+  const applyTemplate = (template) => {
+    setForm({
+      rule_name: template.name,
+      category: template.category,
+      trigger_keywords: template.keywords,
+      response_template: template.response,
+      priority: 10,
+      notes: 'Created from template'
+    });
+    setShowForm(true);
+    setShowTemplates(false);
+  };
+
   return (
     <section>
       <Title
         title="Business Brain"
         sub="Teach your AI how to respond — like briefing a new employee"
         action={
-          <button onClick={openAdd}><Plus size={15}/> Add New Rule</button>
+          <div style={{display:'flex', gap:'8px'}}>
+            <button onClick={() => setShowTemplates(!showTemplates)} className="outline"><Zap size={15}/> Quick Templates</button>
+            <button onClick={openAdd}><Plus size={15}/> Add New Rule</button>
+          </div>
         }
       />
+
+      {/* Quick Templates */}
+      {showTemplates && (
+        <div className="card" style={{marginBottom:'20px', background:'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color:'white', borderRadius:'12px', padding:'20px'}}>
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'16px'}}>
+            <h3 style={{margin:0, fontSize:'1.1em'}}>✨ Quick Start Templates</h3>
+            <button className="outline" onClick={() => setShowTemplates(false)} style={{background:'rgba(255,255,255,0.2)', border:'none', color:'white'}}><X size={14}/></button>
+          </div>
+          <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))', gap:'12px'}}>
+            {templates.map((t, i) => (
+              <div key={i} onClick={() => applyTemplate(t)} style={{background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:'8px', padding:'12px', cursor:'pointer', transition:'all 0.2s'}}>
+                <div style={{fontWeight:600, marginBottom:'4px'}}>{t.name}</div>
+                <div style={{fontSize:'0.85em', opacity:0.9}}>{t.response.substring(0, 50)}...</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid4" style={{marginBottom:'20px'}}>
