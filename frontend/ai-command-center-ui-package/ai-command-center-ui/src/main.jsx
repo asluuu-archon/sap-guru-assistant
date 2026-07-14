@@ -513,6 +513,8 @@ function Overview({ setPage }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(null);
+  const [briefing, setBriefing] = useState(null);
+  const [briefingLoading, setBriefingLoading] = useState(true);
 
   const fetchOverview = () => {
     setLoading(true);
@@ -528,7 +530,23 @@ function Overview({ setPage }) {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchOverview(); }, []);
+  const fetchBriefing = () => {
+    setBriefingLoading(true);
+    fetch(`${API_BASE}/briefing/latest`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success' && d.briefing) {
+          setBriefing(d.briefing);
+        }
+      })
+      .catch(err => console.error('Briefing fetch error:', err))
+      .finally(() => setBriefingLoading(false));
+  };
+
+  useEffect(() => { 
+    fetchOverview();
+    fetchBriefing();
+  }, []);
 
   const s = data?.stat_cards || {};
   const tempBreakdown = data?.temperature_breakdown || [];
@@ -614,6 +632,28 @@ function Overview({ setPage }) {
           <small>have email address</small>
         </div>
       </div>
+
+      {/* Morning Briefing Card */}
+      {!briefingLoading && briefing && (
+        <div style={{background:'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius:'12px', padding:'20px', marginBottom:'20px', color:'white', boxShadow:'0 8px 32px rgba(102, 126, 234, 0.2)'}}
+        >
+          <div style={{display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:'12px'}}>
+            <div>
+              <div style={{fontSize:'0.85em', fontWeight:600, opacity:0.9}}>Today's Briefing</div>
+              <div style={{fontSize:'1.1em', fontWeight:700, marginTop:'4px'}}>Your Morning Summary</div>
+            </div>
+            <div style={{fontSize:'1.8em'}}>☀️</div>
+          </div>
+          <div style={{fontSize:'0.95em', lineHeight:'1.6', opacity:0.95}}>
+            {briefing.summary || 'Your briefing is being prepared...'}
+          </div>
+          {briefing.created_at && (
+            <div style={{fontSize:'0.8em', marginTop:'12px', opacity:0.7}}>
+              Generated at {new Date(briefing.created_at).toLocaleTimeString()}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Urgent Action Banner */}
       {(s.hot_leads > 0 || s.needs_human > 0) && (
