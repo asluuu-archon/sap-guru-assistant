@@ -316,7 +316,7 @@ function Screen({page, dashboard, activeBusiness, setPage}) {
       {page==='Automation'&&<Automation/>}
       {page==='Businesses'&&<BusinessesAdmin activeBusiness={activeBusiness} setPage={setPage}/>}
       {page==='Integrations'&&<IntegrationsPage activeBusiness={activeBusiness}/>}
-      {page==='Publisher'&&<PublisherPage activeBusiness={activeBusiness}/>}
+      {page==='Publisher'&&<PublisherPage activeBusiness={activeBusiness} setPage={setPage}/>}
       {page==='Hot Lead Queue'&&<HotLeadQueue activeBusiness={activeBusiness} setPage={setPage}/>}
       {page==='Import & Export'&&<LeadImportExport activeBusiness={activeBusiness}/>}
       {page==='Google Reviews'&&<GoogleReviewsPage activeBusiness={activeBusiness}/>}
@@ -393,22 +393,30 @@ function Overview({ setPage }) {
         }
       />
 
-      {/* Morning Briefing Card */}
-      {(briefing || briefingLoading) && (
-        <div style={{background:'linear-gradient(135deg,#1e3a5f,#1e293b)',border:'1px solid #2d4a6e',borderRadius:12,padding:'16px 20px',marginBottom:16,display:'flex',gap:14,alignItems:'flex-start'}}>
-          <div style={{width:40,height:40,borderRadius:10,background:'rgba(251,191,36,0.15)',border:'1px solid rgba(251,191,36,0.3)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-            <Sunrise size={20} color="#fbbf24"/>
-          </div>
-          <div style={{flex:1,minWidth:0}}>
-            <div style={{fontSize:12,fontWeight:700,color:'#fbbf24',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:4}}>AI Morning Briefing</div>
-            {briefingLoading ? (
-              <div style={{fontSize:13,color:'#94a3b8'}}>Generating your briefing...</div>
-            ) : (
-              <div style={{fontSize:13,color:'#cbd5e1',lineHeight:1.6,whiteSpace:'pre-wrap'}}>{briefing?.summary || briefing}</div>
+      {/* Morning Briefing Card — always visible */}
+      <div style={{background:'linear-gradient(135deg,#1e3a5f,#1e293b)',border:'1px solid #2d4a6e',borderRadius:12,padding:'16px 20px',marginBottom:16,display:'flex',gap:14,alignItems:'flex-start'}}>
+        <div style={{width:40,height:40,borderRadius:10,background:'rgba(251,191,36,0.15)',border:'1px solid rgba(251,191,36,0.3)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+          <Sunrise size={20} color="#fbbf24"/>
+        </div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}}>
+            <div style={{fontSize:12,fontWeight:700,color:'#fbbf24',textTransform:'uppercase',letterSpacing:'0.05em'}}>AI Morning Briefing</div>
+            {!briefingLoading && (
+              <button onClick={fetchBriefing} style={{fontSize:11,color:'#60a5fa',background:'none',border:'none',cursor:'pointer',fontWeight:600,padding:0}}>↻ Refresh</button>
             )}
           </div>
+          {briefingLoading ? (
+            <div style={{fontSize:13,color:'#94a3b8'}}>Generating your briefing...</div>
+          ) : briefing ? (
+            <div style={{fontSize:13,color:'#cbd5e1',lineHeight:1.6,whiteSpace:'pre-wrap'}}>{briefing?.summary || briefing}</div>
+          ) : (
+            <div style={{display:'flex',alignItems:'center',gap:12}}>
+              <div style={{fontSize:13,color:'#64748b'}}>No briefing generated yet for today.</div>
+              <button onClick={fetchBriefing} style={{fontSize:12,padding:'4px 12px',borderRadius:6,background:'rgba(251,191,36,0.15)',border:'1px solid rgba(251,191,36,0.3)',color:'#fbbf24',cursor:'pointer',fontWeight:600}}>Generate Now</button>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Row 1 — Primary stat cards */}
       <div className="grid4">
@@ -595,7 +603,8 @@ function Overview({ setPage }) {
       {/* Row 5 — Module breakdown + Needs Human */}
       <div className="grid2" style={{marginTop:'20px'}}>
         {/* Top modules */}
-        <Card title="Top Interested Modules">
+        <Card title="Top Interested Products / Services">
+          <div style={{fontSize:'0.75em',color:'#64748b',marginBottom:8}}>What leads are most interested in (by volume)</div>
           {moduleBreakdown.length > 0 ? (
             <div style={{display:'flex', flexDirection:'column', gap:'10px', marginTop:'4px'}}>
               {moduleBreakdown.map((mod, i) => {
@@ -604,8 +613,8 @@ function Overview({ setPage }) {
                 return (
                   <div key={i}>
                     <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.83em', marginBottom:'4px'}}>
-                      <span style={{color:'#e2e8f0'}}>{mod.label}</span>
-                      <span style={{color:'#64748b'}}>{mod.value} leads</span>
+                      <span style={{color:'#e2e8f0',fontWeight:500}}>{mod.label || mod.module || 'Unknown'}</span>
+                      <span style={{color:'#94a3b8'}}>{mod.value} leads</span>
                     </div>
                     <div style={{background:'rgba(255,255,255,0.06)', borderRadius:'4px', height:'6px'}}>
                       <div style={{width:`${pct}%`, height:'6px', borderRadius:'4px', background: colors[i % colors.length]}}/>
@@ -615,7 +624,7 @@ function Overview({ setPage }) {
               })}
             </div>
           ) : (
-            <div style={{padding:'20px', textAlign:'center', color:'#475569', fontSize:'0.85em'}}>No module data yet</div>
+            <div style={{padding:'20px', textAlign:'center', color:'#475569', fontSize:'0.85em'}}>No product/service interest data yet</div>
           )}
         </Card>
 
@@ -855,8 +864,11 @@ function Conversations() {
             const lastMsg = conv.last_message || '';
             const isUserLast = conv.last_sender === 'user';
             
-            // Display name fallback logic
-            const displayName = conv.display_name || conv.customer_name || conv.name || conv.instagram_username || conv.sender_id;
+            // Display name fallback logic — show friendly name, not numeric ID
+            const rawName = conv.display_name || conv.customer_name || conv.name || conv.instagram_username || conv.sender_id;
+            const displayName = rawName && /^\d{10,}$/.test(String(rawName))
+              ? `User ...${String(rawName).slice(-4)}`
+              : rawName;
 
             return (
               <div
@@ -941,6 +953,11 @@ function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh }) 
   const history = fullConv?.history || [];
   const stateColor = conv.needs_human ? '#ef4444' : (CONV_STATE_COLORS[conv.conversation_state] || '#475569');
   const stateLabel = conv.needs_human ? 'Needs Human' : (conv.conversation_state || 'active').replace(/_/g, ' ');
+  const isWhatsApp = (conv.channel || 'instagram') === 'whatsapp';
+  const rawDisplayName = conv.display_name || conv.customer_name || conv.name || conv.instagram_username || conv.sender_id;
+  const panelDisplayName = rawDisplayName && /^\d{10,}$/.test(String(rawDisplayName))
+    ? `User ...${String(rawDisplayName).slice(-4)}`
+    : rawDisplayName;
 
   // Scroll to bottom when history loads
   useEffect(() => {
@@ -980,10 +997,10 @@ function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh }) 
       <div style={{padding:'14px 16px', borderBottom:'1px solid #1e293b', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0}}>
         <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
           <div style={{width:'36px', height:'36px', borderRadius:'50%', background:'#2563eb', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:700}}>
-            {String(conv.display_name || '?')[0].toUpperCase()}
+            {String(panelDisplayName || '?')[0].toUpperCase()}
           </div>
           <div>
-            <div style={{fontWeight:700, color:'#e2e8f0', fontSize:'0.95em'}}>{conv.display_name}</div>
+            <div style={{fontWeight:700, color:'#e2e8f0', fontSize:'0.95em'}}>{panelDisplayName}</div>
             <div style={{fontSize:'0.75em', display:'flex', alignItems:'center', gap:'6px'}}>
               {isWhatsApp ? (
                             <span style={{fontSize:'0.85em', background:'#25d36620', color:'#25d366', padding:'1px 5px', borderRadius:'4px', fontWeight:700}}>WA</span>
@@ -2838,17 +2855,18 @@ function Reports() {
           {/* Row 4 — Module breakdown + Stage funnel */}
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
             <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
-              <div style={{fontWeight:600,color:'#1e293b',marginBottom:16,fontSize:14}}>Top Interested Modules / Products</div>
+              <div style={{fontWeight:600,color:'#1e293b',marginBottom:4,fontSize:14}}>Top Interested Products / Services</div>
+              <div style={{fontSize:11,color:'#94a3b8',marginBottom:12}}>What leads are most interested in (by enquiry volume)</div>
               {data.module_breakdown && data.module_breakdown.length > 0 ? (
                 <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={data.module_breakdown} layout="vertical" margin={{top:0,right:20,bottom:0,left:60}}>
+                  <BarChart data={data.module_breakdown} layout="vertical" margin={{top:0,right:20,bottom:0,left:120}}>
                     <XAxis type="number" tick={{fontSize:10,fill:'#94a3b8'}}/>
-                    <YAxis type="category" dataKey="module" tick={{fontSize:10,fill:'#475569'}} width={60}/>
+                    <YAxis type="category" dataKey="module" tick={{fontSize:10,fill:'#475569'}} width={120}/>
                     <Tooltip contentStyle={{fontSize:12}}/>
                     <Bar dataKey="count" fill="#10b981" radius={[0,4,4,0]}/>
                   </BarChart>
                 </ResponsiveContainer>
-              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:40}}>No module data yet</div>}
+              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:40}}>No product/service interest data yet</div>}
             </div>
             <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
               <div style={{fontWeight:600,color:'#1e293b',marginBottom:16,fontSize:14}}>Lead Stage Funnel</div>
@@ -2920,7 +2938,11 @@ function Reports() {
               <tbody>
                 {(data.top_leads || []).map((lead,i) => (
                   <tr key={i} style={{borderBottom:'1px solid #f8fafc'}}>
-                    <td style={{padding:'10px',fontSize:13,color:'#1e293b',fontWeight:500}}>{lead.name}</td>
+                    <td style={{padding:'10px',fontSize:13,color:'#1e293b',fontWeight:500}}>
+                      {lead.name && /^\d{10,}$/.test(String(lead.name))
+                        ? `User ...${String(lead.name).slice(-4)}`
+                        : (lead.name || '—')}
+                    </td>
                     <td style={{padding:'10px',fontSize:13,color:'#475569'}}>{lead.phone || '—'}</td>
                     <td style={{padding:'10px',fontSize:13,color:'#475569'}}>{lead.module || '—'}</td>
                     <td style={{padding:'10px'}}>
@@ -3835,7 +3857,7 @@ function Name({ name, source }) {
       }}>
         {source === 'whatsapp' ? '💬' : source === 'instagram' ? '📸' : '👤'}
       </span>
-      <span style={{ fontWeight: 700, color: displayName === 'Name Pending' ? '#64748b' : '#f8fafc', fontSize: '0.95em' }}>
+      <span style={{ fontWeight: 700, color: displayName === 'Name Pending' ? '#94a3b8' : '#1e293b', fontSize: '0.95em' }}>
         {displayName}
       </span>
     </span>
@@ -4241,7 +4263,7 @@ const PLATFORMS = [
 
 const CHAR_LIMITS = { instagram: 2200, facebook: 63206, whatsapp: 1024 };
 
-function PublisherPage({ activeBusiness }) {
+function PublisherPage({ activeBusiness, setPage }) {
   const [tab, setTab] = useState('compose');
   const [caption, setCaption] = useState('');
   const [mediaUrl, setMediaUrl] = useState('');
@@ -4256,6 +4278,25 @@ function PublisherPage({ activeBusiness }) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadedPreview, setUploadedPreview] = useState(null);
+  const [integrations, setIntegrations] = useState({});
+
+  // Fetch integration status so platform toggles know what's connected
+  useEffect(() => {
+    fetch(`${API_BASE}/integrations/status`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success' && d.integrations) {
+          setIntegrations(d.integrations);
+        } else {
+          // If endpoint not available, show all platforms as available
+          setIntegrations({ instagram: { is_connected: true }, facebook: { is_connected: true }, whatsapp: { is_connected: true } });
+        }
+      })
+      .catch(() => {
+        // Fallback: show all platforms
+        setIntegrations({ instagram: { is_connected: true }, facebook: { is_connected: true }, whatsapp: { is_connected: true } });
+      });
+  }, []);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
