@@ -1312,7 +1312,7 @@ function LeadDetailPanel({ lead, summary, loadingSummary, onClose, onMarkQualifi
           )}
         </Card>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -1435,6 +1435,7 @@ function HotLeadQueue() {
                     {lead.is_qualified && <span style={{fontSize:'0.72em', padding:'3px 9px', borderRadius:'12px', background:'#f0fdf4', color:'#14532d', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.02em'}}>Qualified</span>}
                   </div>
                 </div>
+              </div>
               );
             })}
         </div>
