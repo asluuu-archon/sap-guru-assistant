@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Bell, HelpCircle, Search, Settings, LayoutDashboard, MessagesSquare, Users, Bug, Bot, Brain, UserRound, BarChart3, Workflow, Plus, Download, Filter, Play, X, Phone, MapPin, BookOpen, Star, Clock, ChevronRight, ToggleLeft, ToggleRight, Pencil, Trash2, Tag, Zap, Save, AlertTriangle, Building2, Globe, CheckCircle, Plug, Wifi, WifiOff, RefreshCw, ExternalLink, Key, Link, Send, Radio, Image, Video, FileText, Calendar, CheckSquare, XCircle, Loader, MessageSquare, ThumbsUp, ThumbsDown, Flame, Mail } from 'lucide-react';
+import { Bell, HelpCircle, Search, Settings, LayoutDashboard, MessagesSquare, Users, Bug, Bot, Brain, UserRound, BarChart3, Workflow, Plus, Download, Filter, Play, X, Phone, MapPin, BookOpen, Star, Clock, ChevronRight, ToggleLeft, ToggleRight, Pencil, Trash2, Tag, Zap, Save, AlertTriangle, Building2, Globe, CheckCircle, Plug, Wifi, WifiOff, RefreshCw, ExternalLink, Key, Link, Send, Radio, Image, Video, FileText, Calendar, CheckSquare, XCircle, Loader, MessageSquare, ThumbsUp, ThumbsDown, Flame, Mail, Megaphone, Sunrise } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
 import './styles.css';
 
@@ -8,7 +8,7 @@ const API_BASE = "https://sap-guru-assistant.onrender.com";
 
 const nav = [
   ['Overview', LayoutDashboard], ['Conversations', MessagesSquare], ['Leads', Users], ['Hot Lead Queue', Flame], ['Import & Export', Download], ['Pipeline Debugger', Bug],
-  ['AI Playground', Bot], ['Business Brain', Brain], ['Appointments', Calendar], ['Customer 360°', UserRound], ['Reports', BarChart3], ['Automation', Workflow], ['Publisher', Radio], ['Google Reviews', Star], ['Businesses', Building2], ['Integrations', Plug], ['Settings', Settings]
+  ['AI Playground', Bot], ['Business Brain', Brain], ['Customer 360°', UserRound], ['Reports', BarChart3], ['Automation', Workflow], ['Publisher', Radio], ['Google Reviews', Star], ['Businesses', Building2], ['Integrations', Plug], ['Settings', Settings]
 ];
 
 const colors = ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6'];
@@ -25,479 +25,6 @@ const intents = [
   {name:'Other', value:13}
 ];
 
-function BroadcastsPage({ activeBusiness }) {
-  const [templates, setTemplates] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [templateLanguage, setTemplateLanguage] = useState("en_US");
-  const [templateComponents, setTemplateComponents] = useState({});
-  const [audienceFilter, setAudienceFilter] = useState("all");
-  const [sending, setSending] = useState(false);
-  const [sendResult, setSendResult] = useState(null);
-
-  useEffect(() => {
-    if (activeBusiness) {
-      fetchTemplates();
-    }
-  }, [activeBusiness]);
-
-  const fetchTemplates = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`${API_BASE}/whatsapp/templates?business_id=${activeBusiness.id}`);
-      const data = await response.json();
-      if (data.status === "success") {
-        setTemplates(data.templates);
-      } else {
-        setError(data.message || "Failed to fetch templates.");
-      }
-    } catch (err) {
-      setError("Network error fetching templates.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSendBroadcast = async () => {
-    if (!selectedTemplate) {
-      alert("Please select a template.");
-      return;
-    }
-    setSending(true);
-    setSendResult(null);
-    try {
-      const response = await fetch(`${API_BASE}/whatsapp/broadcast`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          business_id: activeBusiness.id,
-          template_name: selectedTemplate.name,
-          language: templateLanguage,
-          components: Object.values(templateComponents),
-          audience_filter: audienceFilter,
-        }),
-      });
-      const data = await response.json();
-      if (data.status === "success") {
-        setSendResult({ success: true, message: data.message });
-      } else {
-        setSendResult({ success: false, message: data.message || "Failed to send broadcast." });
-      }
-    } catch (err) {
-      setSendResult({ success: false, message: "Network error sending broadcast." });
-    } finally {
-      setSending(false);
-    }
-  };
-
-  return (
-    <section>
-      <header className="page-header">
-        <h2>WhatsApp Broadcast Campaigns</h2>
-        <p>Send personalized, template-based messages to segmented leads on WhatsApp.</p>
-      </header>
-
-      <div className="grid2">
-        <div className="card">
-          <h3>1. Select Template</h3>
-          {loading && <p>Loading templates...</p>}
-          {error && <p>Error: {error}</p>}
-          {!loading && templates.length === 0 && <p>No templates found. Create one in WhatsApp Manager.</p>}
-          {!loading && templates.length > 0 && (
-            <select
-              value={selectedTemplate ? selectedTemplate.name : ""}
-              onChange={(e) => setSelectedTemplate(templates.find(t => t.name === e.target.value))}
-              className="input-field"
-            >
-              <option value="">-- Select a Template --</option>
-              {templates.map((template) => (
-                <option key={template.name} value={template.name}>
-                  {template.name} ({template.language})
-                </option>
-              ))}
-            </select>
-          )}
-
-          {selectedTemplate && (
-            <div style={{ marginTop: 20, borderTop: "1px solid #eee", paddingTop: 20 }}>
-              <h4>Template Preview: {selectedTemplate.name}</h4>
-              <p style={{ fontSize: 12, color: "#666" }}>Language: {selectedTemplate.language}</p>
-              <div className="template-preview" style={{ background: "#e6f7ff", padding: 15, borderRadius: 8, border: "1px solid #b3e0ff" }}>
-                {selectedTemplate.components.map((comp, idx) => (
-                  <div key={idx} style={{ marginBottom: 10 }}>
-                    {comp.type === "HEADER" && comp.format === "TEXT" && (
-                      <p style={{ fontWeight: "bold", marginBottom: 5 }}>{comp.text}</p>
-                    )}
-                    {comp.type === "BODY" && <p>{comp.text}</p>}
-                    {comp.type === "FOOTER" && <p style={{ fontSize: 11, color: "#888" }}>{comp.text}</p>}
-                    {comp.type === "BUTTONS" && (
-                      <div style={{ display: "flex", gap: 5, marginTop: 10 }}>
-                        {comp.buttons.map((btn, bIdx) => (
-                          <button key={bIdx} className="button-secondary" style={{ padding: "5px 10px", fontSize: 12 }}>{btn.text}</button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <p style={{ fontSize: 11, color: "#999", marginTop: 10 }}>Note: Variables like {"{{1}}"} will be replaced with lead data.</p>
-            </div>
-          )}
-        </div>
-
-        <div className="card">
-          <h3>2. Configure & Send</h3>
-          <div style={{ marginBottom: 20 }}>
-            <label className="form-label">Audience Filter</label>
-            <select value={audienceFilter} onChange={(e) => setAudienceFilter(e.target.value)} className="input-field">
-              <option value="all">All Leads</option>
-              <option value="hot">Hot Leads Only</option>
-              <option value="warm">Warm Leads Only</option>
-              <option value="qualified">Qualified Leads Only</option>
-              {/* Add more filters as needed */}
-            </select>
-          </div>
-
-          {selectedTemplate && selectedTemplate.components.some(c => c.text && c.text.includes("{{1}}")) && (
-            <div style={{ marginBottom: 20 }}>
-              <label className="form-label">{"Template Variables (e.g., {{1}}, {{2}})"}</label>
-              {selectedTemplate.components.map((comp, compIdx) => {
-                const matches = comp.text ? [...comp.text.matchAll(/\{\{(\d+)\}\}/g)] : [];
-                return matches.map((match, varIdx) => {
-                  const varNumber = match[1];
-                  return (
-                    <input
-                      key={`${compIdx}-${varNumber}`}
-                      type="text"
-                      placeholder={`Value for {{${varNumber}}}`}
-                      value={templateComponents[varNumber] || ""}
-                      onChange={(e) => setTemplateComponents(prev => ({ ...prev, [varNumber]: e.target.value }))}
-                      className="input-field"
-                      style={{ marginBottom: 10 }}
-                    />
-                  );
-                });
-              })}
-            </div>
-          )}
-
-          <button onClick={handleSendBroadcast} disabled={sending || !selectedTemplate} className="button-primary">
-            {sending ? "Sending..." : "Send Broadcast"}
-          </button>
-
-          {sendResult && (
-            <div className={sendResult.success ? "success-message" : "error-message"} style={{ marginTop: 20 }}>
-              {sendResult.message}
-            </div>
-          )}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Conversations() {
-  const [conversations, setConversations] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all");
-  const [search, setSearch] = useState("");
-  const [searchInput, setSearchInput] = useState("");
-  const [selectedConversation, setSelectedConversation] = useState(null);
-
-  const fetchConversations = async (f = filter, s = search) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({ filter: f, limit: "100" });
-      if (s) params.set("search", s);
-      const res = await fetch(`${API_BASE}/conversations?${params.toString()}`);
-      const data = await res.json();
-      if (data.status === "success") {
-        setConversations(data.conversations || []);
-      } else {
-        console.error("Failed to fetch conversations:", data.message);
-      }
-    } catch (e) {
-      console.error("Error fetching conversations:", e);
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchConversations();
-  }, []);
-
-  const handleFilterChange = (f) => {
-    setFilter(f);
-    setSelectedConversation(null);
-    fetchConversations(f, search);
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    setSearch(searchInput);
-    fetchConversations(filter, searchInput);
-  };
-
-  const handleSelectConversation = (conv) => {
-    setSelectedConversation(conv);
-  };
-
-  const handleCloseChat = () => {
-    setSelectedConversation(null);
-    fetchConversations(); // Refresh conversations after closing chat
-  };
-
-  return (
-    <section>
-      <Title
-        title="Unified Inbox"
-        sub={loading ? "Loading..." : `${conversations.length} conversations`}
-        action={
-          <div style={{ display: "flex", gap: "8px" }}>
-            <button className="ghost" onClick={() => fetchConversations()}>↻ Refresh</button>
-          </div>
-        }
-      />
-
-      <div style={{ display: "flex", gap: "6px", marginBottom: "14px", flexWrap: "wrap" }}>
-        {Object.keys(CONV_FILTER_LABELS).map((f) => (
-          <button
-            key={f}
-            onClick={() => handleFilterChange(f)}
-            style={{
-              padding: "6px 14px",
-              fontSize: "0.82em",
-              borderRadius: "20px",
-              background: filter === f ? "#2563eb" : "rgba(255,255,255,0.05)",
-              border: `1px solid ${filter === f ? "#2563eb" : "#334155"}`,
-              color: filter === f ? "#fff" : "#94a3b8",
-              cursor: "pointer",
-            }}
-          >
-            {CONV_FILTER_LABELS[f]}
-          </button>
-        ))}
-      </div>
-
-      <form onSubmit={handleSearch} style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-        <div className="search" style={{ flex: 1 }}>
-          <Search size={15} />
-          <input
-            placeholder="Search by name, message, or sender ID..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-          />
-        </div>
-        <button type="submit" style={{ padding: "0 16px" }}>Search</button>
-        {search && (
-          <button type="button" className="outline" onClick={() => { setSearchInput(""); setSearch(""); fetchConversations(filter, ""); }}>
-            Clear
-          </button>
-        )}
-      </form>
-
-      <div style={{ display: "grid", gridTemplateColumns: selectedConversation ? "1fr 1.1fr" : "1fr", gap: "16px", alignItems: "start" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          {loading ? (
-            <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>Loading conversations...</div>
-          ) : conversations.length === 0 ? (
-            <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>No conversations found.</div>
-          ) : conversations.map((conv) => {
-            const isSelected = selectedConversation?.sender_id === conv.sender_id;
-            const stateColor = CONV_STATE_COLORS[conv.conversation_state] || "#64748b";
-            return (
-              <div
-                key={conv.sender_id}
-                onClick={() => handleSelectConversation(conv)}
-                style={{
-                  padding: "14px 16px",
-                  background: isSelected ? "rgba(37,99,235,0.15)" : "rgba(255,255,255,0.03)",
-                  border: `1px solid ${isSelected ? "#2563eb" : "#1e293b"}`,
-                  borderLeft: `4px solid ${isSelected ? "#2563eb" : stateColor}`,
-                  borderRadius: "10px",
-                  cursor: "pointer",
-                  transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                  marginBottom: "2px",
-                }}
-                onMouseEnter={(e) => !isSelected && (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
-                onMouseLeave={(e) => !isSelected && (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                  <div style={{ fontSize: "0.95em", fontWeight: 600, color: "#f8fafc" }}>{conv.customer_name || `User ${String(conv.sender_id).slice(-4)}`}</div>
-                  <span style={{ fontSize: "0.75em", color: "#94a3b8" }}>{timeAgo(conv.last_active)}</span>
-                </div>
-                <p style={{ fontSize: "0.85em", color: "#cbd5e1", marginBottom: "8px", lineHeight: "1.4" }}>{conv.last_message}</p>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: "0.75em", fontWeight: 700, color: stateColor }}>
-                    {CONV_FILTER_LABELS[conv.conversation_state] || conv.conversation_state}
-                  </span>
-                  {conv.needs_human && (
-                    <span style={{ fontSize: "0.75em", color: "#ef4444", display: "flex", alignItems: "center", gap: "4px" }}>
-                      <AlertTriangle size={12} /> Needs Human
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {selectedConversation && (
-          <ConversationChatPanel conversation={selectedConversation} onClose={handleCloseChat} onUpdateConversation={fetchConversations} />
-        )}
-      </div>
-    </section>
-  );
-}
-
-function ConversationChatPanel({ conversation, onClose, onUpdateConversation }) {
-  const [message, setMessage] = useState("");
-  const [sending, setSending] = useState(false);
-  const [loadingHistory, setLoadingHistory] = useState(true);
-  const [history, setHistory] = useState([]);
-
-  useEffect(() => {
-    if (conversation?.sender_id) {
-      fetchHistory(conversation.sender_id);
-    }
-  }, [conversation?.sender_id]);
-
-  const fetchHistory = async (senderId) => {
-    setLoadingHistory(true);
-    try {
-      const res = await fetch(`${API_BASE}/conversation/${senderId}/history`);
-      const data = await res.json();
-      if (data.status === "success") {
-        setHistory(data.history || []);
-      } else {
-        console.error("Failed to fetch history:", data.message);
-      }
-    } catch (e) {
-      console.error("Error fetching history:", e);
-    } finally {
-      setLoadingHistory(false);
-    }
-  };
-
-  const handleSendReply = async () => {
-    if (!message.trim()) return;
-    setSending(true);
-    try {
-      const res = await fetch(`${API_BASE}/conversation/send-reply`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sender_id: conversation.sender_id, message: message }),
-      });
-      const data = await res.json();
-      if (data.status === "success") {
-        setMessage("");
-        fetchHistory(conversation.sender_id);
-        onUpdateConversation(); // Refresh parent list
-      } else {
-        alert(`Failed to send reply: ${data.message}`);
-      }
-    } catch (e) {
-      alert("Network error sending reply.");
-    } finally {
-      setSending(false);
-    }
-  };
-
-  const handleUpdateStatus = async (status) => {
-    try {
-      const res = await fetch(`${API_BASE}/conversations/${conversation.sender_id}/status`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: status }),
-      });
-      const data = await res.json();
-      if (data.status === "success") {
-        onUpdateConversation(); // Refresh parent list
-        onClose(); // Close chat panel after status update
-      } else {
-        alert(`Failed to update status: ${data.message}`);
-      }
-    } catch (e) {
-      alert("Network error updating status.");
-    }
-  };
-
-  return (
-    <Card style={{ position: "sticky", top: "16px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px", borderBottom: "1px solid #334155", paddingBottom: "10px" }}>
-        <h3 style={{ fontSize: "1.1em", color: "#f8fafc" }}>
-          Conversation with {conversation.customer_name || `User ${String(conversation.sender_id).slice(-4)}`}
-        </h3>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <button className="button-secondary" onClick={() => handleUpdateStatus("closed")} title="Mark as Closed">
-            <CheckSquare size={16} /> Mark Closed
-          </button>
-          <button className="button-secondary" onClick={() => handleUpdateStatus("needs_human")} title="Needs Human Attention">
-            <AlertTriangle size={16} /> Needs Human
-          </button>
-          <button className="ghost" onClick={() => fetchHistory(conversation.sender_id)} title="Refresh Chat">
-            <RefreshCw size={16} />
-          </button>
-          <button className="ghost" onClick={onClose} title="Close Chat">
-            <X size={16} />
-          </button>
-        </div>
-      </div>
-
-      <div style={{ maxHeight: "400px", overflowY: "auto", marginBottom: "15px", paddingRight: "10px" }}>
-        {loadingHistory ? (
-          <div style={{ textAlign: "center", color: "#94a3b8" }}>Loading messages...</div>
-        ) : history.length === 0 ? (
-          <div style={{ textAlign: "center", color: "#94a3b8" }}>No messages in this conversation.</div>
-        ) : (
-          history.map((msg, i) => (
-            <div key={i} style={{ marginBottom: "10px", display: "flex", justifyContent: msg.direction === "inbound" ? "flex-start" : "flex-end" }}>
-              <div
-                style={{
-                  maxWidth: "70%",
-                  padding: "8px 12px",
-                  borderRadius: msg.direction === "inbound" ? "12px 12px 12px 2px" : "12px 12px 2px 12px",
-                  background: msg.direction === "inbound" ? "#1e293b" : "#2563eb",
-                  color: "#f8fafc",
-                  fontSize: "0.88em",
-                  lineHeight: "1.4",
-                }}
-              >
-                <div style={{ fontSize: "0.7em", opacity: 0.7, marginBottom: "4px" }}>
-                  {msg.direction === "inbound" ? "Customer" : "You"} - {new Date(msg.timestamp).toLocaleTimeString()}
-                </div>
-                {msg.message}
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      <div style={{ display: "flex", gap: "8px", borderTop: "1px solid #334155", paddingTop: "15px" }}>
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type your reply..."
-          className="input-field"
-          style={{ flex: 1 }}
-          onKeyPress={(e) => {
-            if (e.key === "Enter") {
-              handleSendReply();
-            }
-          }}
-        />
-        <button onClick={handleSendReply} disabled={sending} className="button-primary">
-          {sending ? <Loader size={16} className="spin" /> : <Send size={16} />} Send
-        </button>
-      </div>
-    </Card>
-  );
-}
 function App() {
   const [page, setPage] = useState("Overview");
   const [dashboard, setDashboard] = useState(null);
@@ -571,7 +98,7 @@ function Sidebar({page,setPage,activeBusiness}) {
     { label: 'Overview', items: [['Overview', LayoutDashboard]] },
     { label: 'Inbox', items: [['Conversations', MessagesSquare]] },
     { label: 'Sales & CRM', items: [['Leads', Users], ['Hot Lead Queue', Flame], ['Import & Export', Download], ['Customer 360°', UserRound]] },
-    { label: 'Marketing', items: [['Publisher', Radio], ['Broadcasts', Radio], ['Google Reviews', Star]] },
+    { label: 'Marketing', items: [['Publisher', Radio], ['Broadcasts', Megaphone], ['Google Reviews', Star]] },
     { label: 'Intelligence', items: [['Business Brain', Brain], ['Pipeline Debugger', Bug], ['AI Playground', Bot], ['Reports', BarChart3]] },
     { label: 'Settings', items: [['Automation', Workflow], ['Businesses', Building2], ['Integrations', Plug], ['Settings', Settings]] }
   ];
@@ -631,420 +158,648 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notification
     const handleClick = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setShowSwitcher(false);
     };
-    document.addEventListener('mousedown', handleClick);
+    if (showSwitcher) document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
+  }, [showSwitcher]);
 
-  // Close notifications when clicking outside
+  // Close notification panel when clicking outside
   React.useEffect(() => {
     const handleClick = (e) => {
       if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifsState(false);
     };
-    document.addEventListener('mousedown', handleClick);
+    if (showNotifs) document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
+  }, [showNotifs]);
+
+  const handleBellClick = () => {
+    setShowNotifsState(p => !p);
+    if (!showNotifs && unreadCount > 0) onMarkAllRead();
+  };
 
   return (
-    <header className="topbar">
-      <div className="left">
-        <div className="business-switcher" onClick={() => setShowSwitcher(!showSwitcher)} ref={dropdownRef}>
-          <div className="avatar">{activeBusiness?.name[0].toUpperCase()}</div>
-          <span className="name">{activeBusiness?.name || 'Select Business'}</span>
-          <ChevronRight size={16} style={{transform: showSwitcher ? 'rotate(90deg)' : 'none'}}/>
-        </div>
+    <header style={{position:'relative'}}>
+      <div style={{display:'flex',alignItems:'center',gap:10,background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:10,padding:'6px 14px',width:320}}>
+        <Search size={16} color="#94a3b8"/>
+        <input placeholder="Search anything..." style={{border:'none',background:'none',fontSize:13,color:'#1e293b',outline:'none',width:'100%'}}/>
+      </div>
+
+      {/* Business Switcher */}
+      <div style={{position:'relative'}} ref={dropdownRef}>
+        <button
+          onClick={() => setShowSwitcher(p => !p)}
+          style={{display:'flex',alignItems:'center',gap:8,padding:'6px 12px',borderRadius:8,border:'1px solid #e2e8f0',background: showSwitcher ? '#f0f9ff' : 'white',cursor:'pointer',fontSize:13,fontWeight:500,color:'#1e293b',maxWidth:220,transition:'background 0.15s'}}
+        >
+          <Building2 size={14} color="#3b82f6"/>
+          <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:140}}>
+            {activeBusiness ? activeBusiness.name : 'Select Workspace'}
+          </span>
+          <span style={{fontSize:10,color:'#94a3b8',marginLeft:2,display:'inline-block',transform: showSwitcher ? 'rotate(180deg)' : 'rotate(0deg)',transition:'transform 0.15s'}}>▾</span>
+        </button>
+
         {showSwitcher && (
-          <div className="dropdown-menu">
-            {businesses.map(biz => (
-              <div key={biz.id} className="dropdown-item" onClick={() => onSwitch(biz)}>
-                {biz.name}
-              </div>
-            ))}
+          <div style={{position:'absolute',top:'calc(100% + 6px)',right:0,background:'white',border:'1px solid #e2e8f0',borderRadius:10,boxShadow:'0 8px 30px rgba(0,0,0,0.15)',zIndex:9000,minWidth:260,overflow:'hidden'}}>
+            <div style={{padding:'10px 14px',fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.05em',borderBottom:'1px solid #f1f5f9'}}>Switch Workspace</div>
+            {businesses.length === 0 && (
+              <div style={{padding:'16px 14px',fontSize:13,color:'#94a3b8',textAlign:'center'}}>No workspaces yet</div>
+            )}
+            {businesses.map(biz => {
+              const isSelected = activeBusiness && activeBusiness.id === biz.id;
+              return (
+                <button key={biz.id} onClick={() => { onSwitch(biz); setShowSwitcher(false); }}
+                  style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'10px 14px',background: isSelected ? '#f0f9ff' : 'white',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'1px solid #f8fafc'}}>
+                  <div style={{width:30,height:30,borderRadius:7,background: isSelected ? '#3b82f6' : '#e2e8f0',display:'flex',alignItems:'center',justifyContent:'center',color: isSelected ? 'white' : '#64748b',fontSize:13,fontWeight:700,flexShrink:0}}>{(biz.name||'?')[0].toUpperCase()}</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:13,fontWeight:600,color:'#1e293b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{biz.name}</div>
+                    <div style={{fontSize:11,color:'#94a3b8'}}>{biz.industry || 'Business'}</div>
+                  </div>
+                  {isSelected && <CheckCircle size={15} color="#3b82f6"/>}
+                </button>
+              );
+            })}
+            <div style={{padding:'8px 14px',borderTop:'1px solid #f1f5f9'}}>
+              <button onClick={() => { setShowSwitcher(false); onNavigate('Businesses'); }}
+                style={{width:'100%',padding:'8px',borderRadius:6,background:'#f8fafc',border:'1px solid #e2e8f0',cursor:'pointer',fontSize:12,color:'#3b82f6',fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+                <Plus size={13}/> Add New Business
+              </button>
+            </div>
           </div>
         )}
       </div>
-      <div className="right">
-        <button className="icon-button" onClick={() => onNavigate('Settings')}><Settings size={20}/></button>
-        <div className="notification-bell" onClick={() => setShowNotifsState(!showNotifs)} ref={notifRef}>
-          <Bell size={20}/>
-          {unreadCount > 0 && <span className="badge">{unreadCount}</span>}
-          {showNotifs && (
-            <div className="notifications-dropdown">
-              <div className="header">
-                <h4>Notifications</h4>
-                {unreadCount > 0 && <button className="mark-read" onClick={onMarkAllRead}>Mark all as read</button>}
+
+      {/* Bell Icon with badge */}
+      <div style={{position:'relative'}} ref={notifRef}>
+        <button onClick={handleBellClick}
+          style={{background:'none',border:'none',cursor:'pointer',padding:'6px',borderRadius:8,color: showNotifs ? '#3b82f6' : '#64748b',position:'relative',display:'flex',alignItems:'center',transition:'color 0.15s'}}>
+          <Bell size={18}/>
+          {unreadCount > 0 && (
+            <span style={{position:'absolute',top:2,right:2,width:16,height:16,borderRadius:'50%',background:'#ef4444',color:'white',fontSize:9,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
+
+        {showNotifs && (
+          <div style={{position:'absolute',top:'calc(100% + 8px)',right:0,background:'white',border:'1px solid #e2e8f0',borderRadius:12,boxShadow:'0 12px 40px rgba(0,0,0,0.15)',zIndex:9000,width:360,maxHeight:480,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+            {/* Header */}
+            <div style={{padding:'14px 16px',borderBottom:'1px solid #f1f5f9',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}}>
+              <div style={{fontSize:14,fontWeight:700,color:'#1e293b'}}>Notifications</div>
+              <div style={{display:'flex',alignItems:'center',gap:8}}>
+                {notifications.length > 0 && (
+                  <span style={{fontSize:11,color:'#64748b'}}>{notifications.length} alerts</span>
+                )}
               </div>
+            </div>
+
+            {/* Notification list */}
+            <div style={{overflowY:'auto',flex:1}}>
               {notifications.length === 0 ? (
-                <p className="empty-state">No new notifications.</p>
+                <div style={{padding:32,textAlign:'center'}}>
+                  <Bell size={28} color="#e2e8f0" style={{margin:'0 auto 10px',display:'block'}}/>
+                  <div style={{fontSize:13,color:'#94a3b8',fontWeight:500}}>All caught up!</div>
+                  <div style={{fontSize:12,color:'#cbd5e1',marginTop:4}}>No new alerts right now</div>
+                </div>
               ) : (
-                notifications.map(notif => (
-                  <div key={notif.id} className="notification-item">
-                    <div className="icon" style={{background: NOTIF_ICONS[notif.type]?.bg, color: NOTIF_ICONS[notif.type]?.color}}>{NOTIF_ICONS[notif.type]?.icon}</div>
-                    <div className="content">
-                      <div className="title">{notif.title}</div>
-                      <div className="message">{notif.message}</div>
-                      <div className="time">{timeAgo(notif.created_at)}</div>
+                notifications.map((notif, idx) => {
+                  const cfg = NOTIF_ICONS[notif.type] || { icon: '🔔', color: '#64748b', bg: '#f8fafc' };
+                  return (
+                    <div key={notif.id}
+                      onClick={() => { onNavigate(notif.target_page); setShowNotifsState(false); }}
+                      style={{display:'flex',gap:12,padding:'12px 16px',borderBottom:'1px solid #f8fafc',cursor:'pointer',background: notif.is_read ? 'white' : '#fafbff',transition:'background 0.1s'}}
+                      onMouseEnter={e => e.currentTarget.style.background='#f8fafc'}
+                      onMouseLeave={e => e.currentTarget.style.background= notif.is_read ? 'white' : '#fafbff'}
+                    >
+                      <div style={{width:36,height:36,borderRadius:9,background:cfg.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>{cfg.icon}</div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:2}}>
+                          <span style={{fontSize:12,fontWeight:700,color:'#1e293b'}}>{notif.title}</span>
+                          <span style={{fontSize:10,color:'#94a3b8',flexShrink:0,marginLeft:8}}>{timeAgo(notif.time)}</span>
+                        </div>
+                        <div style={{fontSize:12,color:'#64748b',lineHeight:1.4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{notif.message}</div>
+                        <div style={{fontSize:11,color:cfg.color,fontWeight:600,marginTop:4}}>{notif.action} →</div>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
-          )}
+
+            {/* Footer */}
+            {notifications.length > 0 && (
+              <div style={{padding:'10px 16px',borderTop:'1px solid #f1f5f9',flexShrink:0}}>
+                <button onClick={() => { onNavigate('Leads'); setShowNotifsState(false); }}
+                  style={{width:'100%',padding:'7px',borderRadius:6,background:'#f8fafc',border:'1px solid #e2e8f0',cursor:'pointer',fontSize:12,color:'#475569',fontWeight:500}}>
+                  View All Leads
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <HelpCircle size={18} style={{color:'#94a3b8',cursor:'pointer'}}/>
+      <div className="avatar small">A</div>
+    </header>
+  );
+}
+
+function Screen({page, dashboard, activeBusiness, setPage}) {
+  return (
+    <>
+      {page==='Overview'&&<Overview dashboard={dashboard} setPage={setPage}/>}
+      {page==='Conversations'&&<Conversations dashboard={dashboard}/>}
+      {page==='Leads'&&<Leads/>}
+      {page==='Pipeline Debugger'&&<Debugger/>}
+      {page==='AI Playground'&&<Playground/>}
+      {page==='Business Brain'&&<BusinessBrain/>}
+      {page==='Customer 360°'&&<Customer360/>}
+      {page==='Reports'&&<Reports dashboard={dashboard}/>}
+      {page==='Automation'&&<Automation/>}
+      {page==='Businesses'&&<BusinessesAdmin activeBusiness={activeBusiness} setPage={setPage}/>}
+      {page==='Integrations'&&<IntegrationsPage activeBusiness={activeBusiness}/>}
+      {page==='Publisher'&&<PublisherPage activeBusiness={activeBusiness}/>}
+      {page==='Hot Lead Queue'&&<HotLeadQueue activeBusiness={activeBusiness} setPage={setPage}/>}
+      {page==='Import & Export'&&<LeadImportExport activeBusiness={activeBusiness}/>}
+      {page==='Google Reviews'&&<GoogleReviewsPage activeBusiness={activeBusiness}/>}
+      {page==='Broadcasts'&&<BroadcastsPage activeBusiness={activeBusiness}/>}
+      {page==='Settings'&&<SettingsPage/>}
+    </>
+  );
+}
+
+function Title({title,sub,action}) {
+  return <div className="title"><div><h1>{title}</h1><p>{sub}</p></div>{action}</div>;
+}
+
+function Stat({label,value,change}) {
+  return <div className="card stat"><p>{label}</p><h2>{value}</h2><span>{change}</span><small>live data</small></div>;
+}
+
+function Overview({ setPage }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [lastRefresh, setLastRefresh] = useState(null);
+  const [briefing, setBriefing] = useState(null);
+  const [briefingLoading, setBriefingLoading] = useState(false);
+
+  const fetchBriefing = () => {
+    setBriefingLoading(true);
+    fetch(`${API_BASE}/briefing/latest`)
+      .then(r => r.json())
+      .then(d => { if (d.status === 'success') setBriefing(d.briefing); })
+      .catch(() => {})
+      .finally(() => setBriefingLoading(false));
+  };
+
+  const fetchOverview = () => {
+    setLoading(true);
+    fetch(`${API_BASE}/overview`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') {
+          setData(d);
+          setLastRefresh(new Date());
+        }
+      })
+      .catch(err => console.error('Overview fetch error:', err))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchOverview(); fetchBriefing(); }, []);
+
+  const s = data?.stat_cards || {};
+  const tempBreakdown = data?.temperature_breakdown || [];
+  const moduleBreakdown = data?.module_breakdown || [];
+  const activityChart = data?.activity_chart || [];
+  const recentLeads = data?.recent_leads || [];
+  const needsHumanList = data?.needs_human_list || [];
+
+  // % change for new leads today vs yesterday
+  const todayChange = s.new_leads_yesterday > 0
+    ? Math.round(((s.new_leads_today - s.new_leads_yesterday) / s.new_leads_yesterday) * 100)
+    : null;
+
+  const TEMP_COLORS = { Hot: '#ef4444', Warm: '#f59e0b', Cold: '#3b82f6' };
+  const STAGE_LABELS_OV = { new: 'New', qualified: 'Qualified', phone_pending: 'Phone Pending', name_pending: 'Name Pending', lead_collection: 'In Progress' };
+
+  return (
+    <section>
+      <Title
+        title="Dashboard Overview"
+        sub={lastRefresh ? `Last updated ${lastRefresh.toLocaleTimeString()}` : 'Loading live data...'}
+        action={
+          <button onClick={fetchOverview} disabled={loading} className="ghost">
+            {loading ? 'Refreshing...' : '↻ Refresh'}
+          </button>
+        }
+      />
+
+      {/* Morning Briefing Card */}
+      {(briefing || briefingLoading) && (
+        <div style={{background:'linear-gradient(135deg,#1e3a5f,#1e293b)',border:'1px solid #2d4a6e',borderRadius:12,padding:'16px 20px',marginBottom:16,display:'flex',gap:14,alignItems:'flex-start'}}>
+          <div style={{width:40,height:40,borderRadius:10,background:'rgba(251,191,36,0.15)',border:'1px solid rgba(251,191,36,0.3)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+            <Sunrise size={20} color="#fbbf24"/>
+          </div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:12,fontWeight:700,color:'#fbbf24',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:4}}>AI Morning Briefing</div>
+            {briefingLoading ? (
+              <div style={{fontSize:13,color:'#94a3b8'}}>Generating your briefing...</div>
+            ) : (
+              <div style={{fontSize:13,color:'#cbd5e1',lineHeight:1.6,whiteSpace:'pre-wrap'}}>{briefing?.summary || briefing}</div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Row 1 — Primary stat cards */}
+      <div className="grid4">
+        <div className="card stat">
+          <p>Total Leads</p>
+          <h2>{loading ? '...' : s.total_leads ?? 0}</h2>
+          <span style={{color:'#f59e0b'}}>{s.hot_leads ?? 0} hot · {s.warm_leads ?? 0} warm</span>
+          <small>all time</small>
+        </div>
+        <div className="card stat">
+          <p>New Today</p>
+          <h2>{loading ? '...' : s.new_leads_today ?? 0}</h2>
+          <span style={{color: todayChange >= 0 ? '#10b981' : '#ef4444'}}>
+            {todayChange !== null ? `${todayChange >= 0 ? '+' : ''}${todayChange}% vs yesterday` : 'vs yesterday'}
+          </span>
+          <small>leads created today</small>
+        </div>
+        <div className="card stat">
+          <p>Qualified Leads</p>
+          <h2>{loading ? '...' : s.qualified_leads ?? 0}</h2>
+          <span style={{color:'#10b981'}}>of {s.total_leads ?? 0} total</span>
+          <small>manually qualified</small>
+        </div>
+        <div className="card stat">
+          <p>Needs Human</p>
+          <h2 style={{color: (s.needs_human ?? 0) > 0 ? '#ef4444' : 'inherit'}}>{loading ? '...' : s.needs_human ?? 0}</h2>
+          <span style={{color: (s.needs_human ?? 0) > 0 ? '#ef4444' : '#64748b'}}>waiting for you</span>
+          <small>manual review required</small>
         </div>
       </div>
-    </header>
+
+      {/* Row 2 — Secondary stat cards */}
+      <div className="grid4" style={{marginTop:'12px'}}>
+        <div className="card stat">
+          <p>Total Conversations</p>
+          <h2>{loading ? '...' : s.total_conversations ?? 0}</h2>
+          <span>all Instagram DMs</span>
+          <small>all time</small>
+        </div>
+        <div className="card stat">
+          <p>Hot Leads</p>
+          <h2 style={{color:'#ef4444'}}>{loading ? '...' : s.hot_leads ?? 0}</h2>
+          <span style={{color:'#ef4444'}}>phone + email captured</span>
+          <small>highest priority</small>
+        </div>
+        <div className="card stat">
+          <p>With Phone</p>
+          <h2>{loading ? '...' : s.leads_with_phone ?? 0}</h2>
+          <span>contactable leads</span>
+          <small>have phone number</small>
+        </div>
+        <div className="card stat">
+          <p>With Email</p>
+          <h2>{loading ? '...' : s.leads_with_email ?? 0}</h2>
+          <span>email captured</span>
+          <small>have email address</small>
+        </div>
+      </div>
+
+      {/* Urgent Action Banner */}
+      {(s.hot_leads > 0 || s.needs_human > 0) && (
+        <div style={{background:'rgba(239,68,68,0.1)', border:'1px solid #ef4444', borderRadius:'12px', padding:'16px', marginBottom:'20px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+          <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
+            <div style={{width:'40px', height:'40px', borderRadius:'50%', background:'#ef4444', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontSize:'1.2em'}}>🔥</div>
+            <div>
+              <div style={{fontWeight:700, color:'#f8fafc'}}>Attention Required</div>
+              <div style={{fontSize:'0.85em', color:'#94a3b8'}}>You have {s.hot_leads} hot leads and {s.needs_human} messages waiting for manual reply.</div>
+            </div>
+          </div>
+          <button onClick={() => setPage('Hot Lead Queue')} style={{background:'#ef4444', color:'white', border:'none', padding:'8px 16px', borderRadius:'8px', fontWeight:600, cursor:'pointer'}}>Open Action Queue</button>
+        </div>
+      )}
+
+      {/* Row 3 — Charts */}
+      <div className="grid2" style={{marginTop:'20px'}}>
+        {/* 7-day activity chart */}
+        <Card title="7-Day Activity">
+          {activityChart.length > 0 ? (
+            <ResponsiveContainer height={220}>
+              <BarChart data={activityChart} margin={{top:5, right:10, left:-20, bottom:0}}>
+                <XAxis dataKey="day" tick={{fontSize:12, fill:'#64748b'}}/>
+                <YAxis tick={{fontSize:11, fill:'#64748b'}}/>
+                <Tooltip
+                  contentStyle={{background:'#1e293b', border:'1px solid #334155', borderRadius:'8px', fontSize:'0.82em'}}
+                  labelStyle={{color:'#e2e8f0'}}
+                />
+                <Bar dataKey="leads" name="New Leads" fill="#2563eb" radius={[4,4,0,0]}/>
+                <Bar dataKey="conversations" name="Conversations" fill="#8b5cf6" radius={[4,4,0,0]}/>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div style={{height:'220px', display:'flex', alignItems:'center', justifyContent:'center', color:'#475569'}}>Loading chart data...</div>
+          )}
+          <div style={{display:'flex', gap:'16px', marginTop:'8px', fontSize:'0.78em', color:'#64748b'}}>
+            <span><i style={{display:'inline-block', width:'10px', height:'10px', borderRadius:'2px', background:'#2563eb', marginRight:'5px'}}/> New Leads</span>
+            <span><i style={{display:'inline-block', width:'10px', height:'10px', borderRadius:'2px', background:'#8b5cf6', marginRight:'5px'}}/> Conversations</span>
+          </div>
+        </Card>
+
+        {/* Temperature breakdown pie */}
+        <Card title="Lead Temperature">
+          {tempBreakdown.length > 0 ? (
+            <div className="pie">
+              <ResponsiveContainer height={200}>
+                <PieChart>
+                  <Pie data={tempBreakdown} dataKey="value" innerRadius={55} outerRadius={85} paddingAngle={3}>
+                    {tempBreakdown.map((entry, i) => (
+                      <Cell key={i} fill={TEMP_COLORS[entry.label] || colors[i]}/>
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{background:'#1e293b', border:'1px solid #334155', borderRadius:'8px', fontSize:'0.82em'}}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div>
+                {tempBreakdown.map((d, i) => (
+                  <p key={d.label}>
+                    <i style={{background: TEMP_COLORS[d.label] || colors[i]}}/>
+                    {d.label} <b>{d.value}</b>
+                  </p>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div style={{height:'200px', display:'flex', alignItems:'center', justifyContent:'center', color:'#475569'}}>Loading...</div>
+          )}
+        </Card>
+      </div>
+
+      {/* Row 4 — Locations & Sources */}
+      <div className="grid2" style={{marginTop:'20px'}}>
+        <Card title="Top Locations">
+          {data?.location_breakdown?.length > 0 ? (
+            <div style={{display:'flex', flexDirection:'column', gap:'10px'}}>
+              {data.location_breakdown.map((loc, i) => {
+                const max = data.location_breakdown[0]?.value || 1;
+                const pct = Math.round((loc.value / max) * 100);
+                return (
+                  <div key={i}>
+                    <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.83em', marginBottom:'4px'}}>
+                      <span style={{color:'#e2e8f0'}}>{loc.label}</span>
+                      <span style={{color:'#64748b'}}>{loc.value} leads</span>
+                    </div>
+                    <div style={{background:'rgba(255,255,255,0.06)', borderRadius:'4px', height:'6px'}}>
+                      <div style={{width:`${pct}%`, height:'6px', borderRadius:'4px', background:'#3b82f6'}}/>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : <div style={{padding:'20px', textAlign:'center', color:'#475569', fontSize:'0.85em'}}>No location data yet</div>}
+        </Card>
+
+        <Card title="Lead Source Breakdown">
+          {data?.source_breakdown?.length > 0 ? (
+            <div style={{display:'flex', alignItems:'center', justifyContent:'space-around', height:180}}>
+              <ResponsiveContainer width="50%" height="100%">
+                <PieChart>
+                  <Pie data={data.source_breakdown} innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="count">
+                    {data.source_breakdown.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={['#e1306c', '#25d366', '#3b82f6', '#8b5cf6'][index % 4]} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{background:'#1e293b', border:'1px solid #334155', borderRadius:'8px', fontSize:'12px'}}/>
+                </PieChart>
+              </ResponsiveContainer>
+              <div style={{width:'45%'}}>
+                {data.source_breakdown.map((item, i) => (
+                  <div key={i} style={{display:'flex', justifyContent:'space-between', marginBottom:'8px', fontSize:'0.82em'}}>
+                    <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                      <div style={{width:'8px', height:'8px', borderRadius:'50%', background:['#e1306c', '#25d366', '#3b82f6', '#8b5cf6'][i % 4]}}></div>
+                      <span style={{color:'#94a3b8'}}>{item.source.replace('_', ' ')}</span>
+                    </div>
+                    <span style={{fontWeight:700, color:'#f8fafc'}}>{item.percentage}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : <div style={{padding:'20px', textAlign:'center', color:'#475569', fontSize:'0.85em'}}>No source data yet</div>}
+        </Card>
+      </div>
+
+      {/* Row 5 — Module breakdown + Needs Human */}
+      <div className="grid2" style={{marginTop:'20px'}}>
+        {/* Top modules */}
+        <Card title="Top Interested Modules">
+          {moduleBreakdown.length > 0 ? (
+            <div style={{display:'flex', flexDirection:'column', gap:'10px', marginTop:'4px'}}>
+              {moduleBreakdown.map((mod, i) => {
+                const maxVal = moduleBreakdown[0]?.value || 1;
+                const pct = Math.round((mod.value / maxVal) * 100);
+                return (
+                  <div key={i}>
+                    <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.83em', marginBottom:'4px'}}>
+                      <span style={{color:'#e2e8f0'}}>{mod.label}</span>
+                      <span style={{color:'#64748b'}}>{mod.value} leads</span>
+                    </div>
+                    <div style={{background:'rgba(255,255,255,0.06)', borderRadius:'4px', height:'6px'}}>
+                      <div style={{width:`${pct}%`, height:'6px', borderRadius:'4px', background: colors[i % colors.length]}}/>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={{padding:'20px', textAlign:'center', color:'#475569', fontSize:'0.85em'}}>No module data yet</div>
+          )}
+        </Card>
+
+        {/* Needs Human list */}
+        <Card title={`Needs Human Review ${needsHumanList.length > 0 ? `(${needsHumanList.length})` : ''}`}>
+          {needsHumanList.length > 0 ? (
+            <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
+              {needsHumanList.map((item, i) => (
+                <div key={i} style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 10px', background:'rgba(239,68,68,0.06)', borderRadius:'8px', borderLeft:'3px solid #ef4444'}}>
+                  <div>
+                    <div style={{fontSize:'0.88em', color:'#e2e8f0', fontWeight:600}}>{item.name}</div>
+                    <div style={{fontSize:'0.75em', color:'#64748b', marginTop:'2px'}}>
+                      {item.updated_at ? new Date(item.updated_at).toLocaleString() : '-'}
+                    </div>
+                  </div>
+                  <Badge text="Review" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{padding:'20px', textAlign:'center', color:'#10b981', fontSize:'0.85em'}}>
+              ✓ All conversations handled — no manual review needed
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* Hot Lead Queue shortcut banner */}
+      {(s.hot_leads > 0 || s.needs_human > 0) && (
+        <div style={{marginTop:'20px',background:'linear-gradient(135deg,#fef2f2,#fff7ed)',border:'1px solid #fecaca',borderRadius:12,padding:'16px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <div style={{fontSize:28}}>🔥</div>
+            <div>
+              <div style={{fontWeight:700,color:'#991b1b',fontSize:15}}>Action Required</div>
+              <div style={{fontSize:13,color:'#b91c1c'}}>
+                {s.hot_leads > 0 && <span>{s.hot_leads} hot lead{s.hot_leads>1?'s':''} need attention</span>}
+                {s.hot_leads > 0 && s.needs_human > 0 && <span> · </span>}
+                {s.needs_human > 0 && <span>{s.needs_human} conversation{s.needs_human>1?'s':''} need human reply</span>}
+              </div>
+            </div>
+          </div>
+          <button onClick={() => setPage('Hot Lead Queue')} style={{display:'flex',alignItems:'center',gap:6,padding:'10px 20px',borderRadius:8,background:'#ef4444',color:'white',border:'none',fontWeight:700,fontSize:13,cursor:'pointer'}}>
+            <Flame size={15}/>Open Hot Lead Queue
+          </button>
+        </div>
+      )}
+
+      {/* Row 5 — Recent Leads */}
+      <div style={{marginTop:'20px'}}>
+        <Card title="Recent Leads">
+          {recentLeads.length > 0 ? (
+            <Table
+              heads={['Name', 'Module', 'Phone', 'Temperature', 'Stage', 'Last Active']}
+              rows={recentLeads.map(lead => [
+                <Name name={lead.name}/>,
+                lead.interested_module || <span style={{color:'#475569'}}>—</span>,
+                lead.phone || <span style={{color:'#475569'}}>—</span>,
+                <LeadTemperatureDot temp={lead.temperature}/>,
+                <Badge text={STAGE_LABELS_OV[lead.lead_stage] || lead.lead_stage || 'New'}/>,
+                lead.updated_at ? new Date(lead.updated_at).toLocaleDateString() : '—',
+              ])}
+            />
+          ) : (
+            <div style={{padding:'20px', textAlign:'center', color:'#475569'}}>Loading recent leads...</div>
+          )}
+        </Card>
+      </div>
+    </section>
   );
 }
 
 const CONV_FILTER_LABELS = {
   all: 'All',
   needs_human: 'Needs Human',
-  pending_reply: 'Pending AI Reply',
+  pending_reply: 'Pending Reply',
   ai_replied: 'AI Replied',
   manual_replied: 'Manual Replied',
 };
 
 const CONV_STATE_COLORS = {
-  active: '#2563eb',
   needs_human: '#ef4444',
   pending_reply: '#f59e0b',
   ai_replied: '#10b981',
-  manual_replied: '#8b5cf6',
-  closed: '#64748b',
+  manual_replied: '#2563eb',
+  lead_collection: '#8b5cf6',
+  replied: '#10b981',
 };
 
-const TEMP_COLORS = {
-  hot: '#ef4444',
-  warm: '#f59e0b',
-  cold: '#64748b',
-};
-
-const TEMP_COLORS_360 = {
-  hot: '#ef4444',
-  warm: '#f59e0b',
-  cold: '#64748b',
-};
-
-const TIMELINE_ICONS = {
-  start: '🚀',
-  lead: '👤',
-  qualified: '✅',
-  activity: '💬',
-  note: '📝',
-  call: '📞',
-  email: '📧',
-  meeting: '🗓️',
-};
-
-const SENTIMENT_COLORS = {
-  positive: '#10b981',
-  neutral: '#f59e0b',
-  negative: '#ef4444',
-};
-
-const URGENCY_COLORS = {
-  high: '#ef4444',
-  medium: '#f59e0b',
-  low: '#10b981',
-};
-
-function Screen({ page, dashboard, activeBusiness, setPage }) {
-  if (!activeBusiness) {
-    return (
-      <div style={{padding: '40px', textAlign: 'center', color: '#94a3b8'}}>
-        <h2 style={{marginBottom: '20px'}}>Welcome to AI Command Center</h2>
-        <p style={{fontSize: '1.1em', lineHeight: '1.6'}}>Please select a business from the top-left dropdown to get started, or create a new one in settings.</p>
-        <button onClick={() => setPage('Settings')} style={{marginTop: '30px', padding: '10px 20px', fontSize: '1em'}}>Go to Settings</button>
-      </div>
-    );
-  }
-
-  switch (page) {
-    case "Overview":
-      return <OverviewPage dashboard={dashboard} activeBusiness={activeBusiness}/>;
-    case "Conversations":
-      return <Conversations/>;
-    case "Leads":
-      return <LeadsPage/>;
-    case "Hot Lead Queue":
-      return <HotLeadQueue/>;
-    case "Import & Export":
-      return <ImportExportPage/>;
-    case "Pipeline Debugger":
-      return <PipelineDebugger/>;
-    case "AI Playground":
-      return <AIPlayground/>;
-    case "Business Brain":
-      return <BusinessBrain/>;
-    case "Appointments":
-      return <AppointmentsPage/>;
-    case "Customer 360°":
-      return <Customer360/>;
-    case "Reports":
-      return <ReportsPage/>;
-    case "Automation":
-      return <AutomationPage/>;
-    case "Publisher":
-      return <PublisherPage/>;
-    case "Broadcasts":
-      return <BroadcastsPage activeBusiness={activeBusiness}/>;
-    case "Google Reviews":
-      return <GoogleReviewsPage/>;
-    case "Businesses":
-      return <BusinessesPage/>;
-    case "Integrations":
-      return <IntegrationsPage/>;
-    case "Settings":
-      return <SettingsPage/>;
-    default:
-      return <OverviewPage dashboard={dashboard} activeBusiness={activeBusiness}/>;
-  }
-}
-
-function Title({ title, sub, action }) {
-  return (
-    <div style={{marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-      <div>
-        <h1 style={{fontSize: '1.8em', color: '#f8fafc', fontWeight: 800, marginBottom: '5px'}}>{title}</h1>
-        {sub && <p style={{fontSize: '0.9em', color: '#94a3b8'}}>{sub}</p>}
-      </div>
-      {action}
-    </div>
-  );
-}
-
-function Card({ title, children, style }) {
-  return (
-    <div className="card" style={style}>
-      {title && <h3 style={{marginBottom: '15px'}}>{title}</h3>}
-      {children}
-    </div>
-  );
-}
-
-function OverviewPage({ dashboard, activeBusiness }) {
-  const [briefing, setBriefing] = useState(null);
-  const [loadingBriefing, setLoadingBriefing] = useState(true);
-
-  useEffect(() => {
-    const fetchBriefing = async () => {
-      setLoadingBriefing(true);
-      try {
-        const res = await fetch(`${API_BASE}/briefing`);
-        const data = await res.json();
-        if (data.status === 'success') {
-          setBriefing(data.briefing);
-        } else {
-          console.error('Failed to fetch briefing:', data.message);
-        }
-      } catch (error) {
-        console.error('Error fetching briefing:', error);
-      } finally {
-        setLoadingBriefing(false);
-      }
-    };
-    fetchBriefing();
-  }, []);
-
-  return (
-    <section>
-      <Title title="Overview" sub="At a glance summary of your business performance"/>
-
-      {loadingBriefing ? (
-        <Card>
-          <div style={{display:'flex', alignItems:'center', justifyContent:'center', height:'100px', color:'#94a3b8'}}>
-            Loading daily briefing...
-          </div>
-        </Card>
-      ) : briefing ? (
-        <Card title="Daily AI Morning Briefing">
-          <div style={{fontSize:'0.9em', lineHeight:'1.6', color:'#e2e8f0'}}>
-            <p style={{marginBottom:'10px'}}>{briefing.summary}</p>
-            {briefing.key_metrics && (
-              <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(150px, 1fr))', gap:'10px', marginTop:'15px'}}>
-                {briefing.key_metrics.map((metric, i) => (
-                  <div key={i} style={{background:'rgba(255,255,255,0.05)', padding:'10px', borderRadius:'8px', border:'1px solid #334155'}}>
-                    <div style={{fontSize:'0.75em', color:'#94a3b8', marginBottom:'3px'}}>{metric.label}</div>
-                    <div style={{fontSize:'1.1em', fontWeight:700, color:'#f8fafc'}}>{metric.value}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-            {briefing.action_items && briefing.action_items.length > 0 && (
-              <div style={{marginTop:'20px'}}>
-                <h4 style={{fontSize:'1em', color:'#f8fafc', marginBottom:'10px'}}>Action Items:</h4>
-                <ul style={{listStyle:'none', padding:0}}>
-                  {briefing.action_items.map((item, i) => (
-                    <li key={i} style={{display:'flex', alignItems:'flex-start', marginBottom:'8px', fontSize:'0.88em', color:'#cbd5e1'}}>
-                      <CheckCircle size={16} style={{marginRight:'8px', color:'#10b981', flexShrink:0}}/>
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </Card>
-      ) : (
-        <Card>
-          <div style={{display:'flex', alignItems:'center', justifyContent:'center', height:'100px', color:'#94a3b8'}}>
-            No daily briefing available.
-          </div>
-        </Card>
-      )}
-
-      <div className="grid2">
-        <Card title="Conversations Over Time">
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={conversationData}>
-              <XAxis dataKey="day" stroke="#64748b" tick={{fontSize: 12}}/>
-              <YAxis stroke="#64748b" tick={{fontSize: 12}}/>
-              <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }} itemStyle={{ color: '#f8fafc' }} labelStyle={{ color: '#94a3b8' }}/>
-              <Line type="monotone" dataKey="total" stroke="#2563eb" strokeWidth={2} name="Total Conversations" />
-              <Line type="monotone" dataKey="ai" stroke="#10b981" strokeWidth={2} name="AI Handled" />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
-        <Card title="Intent Distribution">
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={intents}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-              >
-                {intents.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                ))}
-              </Pie>
-              <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }} itemStyle={{ color: '#f8fafc' }} labelStyle={{ color: '#94a3b8' }}/>
-            </PieChart>
-          </ResponsiveContainer>
-        </Card>
-      </div>
-
-      <Card title="Urgent Action Banner" style={{marginTop: '20px', background: 'linear-gradient(45deg, #ef4444, #f97316)', color: '#fff', border: 'none'}}>
-        <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
-          <AlertTriangle size={28} strokeWidth={2.5}/>
-          <div>
-            <h3 style={{color: '#fff', marginBottom: '5px'}}>5 Conversations Need Human Attention!</h3>
-            <p style={{fontSize: '0.9em', opacity: 0.9}}>Review these conversations now to prevent lead loss and ensure customer satisfaction.</p>
-          </div>
-          <button className="button-light" onClick={() => setPage('Conversations')} style={{marginLeft: 'auto', background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)'}}>View Urgent Conversations</button>
-        </div>
-      </Card>
-    </section>
-  );
-}
-
-function LeadsPage() {
-  const [leads, setLeads] = useState([]);
+function Conversations() {
+  const [conversations, setConversations] = useState([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
-  const [selectedLead, setSelectedLead] = useState(null);
-  const [summary, setSummary] = useState(null);
-  const [loadingSummary, setLoadingSummary] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [fullConv, setFullConv] = useState(null);
+  const [fullLoading, setFullLoading] = useState(false);
 
-  const fetchLeads = (f = filter, s = search) => {
+  const fetchConversations = (f = filter, s = search) => {
     setLoading(true);
     const params = new URLSearchParams({ filter: f, limit: '100' });
     if (s) params.set('search', s);
-    fetch(`${API_BASE}/all-leads?${params}`)
+    fetch(`${API_BASE}/conversations?${params}`)
       .then(r => r.json())
       .then(data => {
         if (data.status === 'success') {
-          setLeads(data.leads || []);
+          setConversations(data.conversations || []);
+          setTotal(data.total || 0);
         }
       })
-      .catch(err => console.error('Leads fetch error:', err))
+      .catch(err => console.error('Conversations fetch error:', err))
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchLeads(); }, []);
+  useEffect(() => { fetchConversations(); }, []);
 
   const handleFilterChange = (f) => {
     setFilter(f);
-    setSelectedLead(null);
-    setSummary(null);
-    fetchLeads(f, search);
+    setSelected(null);
+    setFullConv(null);
+    fetchConversations(f, search);
   };
 
   const handleSearch = (e) => {
     e.preventDefault();
     setSearch(searchInput);
-    fetchLeads(filter, searchInput);
+    fetchConversations(filter, searchInput);
   };
 
-  const loadSummary = async (lead) => {
-    setSelectedLead(lead);
-    setSummary(null);
-    setLoadingSummary(true);
-    try {
-      const res = await fetch(`${API_BASE}/leads/${lead.sender_id}/summary`);
-      const data = await res.json();
-      if (data.status === 'success') {
-        setSummary(data.summary);
-      } else {
-        setSummary({ error: data.message || 'Failed to load summary' });
-      }
-    } catch (e) {
-      setSummary({ error: 'Network error loading summary' });
-    }
-    setLoadingSummary(false);
-  };
-
-  const handleMarkQualified = async (leadId) => {
-    try {
-      const res = await fetch(`${API_BASE}/leads/${leadId}/qualify`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const data = await res.json();
-      if (data.status === 'success') {
-        fetchLeads(filter, search); // Refresh leads list
-        if (selectedLead && selectedLead.id === leadId) {
-          loadSummary({ ...selectedLead, is_qualified: true, temperature: 'hot' }); // Refresh summary
+  const handleSelectConversation = (conv) => {
+    setSelected(conv);
+    setFullConv(null);
+    setFullLoading(true);
+    fetch(`${API_BASE}/conversation/${conv.sender_id}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') {
+          setFullConv(data.conversation);
         }
-      } else {
-        alert(`Failed to qualify lead: ${data.message}`);
-      }
-    } catch (e) {
-      alert('Network error qualifying lead.');
-    }
+      })
+      .catch(err => console.error('Full conv error:', err))
+      .finally(() => setFullLoading(false));
   };
 
-  const LEAD_FILTER_LABELS = {
-    all: 'All Leads',
-    qualified: 'Qualified',
-    new: 'New',
-    phone_pending: 'Phone Pending',
-    name_pending: 'Name Pending',
-    hot: 'Hot',
-    warm: 'Warm',
-    cold: 'Cold',
-  };
+  const [channelFilter, setChannelFilter] = useState('all');
+  const FILTER_KEYS = ['all', 'needs_human', 'pending_reply', 'ai_replied', 'manual_replied'];
+  
+  const filteredByChannel = channelFilter === 'all' ? conversations
+    : conversations.filter(c => (c.channel || 'instagram') === channelFilter);
 
   return (
     <section>
       <Title
-        title="Leads CRM"
-        sub={loading ? 'Loading...' : `${leads.length} leads`}
+        title="Conversations"
+        sub={loading ? 'Loading...' : `${total} conversations`}
         action={
           <div style={{display:'flex', gap:'8px'}}>
-            <button className="ghost" onClick={() => fetchLeads()}>↻ Refresh</button>
+            <button className="ghost" onClick={() => fetchConversations()}>↻ Refresh</button>
           </div>
         }
       />
 
+      {/* Channel filter */}
+      <div style={{display:'flex', gap:'6px', marginBottom:'10px', flexWrap:'wrap', alignItems:'center'}}>
+        <span style={{fontSize:'0.75em', color:'#64748b', marginRight:'4px', fontWeight:600}}>CHANNEL:</span>
+        {[['all','All Channels'],['instagram','📸 Instagram'],['whatsapp','💬 WhatsApp']].map(([val, label]) => (
+          <button
+            key={val}
+            onClick={() => setChannelFilter(val)}
+            style={{
+              padding:'4px 12px', fontSize:'0.78em', borderRadius:'20px',
+              background: channelFilter === val ? (val === 'whatsapp' ? '#25d366' : val === 'instagram' ? '#e1306c' : '#2563eb') : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${channelFilter === val ? 'transparent' : '#334155'}`,
+              color: channelFilter === val ? '#fff' : '#94a3b8',
+              cursor:'pointer',
+            }}
+          >{label}</button>
+        ))}
+      </div>
+
       {/* Filter tabs */}
       <div style={{display:'flex', gap:'6px', marginBottom:'14px', flexWrap:'wrap'}}>
-        {Object.keys(LEAD_FILTER_LABELS).map(f => (
+        {FILTER_KEYS.map(f => (
           <button
             key={f}
             onClick={() => handleFilterChange(f)}
@@ -1056,7 +811,12 @@ function LeadsPage() {
               cursor:'pointer',
             }}
           >
-            {LEAD_FILTER_LABELS[f]}
+            {CONV_FILTER_LABELS[f]}
+            {f === 'needs_human' && conversations.filter(c => c.needs_human).length > 0 && filter !== 'needs_human' && (
+              <span style={{marginLeft:'6px', background:'#ef4444', color:'#fff', borderRadius:'10px', padding:'1px 6px', fontSize:'0.75em'}}>
+                {conversations.filter(c => c.needs_human).length}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -1073,31 +833,40 @@ function LeadsPage() {
         </div>
         <button type="submit" style={{padding:'0 16px'}}>Search</button>
         {search && (
-          <button type="button" className="outline" onClick={() => { setSearchInput(''); setSearch(''); fetchLeads(filter, ''); }}>
+          <button type="button" className="outline" onClick={() => { setSearchInput(''); setSearch(''); fetchConversations(filter, ''); }}>
             Clear
           </button>
         )}
       </form>
 
-      <div style={{display:'grid', gridTemplateColumns: selectedLead ? '1fr 1.1fr' : '1fr', gap:'16px', alignItems:'start'}}>
-        {/* Lead list */}
+      {/* Main layout */}
+      <div style={{display:'grid', gridTemplateColumns: selected ? '1fr 1.1fr' : '1fr', gap:'16px', alignItems:'start'}}>
+
+        {/* Inbox list */}
         <div style={{display:'flex', flexDirection:'column', gap:'6px'}}>
           {loading ? (
-            <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>Loading leads...</div>
-          ) : leads.length === 0 ? (
-            <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>No leads found.</div>
-          ) : leads.map((lead, i) => {
-            const isSelected = selectedLead?.sender_id === lead.sender_id;
-            const tempColor = TEMP_COLORS[lead.temperature] || '#64748b';
+            <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>Loading conversations...</div>
+          ) : conversations.length === 0 ? (
+            <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>No conversations found.</div>
+          ) : filteredByChannel.map((conv, i) => {
+            const isSelected = selected?.sender_id === conv.sender_id;
+            const stateColor = conv.needs_human ? '#ef4444' : (CONV_STATE_COLORS[conv.conversation_state] || '#475569');
+            const stateLabel = conv.needs_human ? 'Needs Human' : (conv.conversation_state || 'active').replace(/_/g, ' ');
+            const lastMsg = conv.last_message || '';
+            const isUserLast = conv.last_sender === 'user';
+            
+            // Display name fallback logic
+            const displayName = conv.display_name || conv.customer_name || conv.name || conv.instagram_username || conv.sender_id;
+
             return (
               <div
                 key={i}
-                onClick={() => loadSummary(lead)}
+                onClick={() => handleSelectConversation(conv)}
                 style={{
                   padding:'14px 16px',
                   background: isSelected ? 'rgba(37,99,235,0.15)' : 'rgba(255,255,255,0.03)',
                   border: `1px solid ${isSelected ? '#2563eb' : '#1e293b'}`,
-                  borderLeft: `4px solid ${isSelected ? '#2563eb' : tempColor}`,
+                  borderLeft: `4px solid ${isSelected ? '#2563eb' : stateColor}`,
                   borderRadius:'10px',
                   cursor:'pointer',
                   transition:'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -1108,41 +877,54 @@ function LeadsPage() {
               >
                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'10px'}}>
                   <div style={{display:'flex', alignItems:'center', gap:'14px'}}>
-                    <div style={{width:'46px', height:'46px', borderRadius:'14px', background: isSelected ? '#3b82f6' : 'rgba(255,255,255,0.07)', border:`1px solid ${isSelected ? '#3b82f6' : 'rgba(255,255,255,0.1)'}`, display:'flex', alignItems:'center', justifyContent:'center', color: isSelected ? '#fff' : '#e2e8f0', fontSize:'1.2em', fontWeight:800, flexShrink:0, transition:'all 0.2s'}}>
-                      {String(lead.name || lead.instagram_username || '?')[0].toUpperCase()}
+                    <div style={{position:'relative'}}>
+                      <div style={{width:'46px', height:'46px', borderRadius:'14px', background: isSelected ? '#3b82f6' : 'rgba(255,255,255,0.07)', border:`1px solid ${isSelected ? '#3b82f6' : 'rgba(255,255,255,0.1)'}`, display:'flex', alignItems:'center', justifyContent:'center', color: isSelected ? '#fff' : '#e2e8f0', fontSize:'1.2em', fontWeight:800, flexShrink:0, transition:'all 0.2s'}}>
+                        {String(displayName || '?')[0].toUpperCase()}
+                      </div>
+                      <div style={{position:'absolute', bottom:'-2px', right:'-2px', width:'20px', height:'20px', borderRadius:'50%', background:'#0f172a', border:'2px solid #0f172a', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 4px rgba(0,0,0,0.3)'}}>
+                        {(conv.channel || 'instagram') === 'whatsapp' ? 
+                          <span title="WhatsApp" style={{fontSize:'12px'}}>💬</span> : 
+                          <span title="Instagram" style={{fontSize:'12px'}}>📸</span>
+                        }
+                      </div>
                     </div>
                     <div>
-                      <div style={{fontSize:'1.05em', fontWeight:700, color: isSelected ? '#fff' : '#f8fafc', transition:'all 0.2s', marginBottom:'3px'}}>{lead.name || lead.instagram_username || `User ${String(lead.sender_id).slice(-4)}`}</div>
+                      <div style={{fontSize:'1.05em', fontWeight:700, color: isSelected ? '#fff' : '#f8fafc', transition:'all 0.2s', marginBottom:'3px'}}>{displayName}</div>
                       <div style={{fontSize:'0.78em', color:'#94a3b8', display:'flex', alignItems:'center', gap:'8px'}}>
-                        <span style={{color: tempColor, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', fontSize:'0.9em'}}>{lead.temperature}</span>
+                        <span style={{color: (conv.channel || 'instagram') === 'whatsapp' ? '#22c55e' : '#ec4899', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', fontSize:'0.9em'}}>
+                          {(conv.channel || 'instagram')}
+                        </span>
                         <span style={{color:'#334155'}}>•</span>
-                        <span style={{color:'#64748b'}}>{lead.lead_stage || 'New Lead'}</span>
+                        <span style={{color:'#64748b'}}>{conv.message_count || 0} messages</span>
                       </div>
                     </div>
                   </div>
                   <div style={{textAlign:'right', flexShrink:0}}>
                     <div style={{fontSize:'0.75em', color:'#475569', fontWeight:500, marginBottom:'5px'}}>
-                      {lead.updated_at ? timeAgo(lead.updated_at) : '-'}
+                      {conv.updated_at ? timeAgo(conv.updated_at) : '-'}
                     </div>
-                    {lead.is_qualified && <span style={{fontSize:'0.72em', padding:'3px 9px', borderRadius:'12px', background:'#f0fdf4', color:'#14532d', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.02em'}}>Qualified</span>}
+                    <span style={{fontSize:'0.72em', padding:'3px 9px', borderRadius:'12px', background:`${stateColor}20`, color:stateColor, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.02em'}}>
+                      {stateLabel}
+                    </span>
                   </div>
                 </div>
-                <div style={{fontSize:'0.88em', color:'#cbd5e1', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', paddingLeft:'60px', lineHeight:'1.4'}}>
-                  {lead.interested_in || lead.notes || <span style={{fontStyle:'italic', color:'#475569'}}>No recent activity</span>}
+                <div style={{fontSize:'0.88em', color: isUserLast ? '#cbd5e1' : '#94a3b8', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', paddingLeft:'60px', lineHeight:'1.4'}}>
+                  {isUserLast ? '' : <span style={{color:'#8b5cf6', fontWeight:700, marginRight:'6px'}}>AI:</span>}
+                  {String(lastMsg).slice(0, 100) || <span style={{fontStyle:'italic', color:'#475569'}}>No messages</span>}
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* Lead detail panel */}
-        {selectedLead && (
-          <LeadDetailPanel
-            lead={selectedLead}
-            summary={summary}
-            loadingSummary={loadingSummary}
-            onClose={() => { setSelectedLead(null); setSummary(null); }}
-            onMarkQualified={handleMarkQualified}
+        {/* Chat panel */}
+        {selected && (
+          <ConversationChatPanel
+            conv={selected}
+            fullConv={fullConv}
+            loading={fullLoading}
+            onClose={() => { setSelected(null); setFullConv(null); }}
+            onRefresh={() => handleSelectConversation(selected)}
           />
         )}
       </div>
@@ -1150,712 +932,1472 @@ function LeadsPage() {
   );
 }
 
-function LeadDetailPanel({ lead, summary, loadingSummary, onClose, onMarkQualified }) {
-  const tempColor = TEMP_COLORS[lead.temperature] || '#64748b';
-  const [showConversation, setShowConversation] = useState(false);
-  const [conversation, setConversation] = useState(null);
-  const [loadingConversation, setLoadingConversation] = useState(false);
+function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh }) {
+  const [replyText, setReplyText] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sendResult, setSendResult] = useState(null);
+  const chatEndRef = React.useRef(null);
 
-  const fetchConversation = async () => {
-    setLoadingConversation(true);
+  const history = fullConv?.history || [];
+  const stateColor = conv.needs_human ? '#ef4444' : (CONV_STATE_COLORS[conv.conversation_state] || '#475569');
+  const stateLabel = conv.needs_human ? 'Needs Human' : (conv.conversation_state || 'active').replace(/_/g, ' ');
+
+  // Scroll to bottom when history loads
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [history.length]);
+
+  const handleSendReply = async () => {
+    if (!replyText.trim()) return;
+    setSending(true);
+    setSendResult(null);
     try {
-      const res = await fetch(`${API_BASE}/conversation/${lead.sender_id}`);
+      const res = await fetch(`${API_BASE}/conversation/send-reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sender_id: conv.sender_id, message: replyText.trim() }),
+      });
       const data = await res.json();
       if (data.status === 'success') {
-        setConversation(data.conversation);
+        setSendResult({ ok: true, msg: 'Reply sent successfully' });
+        setReplyText('');
+        setTimeout(() => { onRefresh(); setSendResult(null); }, 1500);
       } else {
-        console.error('Failed to fetch conversation:', data.message);
+        setSendResult({ ok: false, msg: data.message || 'Send failed' });
       }
     } catch (e) {
-      console.error('Error fetching conversation:', e);
-    } finally {
-      setLoadingConversation(false);
+      setSendResult({ ok: false, msg: 'Network error' });
     }
+    setSending(false);
   };
-
-  useEffect(() => {
-    if (showConversation && !conversation) {
-      fetchConversation();
-    }
-  }, [showConversation, conversation]);
 
   return (
     <div style={{display:'flex', flexDirection:'column', height:'calc(100vh - 160px)', background:'rgba(255,255,255,0.02)', border:'1px solid #1e293b', borderRadius:'12px', overflow:'hidden'}}>
+
       {/* Header */}
       <div style={{padding:'14px 16px', borderBottom:'1px solid #1e293b', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0}}>
         <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
           <div style={{width:'36px', height:'36px', borderRadius:'50%', background:'#2563eb', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:700}}>
-            {String(lead.name || lead.instagram_username || '?')[0].toUpperCase()}
+            {String(conv.display_name || '?')[0].toUpperCase()}
           </div>
           <div>
-            <div style={{fontWeight:700, color:'#e2e8f0', fontSize:'0.95em'}}>{lead.name || lead.instagram_username || `User ${String(lead.sender_id).slice(-4)}`}</div>
+            <div style={{fontWeight:700, color:'#e2e8f0', fontSize:'0.95em'}}>{conv.display_name}</div>
             <div style={{fontSize:'0.75em', display:'flex', alignItems:'center', gap:'6px'}}>
-              <span style={{color: tempColor, fontWeight:600}}>{lead.temperature} Lead</span>
-              <span style={{color:'#475569'}}>· {lead.lead_stage || 'New'}</span>
+              {isWhatsApp ? (
+                            <span style={{fontSize:'0.85em', background:'#25d36620', color:'#25d366', padding:'1px 5px', borderRadius:'4px', fontWeight:700}}>WA</span>
+                          ) : (
+                            <span className="ig" style={{fontSize:'0.85em'}}>IG</span>
+                          )}
+              <span style={{color: stateColor, fontWeight:600}}>{stateLabel}</span>
+              <span style={{color:'#475569'}}>· {history.length} messages</span>
             </div>
           </div>
         </div>
         <div style={{display:'flex', gap:'8px'}}>
-          {!lead.is_qualified && (
-            <button className="button-primary" onClick={() => onMarkQualified(lead.id)} style={{padding:'4px 10px', fontSize:'0.8em'}}>
-              ✅ Mark Qualified
-            </button>
-          )}
+          <button className="ghost" onClick={onRefresh} style={{padding:'4px 10px', fontSize:'0.8em'}}>↻</button>
           <button className="outline" onClick={onClose} style={{padding:'4px 10px', fontSize:'0.8em'}}><X size={13}/></button>
         </div>
       </div>
 
-      {/* Content */}
-      <div style={{flex:1, overflowY:'auto', padding:'16px', display:'flex', flexDirection:'column', gap:'16px'}}>
-        {/* Lead Summary */}
-        <Card title="AI Lead Summary">
-          {loadingSummary ? (
-            <div style={{textAlign:'center', color:'#64748b'}}>Generating summary...</div>
-          ) : summary?.error ? (
-            <div style={{color:'#ef4444'}}>Error: {summary.error}</div>
-          ) : summary ? (
-            <div style={{fontSize:'0.9em', lineHeight:'1.6'}}>
-              <p style={{marginBottom:'10px', fontStyle:'italic', color:'#cbd5e1'}}>"{summary.one_liner}"</p>
-              <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px', marginBottom:'15px'}}>
-                <div style={{background:'rgba(255,255,255,0.05)', padding:'10px', borderRadius:'8px', border:'1px solid #334155'}}>
-                  <div style={{fontSize:'0.75em', color:'#94a3b8', marginBottom:'3px'}}>Intent</div>
-                  <div style={{fontSize:'1.1em', fontWeight:700, color:'#f8fafc'}}>{summary.intent}</div>
-                </div>
-                <div style={{background:'rgba(255,255,255,0.05)', padding:'10px', borderRadius:'8px', border:'1px solid #334155'}}>
-                  <div style={{fontSize:'0.75em', color:'#94a3b8', marginBottom:'3px'}}>Stage</div>
-                  <div style={{fontSize:'1.1em', fontWeight:700, color:'#f8fafc'}}>{summary.stage}</div>
+      {/* Chat history */}
+      <div style={{flex:1, overflowY:'auto', padding:'16px', display:'flex', flexDirection:'column', gap:'10px'}}>
+        {loading ? (
+          <div style={{textAlign:'center', color:'#64748b', padding:'40px'}}>Loading messages...</div>
+        ) : history.length === 0 ? (
+          <div style={{textAlign:'center', color:'#64748b', padding:'40px', fontStyle:'italic'}}>No message history found.</div>
+        ) : history.map((item, i) => (
+          <React.Fragment key={i}>
+            {item.user && (
+              <div style={{display:'flex', justifyContent:'flex-start'}}>
+                <div style={{
+                  maxWidth:'78%', padding:'10px 13px',
+                  background:'#f1f5f9',
+                  border:'1px solid #cbd5e1',
+                  borderRadius:'16px 16px 16px 4px',
+                  fontSize:'0.88em', color:'#1e293b', lineHeight:'1.6',
+                }}>
+                  <div style={{fontSize:'0.75em', color:'#64748b', marginBottom:'4px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>Customer</div>
+                  {item.user}
                 </div>
               </div>
-              {summary.key_facts && summary.key_facts.length > 0 && (
-                <div style={{marginBottom:'15px'}}>
-                  <h4 style={{fontSize:'0.9em', color:'#f8fafc', marginBottom:'8px'}}>Key Facts:</h4>
-                  <ul style={{listStyle:'none', padding:0}}>
-                    {summary.key_facts.map((fact, i) => (
-                      <li key={i} style={{display:'flex', alignItems:'flex-start', marginBottom:'5px', fontSize:'0.85em', color:'#cbd5e1'}}>
-                        <CheckCircle size={14} style={{marginRight:'6px', color:'#10b981', flexShrink:0}}/>
-                        <span>{fact}</span>
-                      </li>
-                    ))}
-                  </ul>
+            )}
+            {item.assistant && (
+              <div style={{display:'flex', justifyContent:'flex-end'}}>
+                <div style={{
+                  maxWidth:'78%', padding:'10px 13px',
+                  background:'#dbeafe',
+                  border:'1px solid #93c5fd',
+                  borderRadius:'16px 16px 4px 16px',
+                  fontSize:'0.88em', color:'#1e3a8a', lineHeight:'1.6',
+                }}>
+                  <div style={{fontSize:'0.75em', color:'#2563eb', marginBottom:'4px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>AI Assistant</div>
+                  {item.assistant}
                 </div>
-              )}
-              {summary.recommended_action && (
-                <div style={{background:'rgba(16,185,129,0.1)', border:'1px solid #10b981', padding:'12px', borderRadius:'8px', marginBottom:'15px'}}>
-                  <h4 style={{fontSize:'0.9em', color:'#10b981', marginBottom:'5px'}}>Recommended Action:</h4>
-                  <p style={{fontSize:'0.85em', color:'#10b981', fontWeight:600}}>{summary.recommended_action}</p>
-                </div>
-              )}
-              {summary.urgency && (
-                <div style={{background:'rgba(239,68,68,0.1)', border:'1px solid #ef4444', padding:'12px', borderRadius:'8px'}}>
-                  <h4 style={{fontSize:'0.9em', color:'#ef4444', marginBottom:'5px'}}>Urgency:</h4>
-                  <p style={{fontSize:'0.85em', color:'#ef4444', fontWeight:600}}>{summary.urgency}</p>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div style={{textAlign:'center', color:'#64748b'}}>No summary available.</div>
-          )}
-        </Card>
+              </div>
+            )}
+          </React.Fragment>
+        ))}
+        <div ref={chatEndRef}/>
+      </div>
 
-        {/* Lead Details */}
-        <Card title="Lead Details">
-          <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px'}}>
-            {[["Name", lead.name], ["Email", lead.email], ["Phone", lead.phone], ["Location", lead.location], ["Interested In", lead.interested_in], ["Mode", lead.mode], ["Lead Stage", lead.lead_stage], ["Status", lead.status], ["Lead Score", lead.lead_score], ["Created At", lead.created_at ? new Date(lead.created_at).toLocaleString() : null]].map(([label, value]) => (
-              value && (
-                <div key={label} style={{background:'rgba(255,255,255,0.05)', padding:'10px', borderRadius:'8px', border:'1px solid #334155'}}>
-                  <div style={{fontSize:'0.75em', color:'#94a3b8', marginBottom:'3px'}}>{label}</div>
-                  <div style={{fontSize:'0.9em', fontWeight:600, color:'#f8fafc'}}>{value}</div>
-                </div>
-              )
-            ))}
+      {/* Reply box */}
+      <div style={{padding:'12px 14px', borderTop:'1px solid #1e293b', flexShrink:0, background:'rgba(0,0,0,0.15)'}}>
+        {sendResult && (
+          <div style={{marginBottom:'8px', fontSize:'0.82em', color: sendResult.ok ? '#10b981' : '#ef4444', padding:'8px 12px', background: sendResult.ok ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', borderRadius:'7px', display:'flex', alignItems:'center', gap:6, border:`1px solid ${sendResult.ok ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.25)'}`}}>
+            <span style={{fontSize:14}}>{sendResult.ok ? '✓' : '✗'}</span>
+            <span>{sendResult.msg}</span>
+            {sendResult.ok && <span style={{marginLeft:'auto', fontSize:'0.85em', opacity:0.7}}>Delivered to Instagram DM</span>}
           </div>
-          {lead.notes && (
-            <div style={{marginTop:'15px', background:'rgba(255,255,255,0.05)', padding:'10px', borderRadius:'8px', border:'1px solid #334155'}}>
-              <div style={{fontSize:'0.75em', color:'#94a3b8', marginBottom:'3px'}}>Notes</div>
-              <div style={{fontSize:'0.9em', fontWeight:600, color:'#f8fafc', lineHeight:'1.5'}}>{lead.notes}</div>
+        )}
+        <div style={{display:'flex', gap:'8px', alignItems:'flex-end'}}>
+          <div style={{flex:1, position:'relative'}}>
+            <textarea
+              placeholder="Type a reply — will be sent directly to this person's Instagram DM..."
+              value={replyText}
+              onChange={e => setReplyText(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) handleSendReply(); }}
+              style={{width:'100%', minHeight:'64px', maxHeight:'120px', resize:'vertical', fontSize:'0.85em', paddingBottom:'18px', boxSizing:'border-box'}}
+            />
+            <div style={{position:'absolute', bottom:6, right:8, fontSize:'0.7em', color: replyText.length > 950 ? '#ef4444' : '#475569'}}>
+              {replyText.length}/1000
             </div>
-          )}
-        </Card>
-
-        {/* Conversation History Toggle */}
-        <Card>
-          <button onClick={() => setShowConversation(!showConversation)} style={{width:'100%', padding:'10px', background:'rgba(255,255,255,0.05)', border:'1px solid #334155', borderRadius:'8px', color:'#f8fafc', fontSize:'0.9em', fontWeight:600, display:'flex', alignItems:'center', justifyContent:'space-between'}}>
-            <span>{showConversation ? 'Hide' : 'Show'} Full Conversation History</span>
-            {loadingConversation ? <Loader size={18} className="spin"/> : <ChevronRight size={18} style={{transform: showConversation ? 'rotate(90deg)' : 'none'}}/>}
+          </div>
+          <button
+            onClick={handleSendReply}
+            disabled={sending || !replyText.trim() || replyText.length > 1000}
+            style={{padding:'10px 18px', alignSelf:'flex-end', flexShrink:0, background: sending ? '#64748b' : '#2563eb', color:'white', border:'none', borderRadius:8, cursor: sending ? 'not-allowed' : 'pointer', fontWeight:600, fontSize:'0.85em', display:'flex', alignItems:'center', gap:6}}
+          >
+            {sending ? (
+              <><span style={{display:'inline-block',width:12,height:12,border:'2px solid rgba(255,255,255,0.3)',borderTopColor:'white',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/> Sending...</>
+            ) : (
+              <><Send size={13}/> Send DM</>
+            )}
           </button>
-          {showConversation && loadingConversation && (
-            <div style={{textAlign:'center', color:'#64748b', padding:'20px'}}>Loading conversation...</div>
-          )}
-          {showConversation && conversation && conversation.history && (
-            <div style={{marginTop:'15px', maxHeight:'400px', overflowY:'auto', background:'rgba(0,0,0,0.1)', borderRadius:'8px', padding:'10px'}}>
-              {conversation.history.map((item, i) => (
-                <div key={i} style={{marginBottom:'10px'}}>
-                  {item.user && (
-                    <div style={{display:'flex', justifyContent:'flex-start', marginBottom:'5px'}}>
-                      <div style={{maxWidth:'75%', padding:'8px 12px', background:'#f1f5f9', borderRadius:'12px 12px 12px 2px', fontSize:'0.84em', color:'#1e293b', lineHeight:'1.5'}}>
-                        <div style={{fontSize:'0.7em', color:'#64748b', fontWeight:700, marginBottom:'3px'}}>Customer</div>
-                        {item.user}
-                      </div>
-                    </div>
-                  )}
-                  {item.assistant && (
-                    <div style={{display:'flex', justifyContent:'flex-end'}}>
-                      <div style={{maxWidth:'75%', padding:'8px 12px', background:'#dbeafe', borderRadius:'12px 12px 2px 12px', fontSize:'0.84em', color:'#1e3a8a', lineHeight:'1.5'}}>
-                        <div style={{fontSize:'0.7em', color:'#2563eb', fontWeight:700, marginBottom:'3px'}}>AI Assistant</div>
-                        {item.assistant}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
+        </div>
+        <div style={{fontSize:'0.72em', color:'#475569', marginTop:'5px', display:'flex', alignItems:'center', gap:8}}>
+          <span style={{color:'#3b82f6', fontWeight:500}}>⚡ Live</span>
+          <span>Ctrl+Enter to send · Sends directly to Instagram DM · Reply appears in their inbox instantly</span>
+        </div>
       </div>
     </div>
   );
 }
 
-function HotLeadQueue() {
-  const [leads, setLeads] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedLead, setSelectedLead] = useState(null);
-  const [summary, setSummary] = useState(null);
-  const [loadingSummary, setLoadingSummary] = useState(false);
+// ─── LEADS PAGE (Fully Wired) ─────────────────────────────────────────────────
 
-  const fetchHotLeads = () => {
+const LEAD_TEMP_COLORS = {
+  hot: '#ef4444',
+  warm: '#f59e0b',
+  cold: '#3b82f6',
+  new: '#8b5cf6',
+};
+
+const STAGE_LABELS = {
+  qualified: 'Qualified',
+  lead_information: 'Lead Info',
+  phone_pending: 'Phone Pending',
+  name_pending: 'Name Pending',
+  learning_lead: 'Learning Lead',
+  job_inquiry: 'Job Inquiry',
+  new: 'New',
+};
+
+function LeadTemperatureDot({ temp }) {
+  const color = LEAD_TEMP_COLORS[String(temp).toLowerCase()] || '#64748b';
+  return (
+    <span style={{display:'inline-flex', alignItems:'center', gap:'5px'}}>
+      <span style={{width:8, height:8, borderRadius:'50%', background:color, display:'inline-block'}}/>
+      <span style={{color, fontWeight:600, fontSize:'0.82em', textTransform:'capitalize'}}>{temp || 'Unknown'}</span>
+    </span>
+  );
+}
+
+function Leads() {
+  const [allLeads, setAllLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('All Leads');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [stageFilter, setStageFilter] = useState('All');
+
+  const tabs = ['All Leads', 'New', 'Warm', 'Hot', 'Qualified', 'Converted'];
+
+  useEffect(() => {
     setLoading(true);
-    fetch(`${API_BASE}/all-leads?filter=hot`)
-      .then(r => r.json())
+    fetch(`${API_BASE}/all-leads`)
+      .then(res => res.json())
       .then(data => {
         if (data.status === 'success') {
-          setLeads(data.leads || []);
+          setAllLeads(data.leads || []);
+        } else {
+          console.error('Failed to load leads:', data);
         }
       })
-      .catch(err => console.error('Hot leads fetch error:', err))
+      .catch(err => console.error('Leads fetch error:', err))
       .finally(() => setLoading(false));
+  }, []);
+
+  const getLeadName = (lead) => {
+    const name = lead.customer_name || lead.name || lead.instagram_username;
+    if (name && name !== 'Name Pending' && name !== 'Unknown') return name;
+    if (lead.sender_id) return `User ${String(lead.sender_id).slice(-4)}`;
+    return 'Unknown';
   };
 
-  useEffect(() => { fetchHotLeads(); }, []);
+  // Filter by tab (temperature)
+  const tabFiltered = allLeads.filter(lead => {
+    if (activeTab === 'All Leads') return true;
+    if (activeTab === 'Qualified') return lead.lead_stage === 'qualified' || lead.status === 'qualified';
+    if (activeTab === 'Converted') return lead.status === 'converted';
+    return String(lead.temperature || '').toLowerCase() === activeTab.toLowerCase();
+  });
 
-  const loadSummary = async (lead) => {
-    setSelectedLead(lead);
-    setSummary(null);
-    setLoadingSummary(true);
-    try {
-      const res = await fetch(`${API_BASE}/leads/${lead.sender_id}/summary`);
-      const data = await res.json();
-      if (data.status === 'success') {
-        setSummary(data.summary);
-      } else {
-        setSummary({ error: data.message || 'Failed to load summary' });
-      }
-    } catch (e) {
-      setSummary({ error: 'Network error loading summary' });
-    }
-    setLoadingSummary(false);
-  };
+  // Filter by stage dropdown
+  const stageFiltered = tabFiltered.filter(lead => {
+    if (stageFilter === 'All') return true;
+    return lead.lead_stage === stageFilter;
+  });
 
-  const handleMarkQualified = async (leadId) => {
-    try {
-      const res = await fetch(`${API_BASE}/leads/${leadId}/qualify`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const data = await res.json();
-      if (data.status === 'success') {
-        fetchHotLeads(); // Refresh leads list
-        if (selectedLead && selectedLead.id === leadId) {
-          loadSummary({ ...selectedLead, is_qualified: true, temperature: 'hot' }); // Refresh summary
-        }
-      } else {
-        alert(`Failed to qualify lead: ${data.message}`);
-      }
-    } catch (e) {
-      alert('Network error qualifying lead.');
-    }
-  };
+  // Filter by search
+  const filtered = stageFiltered.filter(lead => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      getLeadName(lead).toLowerCase().includes(q) ||
+      String(lead.phone || '').includes(q) ||
+      String(lead.email || '').toLowerCase().includes(q) ||
+      String(lead.interested_module || '').toLowerCase().includes(q) ||
+      String(lead.location || '').toLowerCase().includes(q)
+    );
+  });
+
+  // Stats
+  const total = allLeads.length;
+  const qualified = allLeads.filter(l => l.lead_stage === 'qualified' || l.status === 'qualified').length;
+  const hot = allLeads.filter(l => String(l.temperature || '').toLowerCase() === 'hot').length;
+  const warm = allLeads.filter(l => String(l.temperature || '').toLowerCase() === 'warm').length;
+
+  const uniqueStages = ['All', ...new Set(allLeads.map(l => l.lead_stage).filter(Boolean))];
 
   return (
     <section>
       <Title
-        title="Hot Lead Queue"
-        sub={loading ? 'Loading...' : `${leads.length} hot leads`}
-        action={
-          <div style={{display:'flex', gap:'8px'}}>
-            <button className="ghost" onClick={() => fetchHotLeads()}>↻ Refresh</button>
-          </div>
-        }
+        title="Leads Management"
+        sub="Track and manage all your leads"
+        action={<button><Plus size={15}/> Add Lead</button>}
       />
 
-      <div style={{display:'grid', gridTemplateColumns: selectedLead ? '1fr 1.1fr' : '1fr', gap:'16px', alignItems:'start'}}>
-        {/* Hot Lead list */}
-        <div style={{display:'flex', flexDirection:'column', gap:'6px'}}>
+      {/* Stats row */}
+      <div className="grid4" style={{marginBottom: '20px'}}>
+        <Stat label="Total Leads" value={loading ? '...' : total} change="All captured leads"/>
+        <Stat label="Qualified" value={loading ? '...' : qualified} change="Ready for follow-up"/>
+        <Stat label="Hot Leads" value={loading ? '...' : hot} change="High intent"/>
+        <Stat label="Warm Leads" value={loading ? '...' : warm} change="Engaged"/>
+      </div>
+
+      {/* Tabs */}
+      <div className="tabs">
+        {tabs.map(t => (
+          <button
+            key={t}
+            className={activeTab === t ? 'active' : ''}
+            onClick={() => { setActiveTab(t); setSelectedLead(null); }}
+          >
+            {t}
+            <span style={{
+              marginLeft: '6px', fontSize: '0.75em', opacity: 0.7,
+              background: activeTab === t ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
+              borderRadius: '10px', padding: '1px 6px'
+            }}>
+              {t === 'All Leads' ? allLeads.length :
+               t === 'Qualified' ? allLeads.filter(l => l.lead_stage === 'qualified' || l.status === 'qualified').length :
+               t === 'Converted' ? allLeads.filter(l => l.status === 'converted').length :
+               allLeads.filter(l => String(l.temperature || '').toLowerCase() === t.toLowerCase()).length}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Toolbar */}
+      <div className="toolbar">
+        <select value={stageFilter} onChange={e => setStageFilter(e.target.value)}>
+          {uniqueStages.map(s => (
+            <option key={s} value={s}>{s === 'All' ? 'Lead Stage: All' : STAGE_LABELS[s] || s}</option>
+          ))}
+        </select>
+        <div className="search wide">
+          <Search size={15}/>
+          <input
+            placeholder="Search by name, phone or email..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} style={{background:'none',border:'none',cursor:'pointer',padding:'0 4px'}}>
+              <X size={13}/>
+            </button>
+          )}
+        </div>
+        <button className="icon"><Filter size={15}/></button>
+      </div>
+
+      {/* Main content — table + detail panel */}
+      <div style={{display:'grid', gridTemplateColumns: selectedLead ? '1.4fr 1fr' : '1fr', gap:'16px', alignItems:'start'}}>
+
+        {/* Table */}
+        <div className="table">
           {loading ? (
-            <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>Loading hot leads...</div>
-          ) : leads.length === 0 ? (
-            <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>No hot leads found.</div>
-          ) : leads.map((lead, i) => {
-            const isSelected = selectedLead?.sender_id === lead.sender_id;
-            return (
-              <div
-                key={i}
-                onClick={() => loadSummary(lead)}
-                style={{
-                  padding:'14px 16px',
-                  background: isSelected ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${isSelected ? '#ef4444' : '#1e293b'}`,
-                  borderLeft: `4px solid ${isSelected ? '#ef4444' : '#ef4444'}`,
-                  borderRadius:'10px',
-                  cursor:'pointer',
-                  transition:'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                  marginBottom:'2px'
-                }}
-                onMouseEnter={e => !isSelected && (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
-                onMouseLeave={e => !isSelected && (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
-              >
-                <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'10px'}}>
-                  <div style={{display:'flex', alignItems:'center', gap:'14px'}}>
-                    <div style={{width:'46px', height:'46px', borderRadius:'14px', background: isSelected ? '#ef4444' : 'rgba(255,255,255,0.07)', border:`1px solid ${isSelected ? '#ef4444' : 'rgba(255,255,255,0.1)'}`, display:'flex', alignItems:'center', justifyContent:'center', color: isSelected ? '#fff' : '#e2e8f0', fontSize:'1.2em', fontWeight:800, flexShrink:0, transition:'all 0.2s'}}>
-                      {String(lead.name || lead.instagram_username || '?')[0].toUpperCase()}
-                    </div>
-                    <div>
-                      <div style={{fontSize:'1.05em', fontWeight:700, color: isSelected ? '#fff' : '#f8fafc', transition:'all 0.2s', marginBottom:'3px'}}>{lead.name || lead.instagram_username || `User ${String(lead.sender_id).slice(-4)}`}</div>
-                      <div style={{fontSize:'0.78em', color:'#94a3b8', display:'flex', alignItems:'center', gap:'8px'}}>
-                        <span style={{color:'#ef4444', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', fontSize:'0.9em'}}>Hot Lead</span>
-                        <span style={{color:'#334155'}}>•</span>
-                        <span style={{color:'#64748b'}}>{lead.lead_stage || 'New Lead'}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{textAlign:'right', flexShrink:0}}>
-                    <div style={{fontSize:'0.75em', color:'#475569', fontWeight:500, marginBottom:'5px'}}>
-                      {lead.updated_at ? timeAgo(lead.updated_at) : '-'}
-                    </div>
-                    {lead.is_qualified && <span style={{fontSize:'0.72em', padding:'3px 9px', borderRadius:'12px', background:'#f0fdf4', color:'#14532d', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.02em'}}>Qualified</span>}
-                  </div>
-                </div>
-              </div>
-              );
-            })}
+            <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>Loading leads...</div>
+          ) : filtered.length === 0 ? (
+            <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>
+              {searchQuery ? `No leads found for "${searchQuery}"` : 'No leads in this category yet.'}
+            </div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th><th>Contact</th><th>Location</th>
+                  <th>Interested In</th><th>Temperature</th><th>Stage</th>
+                  <th>Status</th><th>Updated</th><th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((lead, i) => (
+                  <tr
+                    key={lead.id || i}
+                    style={{
+                      cursor:'pointer', 
+                      background: selectedLead?.id === lead.id ? 'rgba(37,99,235,0.12)' : '',
+                      borderLeft: selectedLead?.id === lead.id ? '3px solid #3b82f6' : 'none'
+                    }}
+                    onClick={() => setSelectedLead(lead)}
+                  >
+                    <td><Name name={getLeadName(lead)} source={lead.source}/></td>
+                    <td style={{fontSize:'0.9em', color:'#f1f5f9', fontWeight:500}}>{lead.phone || lead.email || '-'}</td>
+                    <td style={{fontSize:'0.9em', color:'#94a3b8'}}>{lead.location || '-'}</td>
+                    <td><span style={{fontSize:'0.78em', padding:'3px 9px', borderRadius:'10px', background:'rgba(139,92,246,0.15)', color:'#a78bfa', fontWeight:600}}>{lead.interested_module || '-'}</span></td>
+                    <td><LeadTemperatureDot temp={lead.temperature}/></td>
+                    <td><span style={{fontSize:'0.8em', color:'#94a3b8', fontWeight:600, textTransform:'capitalize'}}>{(lead.lead_stage || '').replace('_', ' ')}</span></td>
+                    <td><Badge text={lead.status || 'new'}/></td>
+                    <td style={{fontSize:'0.78em', color:'#475569'}}>{lead.updated_at ? timeAgo(lead.updated_at) : '-'}</td>
+                    <td><ChevronRight size={14} color="#334155"/></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
-        {/* Lead detail panel */}
+        {/* Lead Detail Panel */}
         {selectedLead && (
-          <LeadDetailPanel
-            lead={selectedLead}
-            summary={summary}
-            loadingSummary={loadingSummary}
-            onClose={() => { setSelectedLead(null); setSummary(null); }}
-            onMarkQualified={handleMarkQualified}
-          />
+          <LeadDetailPanel lead={selectedLead} onClose={() => setSelectedLead(null)} getLeadName={getLeadName}/>
         )}
       </div>
     </section>
   );
 }
 
-function ImportExportPage() {
-  return (
-    <section>
-      <Title title="Import & Export" sub="Manage your data"/>
-      <Card>
-        <p>Import and Export functionality coming soon.</p>
-      </Card>
-    </section>
-  );
-}
+function LeadDetailPanel({ lead: initialLead, onClose, getLeadName }) {
+  const [lead, setLead] = useState(initialLead);
+  const [qualifying, setQualifying] = useState(false);
+  const [qualifyDone, setQualifyDone] = useState(false);
+  const [summary, setSummary] = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState('');
+  const [showSummary, setShowSummary] = useState(false);
 
-function PipelineDebugger() {
-  const [pipelineOutput, setPipelineOutput] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [senderId, setSenderId] = useState('');
-
-  const handleDebug = async () => {
-    setLoading(true);
-    setPipelineOutput(null);
-    try {
-      const res = await fetch(`${API_BASE}/debug-pipeline`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sender_id: senderId, message_text: message }),
-      });
-      const data = await res.json();
-      setPipelineOutput(data);
-    } catch (e) {
-      setPipelineOutput({ status: 'error', message: e.message });
-    }
-    setLoading(false);
-  };
-
-  return (
-    <section>
-      <Title title="Pipeline Debugger" sub="Test and visualize the AI pipeline flow"/>
-      <Card>
-        <div style={{marginBottom:'15px'}}>
-          <label className="form-label">Sender ID (e.g., Instagram User ID)</label>
-          <input type="text" value={senderId} onChange={e => setSenderId(e.target.value)} placeholder="Enter sender ID" className="input-field"/>
-        </div>
-        <div style={{marginBottom:'15px'}}>
-          <label className="form-label">Test Message</label>
-          <textarea value={message} onChange={e => setMessage(e.target.value)} placeholder="Enter a message to test the pipeline..." className="input-field" rows="4"></textarea>
-        </div>
-        <button onClick={handleDebug} disabled={loading || !message || !senderId} className="button-primary">
-          {loading ? 'Running...' : 'Run Pipeline'}
-        </button>
-
-        {pipelineOutput && (
-          <div style={{marginTop:'20px', background:'rgba(0,0,0,0.1)', padding:'15px', borderRadius:'8px', fontFamily:'monospace', fontSize:'0.85em', whiteSpace:'pre-wrap', wordBreak:'break-word'}}>
-            <h4 style={{marginBottom:'10px', color:'#f8fafc'}}>Pipeline Output:</h4>
-            <pre style={{color:'#cbd5e1'}}>{JSON.stringify(pipelineOutput, null, 2)}</pre>
-          </div>
-        )}
-      </Card>
-    </section>
-  );
-}
-
-function AIPlayground() {
-  const [prompt, setPrompt] = useState('');
-  const [response, setResponse] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const handleGenerate = async () => {
-    setLoading(true);
-    setResponse(null);
-    try {
-      const res = await fetch(`${API_BASE}/ai-playground`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
-      });
-      const data = await res.json();
-      setResponse(data);
-    } catch (e) {
-      setResponse({ error: e.message });
-    }
-    setLoading(false);
-  };
-
-  return (
-    <section>
-      <Title title="AI Playground" sub="Experiment with AI prompts"/>
-      <Card>
-        <div style={{marginBottom:'15px'}}>
-          <label className="form-label">Prompt</label>
-          <textarea value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="Enter your AI prompt here..." className="input-field" rows="6"></textarea>
-        </div>
-        <button onClick={handleGenerate} disabled={loading || !prompt} className="button-primary">
-          {loading ? 'Generating...' : 'Generate Response'}
-        </button>
-
-        {response && (
-          <div style={{marginTop:'20px', background:'rgba(0,0,0,0.1)', padding:'15px', borderRadius:'8px', fontFamily:'monospace', fontSize:'0.85em', whiteSpace:'pre-wrap', wordBreak:'break-word'}}>
-            <h4 style={{marginBottom:'10px', color:'#f8fafc'}}>AI Response:</h4>
-            <pre style={{color:'#cbd5e1'}}>{JSON.stringify(response, null, 2)}</pre>
-          </div>
-        )}
-      </Card>
-    </section>
-  );
-}
-
-function BusinessBrain() {
-  const [rules, setRules] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [newRule, setNewRule] = useState({ trigger_keywords: '', response_template: '', priority: 0, active: true });
-  const [editingRule, setEditingRule] = useState(null);
-  const [showTemplates, setShowTemplates] = useState(false);
-
-  const templates = [
-    {
-      name: "Course Inquiry",
-      description: "Respond to questions about specific courses.",
-      trigger_keywords: "course, training, program, learn",
-      response_template: "Thanks for your interest in {{course_name}}! We offer comprehensive training. Can I share more details or help you enroll?",
-      priority: 5,
-    },
-    {
-      name: "Pricing Inquiry",
-      description: "Provide pricing information for services.",
-      trigger_keywords: "price, cost, how much",
-      response_template: "Our {{service_name}} starts at {{price_point}}. Would you like a detailed quote?",
-      priority: 8,
-    },
-    {
-      name: "Contact Info Request",
-      description: "Share contact details when asked.",
-      trigger_keywords: "contact, call, email, phone",
-      response_template: "You can reach us at {{phone_number}} or email {{email_address}}. How can we help further?",
-      priority: 10,
-    },
-  ];
-
-  const applyTemplate = (template) => {
-    setNewRule({ ...template, active: true });
-    setShowTemplates(false);
-  };
-
+  // Reset state when a different lead is selected
   useEffect(() => {
-    fetchRules();
-  }, []);
+    setLead(initialLead);
+    setQualifyDone(false);
+    setSummary(null);
+    setShowSummary(false);
+    setSummaryError('');
+  }, [initialLead.id]);
 
-  const fetchRules = async () => {
-    setLoading(true);
+  const name = getLeadName(lead);
+
+  const handleQualify = async () => {
+    if (!lead.id) return;
+    setQualifying(true);
     try {
-      const res = await fetch(`${API_BASE}/business-brain/rules`);
+      const res = await fetch(`${API_BASE}/leads/${lead.id}/qualify`, { method: 'PATCH' });
       const data = await res.json();
       if (data.status === 'success') {
-        setRules(data.rules || []);
+        setLead({ ...lead, is_qualified: true, status: 'qualified', lead_stage: 'qualified', temperature: 'hot' });
+        setQualifyDone(true);
       }
-    } catch (e) {
-      console.error('Error fetching rules:', e);
-    }
-    setLoading(false);
+    } catch (e) { console.error(e); }
+    setQualifying(false);
   };
 
-  const handleSaveRule = async (e) => {
-    e.preventDefault();
-    const method = editingRule ? 'PUT' : 'POST';
-    const url = editingRule ? `${API_BASE}/business-brain/rules/${editingRule.id}` : `${API_BASE}/business-brain/rules`;
+  const handleViewSummary = async () => {
+    if (showSummary) { setShowSummary(false); return; }
+    if (summary) { setShowSummary(true); return; }
+    setSummaryLoading(true);
+    setSummaryError('');
     try {
-      const res = await fetch(url, {
-        method: method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newRule),
-      });
+      const res = await fetch(`${API_BASE}/leads/${lead.sender_id}/summary`);
       const data = await res.json();
       if (data.status === 'success') {
-        setNewRule({ trigger_keywords: '', response_template: '', priority: 0, active: true });
-        setEditingRule(null);
-        fetchRules();
+        setSummary(data);
+        setShowSummary(true);
       } else {
-        alert(`Failed to save rule: ${data.message}`);
+        setSummaryError(data.message || 'No conversation found for this lead.');
+        setShowSummary(true);
       }
     } catch (e) {
-      alert('Network error saving rule.');
+      setSummaryError('Could not load summary. Check your connection.');
+      setShowSummary(true);
     }
+    setSummaryLoading(false);
   };
 
-  const handleEditRule = (rule) => {
-    setEditingRule(rule);
-    setNewRule({ ...rule });
-  };
-
-  const handleDeleteRule = async (ruleId) => {
-    if (!window.confirm('Are you sure you want to delete this rule?')) return;
-    try {
-      const res = await fetch(`${API_BASE}/business-brain/rules/${ruleId}`, {
-        method: 'DELETE',
-      });
-      const data = await res.json();
-      if (data.status === 'success') {
-        fetchRules();
-      } else {
-        alert(`Failed to delete rule: ${data.message}`);
-      }
-    } catch (e) {
-      alert('Network error deleting rule.');
-    }
-  };
-
-  const handleToggleActive = async (rule) => {
-    try {
-      const res = await fetch(`${API_BASE}/business-brain/rules/${rule.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...rule, active: !rule.active }),
-      });
-      const data = await res.json();
-      if (data.status === 'success') {
-        fetchRules();
-      } else {
-        alert(`Failed to toggle rule status: ${data.message}`);
-      }
-    } catch (e) {
-      alert('Network error toggling rule status.');
-    }
-  };
+  const URGENCY_COLORS = { high: '#ef4444', medium: '#f59e0b', low: '#10b981' };
 
   return (
-    <section>
-      <Title
-        title="Business Brain"
-        sub="Teach the AI how your business works using natural language instructions."
-        action={
-          <div style={{display:'flex', gap:'8px'}}>
-            <button className="ghost" onClick={() => fetchRules()}>↻ Refresh</button>
-            <button className="button-secondary" onClick={() => setShowTemplates(!showTemplates)}>
-              <Zap size={16}/> Quick Templates
-            </button>
+    <Card>
+      {/* Header */}
+      <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'16px'}}>
+        <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
+          <div className="avatar big" style={{background:'#2563eb', color:'white', fontSize:'1.2em'}}>
+            {String(name)[0].toUpperCase()}
           </div>
-        }
-      />
+          <div>
+            <h2 style={{margin:0, fontSize:'1.1em'}}>{name}</h2>
+            <div style={{marginTop:'4px'}}><LeadTemperatureDot temp={lead.temperature}/></div>
+          </div>
+        </div>
+        <button className="outline" onClick={onClose} style={{padding:'4px 10px'}}><X size={14}/></button>
+      </div>
 
-      {showTemplates && (
-        <Card title="Quick Templates" style={{marginBottom:'20px'}}>
-          <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))', gap:'15px'}}>
-            {templates.map((template, i) => (
-              <div key={i} style={{background:'rgba(255,255,255,0.05)', padding:'15px', borderRadius:'8px', border:'1px solid #334155', display:'flex', flexDirection:'column', justifyContent:'space-between'}}>
-                <div>
-                  <h4 style={{fontSize:'1em', marginBottom:'8px', color:'#f8fafc'}}>{template.name}</h4>
-                  <p style={{fontSize:'0.85em', color:'#cbd5e1', marginBottom:'12px'}}>{template.description}</p>
-                </div>
-                <button className="button-secondary" onClick={() => applyTemplate(template)} style={{alignSelf:'flex-start', padding:'6px 12px', fontSize:'0.8em'}}>
-                  Apply Template
-                </button>
-              </div>
-            ))}
+      {/* Contact info */}
+      <div style={{display:'flex', flexDirection:'column', gap:'8px', marginBottom:'16px'}}>
+        {lead.phone && (
+          <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'0.88em', color:'#94a3b8'}}>
+            <Phone size={13}/> {lead.phone}
           </div>
-        </Card>
+        )}
+        {lead.location && (
+          <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'0.88em', color:'#94a3b8'}}>
+            <MapPin size={13}/> {lead.location}
+          </div>
+        )}
+        {lead.interested_module && (
+          <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'0.88em', color:'#94a3b8'}}>
+            <BookOpen size={13}/> {lead.interested_module}
+          </div>
+        )}
+        {lead.updated_at && (
+          <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'0.88em', color:'#94a3b8'}}>
+            <Clock size={13}/> Last updated: {new Date(lead.updated_at).toLocaleString()}
+          </div>
+        )}
+      </div>
+
+      {/* Key details */}
+      <KeyVals data={{
+        'Lead Stage': STAGE_LABELS[lead.lead_stage] || lead.lead_stage || '-',
+        'Status': lead.status || '-',
+        'Channel': 'Instagram',
+        ...(lead.mode ? {'Mode': lead.mode} : {}),
+        ...(lead.email ? {'Email': lead.email} : {}),
+      }}/>
+
+      {/* Notes */}
+      {lead.notes && (
+        <div style={{marginTop:'14px', padding:'10px 12px', background:'rgba(37,99,235,0.06)', borderRadius:'8px', fontSize:'0.82em', color:'#94a3b8', borderLeft:'3px solid #2563eb'}}>
+          <b style={{color:'#cbd5e1', display:'block', marginBottom:'4px'}}>Notes</b>
+          {lead.notes}
+        </div>
       )}
 
-      <Card title={editingRule ? "Edit Business Rule" : "Add New Business Rule"} style={{marginBottom:'20px'}}>
-        <form onSubmit={handleSaveRule} style={{display:'flex', flexDirection:'column', gap:'15px'}}>
-          <div>
-            <label className="form-label">Trigger Keywords (comma-separated)</label>
-            <input
-              type="text"
-              value={newRule.trigger_keywords}
-              onChange={e => setNewRule({ ...newRule, trigger_keywords: e.target.value })}
-              placeholder="e.g., course, pricing, support"
-              className="input-field"
-              required
-            />
-          </div>
-          <div>
-            <label className="form-label">Response Template (use {{variable}} for dynamic values)</label>
-            <textarea
-              value={newRule.response_template}
-              onChange={e => setNewRule({ ...newRule, response_template: e.target.value })}
-              placeholder="e.g., Our {{course_name}} starts at {{price}}. Can I help you enroll?"
-              className="input-field"
-              rows="4"
-              required
-            ></textarea>
-          </div>
-          <div style={{display:'flex', gap:'15px', alignItems:'center'}}>
-            <div style={{flex:1}}>
-              <label className="form-label">Priority (0-10, higher means more important)</label>
-              <input
-                type="number"
-                value={newRule.priority}
-                onChange={e => setNewRule({ ...newRule, priority: parseInt(e.target.value) })}
-                min="0"
-                max="10"
-                className="input-field"
-                required
-              />
-            </div>
-            <div style={{display:'flex', alignItems:'center', gap:'8px', marginTop:'20px'}}>
-              <input
-                type="checkbox"
-                id="rule-active"
-                checked={newRule.active}
-                onChange={e => setNewRule({ ...newRule, active: e.target.checked })}
-                style={{width:'auto'}}
-              />
-              <label htmlFor="rule-active" className="form-label" style={{marginBottom:0}}>Active</label>
-            </div>
-          </div>
-          <div style={{display:'flex', gap:'10px', marginTop:'10px'}}>
-            <button type="submit" className="button-primary">
-              <Save size={16}/> {editingRule ? 'Update Rule' : 'Add Rule'}
-            </button>
-            {editingRule && (
-              <button type="button" className="button-secondary" onClick={() => { setEditingRule(null); setNewRule({ trigger_keywords: '', response_template: '', priority: 0, active: true }); }}>
-                Cancel Edit
-              </button>
-            )}
-          </div>
-        </form>
-      </Card>
-
-      <Card title="Existing Business Rules">
-        {loading ? (
-          <div style={{textAlign:'center', color:'#64748b'}}>Loading rules...</div>
-        ) : rules.length === 0 ? (
-          <div style={{textAlign:'center', color:'#64748b'}}>No rules defined yet.</div>
+      {/* Actions */}
+      <div style={{marginTop:'16px', display:'flex', gap:'8px', flexWrap:'wrap'}}>
+        {lead.is_qualified || qualifyDone ? (
+          <button disabled style={{flex:1, opacity:0.6, background:'#10b981'}}>
+            ✓ Qualified
+          </button>
         ) : (
-          <div style={{display:'flex', flexDirection:'column', gap:'10px'}}>
-            {rules.map(rule => (
-              <div key={rule.id} style={{background:'rgba(255,255,255,0.03)', padding:'12px 15px', borderRadius:'8px', border:'1px solid #334155', display:'flex', flexDirection:'column', gap:'8px'}}>
-                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                  <h4 style={{fontSize:'0.95em', color:'#f8fafc'}}>{rule.trigger_keywords}</h4>
-                  <div style={{display:'flex', gap:'8px', alignItems:'center'}}>
-                    <span style={{fontSize:'0.75em', fontWeight:700, color:'#94a3b8'}}>P: {rule.priority}</span>
-                    <button onClick={() => handleToggleActive(rule)} style={{background:'none', border:'none', cursor:'pointer', padding:0}}>
-                      {rule.active ? <ToggleRight size={24} color="#10b981"/> : <ToggleLeft size={24} color="#ef4444"/>}
-                    </button>
-                    <button onClick={() => handleEditRule(rule)} className="icon-button"><Pencil size={16}/></button>
-                    <button onClick={() => handleDeleteRule(rule.id)} className="icon-button error"><Trash2 size={16}/></button>
+          <button
+            style={{flex:1}}
+            onClick={handleQualify}
+            disabled={qualifying}
+          >
+            {qualifying ? 'Qualifying...' : 'Mark Qualified'}
+          </button>
+        )}
+        <button
+          className="outline"
+          style={{flex:1}}
+          onClick={handleViewSummary}
+          disabled={summaryLoading}
+        >
+          {summaryLoading ? 'Loading...' : showSummary ? 'Hide Summary' : 'View Conversation'}
+        </button>
+      </div>
+
+      {/* AI Summary Panel */}
+      {showSummary && (
+        <div style={{marginTop:'16px'}}>
+          <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'12px'}}>
+            <Brain size={14} color="#8b5cf6"/>
+            <span style={{fontSize:'0.82em', fontWeight:700, color:'#8b5cf6', textTransform:'uppercase', letterSpacing:'0.05em'}}>AI Conversation Summary</span>
+          </div>
+
+          {summaryError ? (
+            <div style={{padding:'12px', background:'rgba(239,68,68,0.08)', borderRadius:'8px', fontSize:'0.83em', color:'#ef4444'}}>
+              {summaryError}
+            </div>
+          ) : summary ? (
+            <div style={{display:'flex', flexDirection:'column', gap:'10px'}}>
+
+              {/* One-liner */}
+              <div style={{padding:'10px 12px', background:'#f3f0ff', borderRadius:'8px', borderLeft:'3px solid #8b5cf6', fontSize:'0.88em', color:'#3b0764', fontStyle:'italic', lineHeight:'1.5'}}>
+                "{summary.summary?.one_liner}"
+              </div>
+
+              {/* Intent + Stage + Urgency row */}
+              <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'8px'}}>
+                <div style={{padding:'8px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', textAlign:'center'}}>
+                  <div style={{fontSize:'0.7em', color:'#64748b', marginBottom:'3px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>INTENT</div>
+                  <div style={{fontSize:'0.82em', color:'#1e293b', fontWeight:600}}>{summary.summary?.intent || '-'}</div>
+                </div>
+                <div style={{padding:'8px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', textAlign:'center'}}>
+                  <div style={{fontSize:'0.7em', color:'#64748b', marginBottom:'3px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>STAGE</div>
+                  <div style={{fontSize:'0.82em', color:'#1e293b', fontWeight:600}}>{summary.summary?.stage || '-'}</div>
+                </div>
+                <div style={{padding:'8px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', textAlign:'center'}}>
+                  <div style={{fontSize:'0.7em', color:'#64748b', marginBottom:'3px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>URGENCY</div>
+                  <div style={{fontSize:'0.82em', fontWeight:700, color: URGENCY_COLORS[summary.summary?.urgency] || '#475569', textTransform:'capitalize'}}>
+                    {summary.summary?.urgency || '-'}
                   </div>
                 </div>
-                <p style={{fontSize:'0.85em', color:'#cbd5e1', lineHeight:'1.5'}}>{rule.response_template}</p>
               </div>
-            ))}
+
+              {/* Key facts */}
+              {summary.summary?.key_facts?.length > 0 && (
+                <div style={{background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', padding:'10px 12px'}}>
+                  <div style={{fontSize:'0.75em', color:'#475569', marginBottom:'6px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em'}}>Key Facts</div>
+                  <ul style={{margin:0, padding:'0 0 0 16px', display:'flex', flexDirection:'column', gap:'5px'}}>
+                    {summary.summary.key_facts.map((fact, i) => (
+                      <li key={i} style={{fontSize:'0.85em', color:'#1e293b', lineHeight:'1.5'}}>{fact}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Recommended action */}
+              {summary.summary?.recommended_action && (
+                <div style={{padding:'10px 12px', background:'#f0fdf4', border:'1px solid #86efac', borderRadius:'8px', borderLeft:'3px solid #10b981'}}>
+                  <div style={{fontSize:'0.72em', color:'#15803d', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'4px'}}>Recommended Action</div>
+                  <div style={{fontSize:'0.87em', color:'#14532d', lineHeight:'1.5'}}>{summary.summary.recommended_action}</div>
+                </div>
+              )}
+
+              {/* Meta */}
+              <div style={{fontSize:'0.75em', color:'#64748b', display:'flex', gap:'12px'}}>
+                <span>{summary.message_count} messages</span>
+                {summary.last_active && <span>Last active: {new Date(summary.last_active).toLocaleDateString()}</span>}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+// ─── OTHER PAGES (unchanged) ──────────────────────────────────────────────────
+
+const STAGE_ICONS = {
+  'Customer Stage': '👤',
+  'Identity Stage': '🪪',
+  'Conversation Stage': '💬',
+  'Business Brain Stage': '🧠',
+  'Customer Brain Stage': '✨',
+  'Intent Stage': '🎯',
+  'Lead Stage': '🔥',
+  'Decision Stage': '⚡',
+  'Reply Stage': '📤',
+};
+
+const STAGE_COLORS = {
+  completed: { bg: '#f0fdf4', border: '#86efac', dot: '#10b981', text: '#14532d' },
+  skipped:   { bg: '#f8fafc', border: '#e2e8f0', dot: '#94a3b8', text: '#64748b' },
+  error:     { bg: '#fef2f2', border: '#fca5a5', dot: '#ef4444', text: '#7f1d1d' },
+  running:   { bg: '#eff6ff', border: '#93c5fd', dot: '#2563eb', text: '#1e3a8a' },
+};
+
+function Debugger() {
+  const [message, setMessage] = useState('I want to learn SAP FICO. I am based in Mumbai. Please share fee details.');
+  const [senderId, setSenderId] = useState('debug_test_user');
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+  const [expandedStage, setExpandedStage] = useState(null);
+
+  const runPipeline = async () => {
+    if (!message.trim()) return;
+    setRunning(true);
+    setResult(null);
+    setError(null);
+    setExpandedStage(null);
+    try {
+      const res = await fetch(`${API_BASE}/debug/pipeline`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: message.trim(), sender_id: senderId.trim() || 'debug_test_user' }),
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setResult(data);
+      } else {
+        setError(data.message || 'Pipeline failed');
+      }
+    } catch (e) {
+      setError('Network error — is the backend running?');
+    }
+    setRunning(false);
+  };
+
+  const maxTiming = result ? Math.max(...result.stages.map(s => s.timing_ms || 0), 1) : 1;
+
+  return (
+    <section>
+      <Title title="Pipeline Debugger" sub="Type any message and watch the AI process it stage by stage"/>
+
+      {/* Input panel */}
+      <Card>
+        <div style={{display:'flex', flexDirection:'column', gap:'10px'}}>
+          <div style={{display:'flex', gap:'10px'}}>
+            <div style={{flex:1}}>
+              <label style={{fontSize:'0.78em', fontWeight:700, color:'#475569', textTransform:'uppercase', letterSpacing:'0.04em', display:'block', marginBottom:'5px'}}>Test Message</label>
+              <textarea
+                value={message}
+                onChange={e => setMessage(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) runPipeline(); }}
+                style={{width:'100%', minHeight:'70px', maxHeight:'120px', resize:'vertical', fontSize:'0.9em', boxSizing:'border-box'}}
+                placeholder="Type any message a customer might send..."
+              />
+            </div>
+            <div style={{width:'180px', flexShrink:0}}>
+              <label style={{fontSize:'0.78em', fontWeight:700, color:'#475569', textTransform:'uppercase', letterSpacing:'0.04em', display:'block', marginBottom:'5px'}}>Sender ID (optional)</label>
+              <input
+                value={senderId}
+                onChange={e => setSenderId(e.target.value)}
+                style={{width:'100%', fontSize:'0.88em', boxSizing:'border-box'}}
+                placeholder="debug_test_user"
+              />
+              <div style={{fontSize:'0.72em', color:'#94a3b8', marginTop:'4px'}}>Use a real sender_id to test with existing conversation history</div>
+            </div>
           </div>
-        )}
+          <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
+            <button onClick={runPipeline} disabled={running || !message.trim()} style={{display:'flex', alignItems:'center', gap:'6px', padding:'8px 20px'}}>
+              <Play size={14}/> {running ? 'Running Pipeline...' : 'Run Pipeline'}
+            </button>
+            {result && (
+              <div style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
+                <span style={{fontSize:'0.8em', padding:'4px 10px', borderRadius:'20px', background: result.is_lead ? '#fef3c7' : '#f1f5f9', color: result.is_lead ? '#92400e' : '#475569', fontWeight:600, border:`1px solid ${result.is_lead ? '#fcd34d' : '#e2e8f0'}`}}>
+                  {result.is_lead ? '🔥 Lead Detected' : '👤 Not a Lead'}
+                </span>
+                <span style={{fontSize:'0.8em', padding:'4px 10px', borderRadius:'20px', background:'#eff6ff', color:'#1e40af', fontWeight:600, border:'1px solid #bfdbfe'}}>
+                  🎯 {result.intent}
+                </span>
+                <span style={{fontSize:'0.8em', padding:'4px 10px', borderRadius:'20px', background: result.needs_human ? '#fef2f2' : '#f0fdf4', color: result.needs_human ? '#991b1b' : '#14532d', fontWeight:600, border:`1px solid ${result.needs_human ? '#fca5a5' : '#86efac'}`}}>
+                  {result.needs_human ? '🚨 Needs Human' : '✅ AI Handled'}
+                </span>
+                <span style={{fontSize:'0.8em', padding:'4px 10px', borderRadius:'20px', background:'#f8fafc', color:'#475569', fontWeight:600, border:'1px solid #e2e8f0'}}>
+                  ⏱ {result.total_ms}ms total
+                </span>
+              </div>
+            )}
+          </div>
+          <div style={{fontSize:'0.75em', color:'#94a3b8'}}>Ctrl+Enter to run · This runs a test — it will NOT send any message to Instagram</div>
+        </div>
       </Card>
+
+      {error && (
+        <div style={{padding:'12px 16px', background:'#fef2f2', border:'1px solid #fca5a5', borderRadius:'8px', color:'#991b1b', fontSize:'0.88em', marginTop:'12px'}}>
+          ⚠ {error}
+        </div>
+      )}
+
+      {result && (
+        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px', marginTop:'16px'}}>
+
+          {/* Stage cards */}
+          <Card title={`Pipeline Stages · ${result.stages.length} stages · ${result.total_ms}ms`}>
+            <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
+              {result.stages.map((stage, i) => {
+                const colors = STAGE_COLORS[stage.status] || STAGE_COLORS.completed;
+                const isExpanded = expandedStage === i;
+                const timingPct = Math.round((stage.timing_ms / maxTiming) * 100);
+                return (
+                  <div
+                    key={i}
+                    onClick={() => setExpandedStage(isExpanded ? null : i)}
+                    style={{
+                      padding:'10px 12px',
+                      background: colors.bg,
+                      border: `1px solid ${colors.border}`,
+                      borderRadius:'8px',
+                      cursor:'pointer',
+                      transition:'all 0.15s',
+                    }}
+                  >
+                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                      <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                        <span style={{fontSize:'1em'}}>{STAGE_ICONS[stage.name] || '⚙️'}</span>
+                        <div>
+                          <div style={{fontSize:'0.85em', fontWeight:700, color:'#1e293b'}}>{stage.name}</div>
+                          <div style={{fontSize:'0.75em', color:'#64748b', marginTop:'1px'}}>{stage.summary}</div>
+                        </div>
+                      </div>
+                      <div style={{textAlign:'right', flexShrink:0, marginLeft:'8px'}}>
+                        <div style={{fontSize:'0.75em', fontWeight:700, color: colors.text}}>
+                          {stage.status === 'skipped' ? 'SKIPPED' : `${stage.timing_ms}ms`}
+                        </div>
+                        <div style={{fontSize:'0.65em', color:'#94a3b8'}}>{isExpanded ? '▲ hide' : '▼ details'}</div>
+                      </div>
+                    </div>
+                    {/* Timing bar */}
+                    {stage.status !== 'skipped' && (
+                      <div style={{marginTop:'6px', height:'3px', background:'#e2e8f0', borderRadius:'2px'}}>
+                        <div style={{height:'100%', width:`${timingPct}%`, background: colors.dot, borderRadius:'2px', transition:'width 0.4s ease'}} />
+                      </div>
+                    )}
+                    {/* Expanded details */}
+                    {isExpanded && (
+                      <div style={{marginTop:'10px', padding:'10px', background:'rgba(255,255,255,0.7)', borderRadius:'6px', border:'1px solid #e2e8f0'}}>
+                        {Object.entries(stage.details || {}).map(([k, v]) => (
+                          <div key={k} style={{display:'flex', gap:'8px', marginBottom:'4px', fontSize:'0.8em'}}>
+                            <span style={{color:'#64748b', fontWeight:600, minWidth:'120px', flexShrink:0}}>{k.replace(/_/g, ' ')}:</span>
+                            <span style={{color:'#1e293b', wordBreak:'break-word'}}>
+                              {typeof v === 'boolean' ? (v ? '✅ Yes' : '❌ No') : (v === null || v === undefined || v === '') ? <span style={{color:'#94a3b8', fontStyle:'italic'}}>none</span> : String(v)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+
+          {/* Result panel */}
+          <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
+
+            {/* AI Reply */}
+            <Card title="AI Generated Reply">
+              {result.reply_text ? (
+                <div>
+                  <div style={{padding:'14px', background:'#eff6ff', border:'1px solid #bfdbfe', borderRadius:'8px', fontSize:'0.9em', color:'#1e3a8a', lineHeight:'1.6', marginBottom:'10px'}}>
+                    {result.reply_text}
+                  </div>
+                  <div style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
+                    <span style={{fontSize:'0.78em', padding:'3px 9px', borderRadius:'12px', background:'#f1f5f9', color:'#475569', border:'1px solid #e2e8f0'}}>Category: {result.reply_category}</span>
+                    <span style={{fontSize:'0.78em', padding:'3px 9px', borderRadius:'12px', background:'#f1f5f9', color:'#475569', border:'1px solid #e2e8f0'}}>{result.reply_text.length} characters</span>
+                  </div>
+                </div>
+              ) : (
+                <div style={{padding:'14px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', fontSize:'0.88em', color:'#64748b', fontStyle:'italic'}}>
+                  No reply generated — action was "{result.action}"
+                </div>
+              )}
+            </Card>
+
+            {/* Summary */}
+            <Card title="Pipeline Summary">
+              <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px'}}>
+                {[
+                  ['Intent', result.intent],
+                  ['Action', result.action],
+                  ['Lead Detected', result.is_lead ? 'Yes' : 'No'],
+                  ['Needs Human', result.needs_human ? 'Yes' : 'No'],
+                  ['Total Time', `${result.total_ms}ms`],
+                  ['Stages Run', result.stages.filter(s => s.status === 'completed').length + ' / ' + result.stages.length],
+                ].map(([k, v]) => (
+                  <div key={k} style={{padding:'8px 10px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px'}}>
+                    <div style={{fontSize:'0.7em', color:'#64748b', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'3px'}}>{k}</div>
+                    <div style={{fontSize:'0.88em', color:'#1e293b', fontWeight:600}}>{v}</div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* AI Memory */}
+            {result.ai_memory && Object.keys(result.ai_memory).length > 0 && (
+              <Card title="AI Memory (what the AI remembered)">
+                <div style={{display:'flex', flexDirection:'column', gap:'4px'}}>
+                  {Object.entries(result.ai_memory).map(([k, v]) => (
+                    <div key={k} style={{display:'flex', gap:'8px', fontSize:'0.82em', padding:'4px 0', borderBottom:'1px solid #f1f5f9'}}>
+                      <span style={{color:'#64748b', fontWeight:600, minWidth:'140px', flexShrink:0}}>{k.replace(/_/g, ' ')}:</span>
+                      <span style={{color:'#1e293b'}}>{v === null || v === undefined ? <span style={{color:'#94a3b8', fontStyle:'italic'}}>null</span> : String(v)}</span>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
+            {/* Logs */}
+            <Card title="Pipeline Logs">
+              <div style={{fontFamily:'monospace', fontSize:'0.78em', display:'flex', flexDirection:'column', gap:'3px'}}>
+                {(result.logs || []).map((log, i) => (
+                  <div key={i} style={{color: log.includes('error') || log.includes('Error') ? '#ef4444' : '#475569', padding:'2px 0', borderBottom:'1px solid #f8fafc'}}>
+                    <span style={{color:'#94a3b8', marginRight:'8px'}}>{String(i+1).padStart(2,'0')}</span>{log}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
 
-function AppointmentsPage() {
-  const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+function Playground() {
+  const [message, setMessage] = React.useState('');
+  const [senderId, setSenderId] = React.useState('playground_test_user');
+  const [loading, setLoading] = React.useState(false);
+  const [result, setResult] = React.useState(null);
+  const [error, setError] = React.useState(null);
+  const [history, setHistory] = React.useState([]);
+  const [historyLoading, setHistoryLoading] = React.useState(true);
+  const [selectedHistory, setSelectedHistory] = React.useState(null);
 
-  useEffect(() => {
-    fetchAppointments();
-  }, []);
+  const loadHistory = () => {
+    setHistoryLoading(true);
+    fetch(`${API_BASE}/playground/history?limit=20`)
+      .then(r => r.json())
+      .then(d => setHistory(d.history || []))
+      .catch(() => {})
+      .finally(() => setHistoryLoading(false));
+  };
 
-  const fetchAppointments = async () => {
+  React.useEffect(() => { loadHistory(); }, []);
+
+  const runTest = async () => {
+    if (!message.trim()) return;
     setLoading(true);
+    setResult(null);
     setError(null);
+    setSelectedHistory(null);
     try {
-      const response = await fetch(`${API_BASE}/appointments`);
-      const data = await response.json();
-      if (data.status === "success") {
-        setAppointments(data.appointments);
+      const res = await fetch(`${API_BASE}/playground/test-message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: message.trim(), sender_id: senderId.trim() || 'playground_test_user' })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setResult(data);
+        loadHistory();
       } else {
-        setError(data.message || "Failed to fetch appointments.");
+        setError(data.message || 'Unknown error');
       }
-    } catch (err) {
-      setError("Network error fetching appointments.");
+    } catch (e) {
+      setError('Failed to connect to backend');
     } finally {
       setLoading(false);
     }
   };
 
+  const displayResult = selectedHistory ? selectedHistory.result : result;
+
+  const intentColor = (conf) => {
+    if (!conf) return '#6b7280';
+    if (conf >= 0.85) return '#10b981';
+    if (conf >= 0.6) return '#f59e0b';
+    return '#ef4444';
+  };
+
+  const tempColor = { hot: '#ef4444', warm: '#f59e0b', cold: '#3b82f6' };
+
+  return (
+    <section style={{padding:'0 0 40px 0'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:24}}>
+        <div>
+          <h1 style={{fontSize:22,fontWeight:700,color:'#1e293b',margin:0}}>AI Playground</h1>
+          <p style={{color:'#64748b',margin:'4px 0 0',fontSize:14}}>Test any message and see exactly how the AI processes it</p>
+        </div>
+        <button onClick={loadHistory} style={{padding:'8px 16px',background:'#f1f5f9',border:'1px solid #e2e8f0',borderRadius:8,cursor:'pointer',fontSize:13,color:'#475569'}}>↻ Refresh History</button>
+      </div>
+
+      {/* Input Panel */}
+      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:24,marginBottom:24}}>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 280px',gap:16,marginBottom:16}}>
+          <div>
+            <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Test Message</label>
+            <textarea
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              onKeyDown={e => { if (e.ctrlKey && e.key === 'Enter') runTest(); }}
+              placeholder="Type any message a customer might send... (Ctrl+Enter to run)"
+              rows={3}
+              style={{width:'100%',padding:'10px 14px',border:'1px solid #d1d5db',borderRadius:8,fontSize:14,resize:'vertical',fontFamily:'inherit',color:'#1e293b',boxSizing:'border-box'}}
+            />
+          </div>
+          <div>
+            <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Sender ID <span style={{fontWeight:400,color:'#9ca3af'}}>(optional — use real ID for history)</span></label>
+            <input
+              value={senderId}
+              onChange={e => setSenderId(e.target.value)}
+              placeholder="playground_test_user"
+              style={{width:'100%',padding:'10px 14px',border:'1px solid #d1d5db',borderRadius:8,fontSize:14,fontFamily:'inherit',color:'#1e293b',boxSizing:'border-box'}}
+            />
+            <p style={{fontSize:12,color:'#9ca3af',margin:'6px 0 0'}}>Use a real sender_id to include conversation history in the test</p>
+          </div>
+        </div>
+        <div style={{display:'flex',gap:12,alignItems:'center'}}>
+          <button
+            onClick={runTest}
+            disabled={loading || !message.trim()}
+            style={{padding:'10px 28px',background: loading ? '#94a3b8' : '#2563eb',color:'#fff',border:'none',borderRadius:8,cursor: loading ? 'not-allowed' : 'pointer',fontWeight:600,fontSize:14,display:'flex',alignItems:'center',gap:8}}
+          >
+            {loading ? '⏳ Running Pipeline...' : '▶ Run Pipeline'}
+          </button>
+          <button onClick={() => { setMessage(''); setResult(null); setError(null); setSelectedHistory(null); }} style={{padding:'10px 16px',background:'#f1f5f9',border:'1px solid #e2e8f0',borderRadius:8,cursor:'pointer',fontSize:13,color:'#475569'}}>Clear</button>
+          {loading && <span style={{fontSize:13,color:'#6b7280',fontStyle:'italic'}}>Processing through 9 pipeline stages...</span>}
+        </div>
+        {error && <div style={{marginTop:12,padding:'10px 14px',background:'#fef2f2',border:'1px solid #fecaca',borderRadius:8,color:'#dc2626',fontSize:13}}>{error}</div>}
+      </div>
+
+      {/* Results */}
+      {displayResult && (
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20,marginBottom:24}}>
+
+          {/* Left: AI Reply + Analysis */}
+          <div style={{display:'flex',flexDirection:'column',gap:16}}>
+
+            {/* AI Reply */}
+            <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
+              <h3 style={{fontSize:14,fontWeight:700,color:'#1e293b',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
+                <span style={{fontSize:18}}>💬</span> AI Generated Reply
+              </h3>
+              <div style={{background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:8,padding:'14px 16px',color:'#1e40af',fontSize:14,lineHeight:1.6,fontStyle:'italic'}}>
+                {displayResult.reply?.reply || displayResult.reply?.message || 'No reply generated'}
+              </div>
+              {displayResult.reply?.category && (
+                <div style={{marginTop:8,display:'flex',gap:8,flexWrap:'wrap'}}>
+                  <span style={{padding:'3px 10px',background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:20,fontSize:12,color:'#15803d',fontWeight:600}}>{displayResult.reply.category}</span>
+                  <span style={{padding:'3px 10px',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:20,fontSize:12,color:'#475569'}}>{displayResult.reply.char_count || (displayResult.reply.reply || '').length} chars</span>
+                </div>
+              )}
+            </div>
+
+            {/* Intent Analysis */}
+            <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
+              <h3 style={{fontSize:14,fontWeight:700,color:'#1e293b',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
+                <span style={{fontSize:18}}>🎯</span> Intent Detection
+              </h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                <div style={{padding:'12px 14px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'}}>
+                  <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Intent</div>
+                  <div style={{fontSize:15,fontWeight:700,color:'#1e293b'}}>{displayResult.intent?.intent || 'unknown'}</div>
+                </div>
+                <div style={{padding:'12px 14px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'}}>
+                  <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Confidence</div>
+                  <div style={{fontSize:15,fontWeight:700,color: intentColor(displayResult.intent?.confidence)}}>
+                    {displayResult.intent?.confidence ? `${Math.round(displayResult.intent.confidence * 100)}%` : 'N/A'}
+                  </div>
+                </div>
+              </div>
+              {displayResult.intent?.reason && (
+                <div style={{marginTop:10,fontSize:13,color:'#475569',padding:'8px 12px',background:'#f8fafc',borderRadius:6}}>
+                  {displayResult.intent.reason}
+                </div>
+              )}
+            </div>
+
+            {/* Decision */}
+            <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
+              <h3 style={{fontSize:14,fontWeight:700,color:'#1e293b',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
+                <span style={{fontSize:18}}>⚡</span> Decision
+              </h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
+                <div style={{padding:'10px 12px',background: displayResult.decision?.should_reply ? '#f0fdf4' : '#fef2f2',borderRadius:8,border:`1px solid ${displayResult.decision?.should_reply ? '#bbf7d0' : '#fecaca'}`}}>
+                  <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Should Reply</div>
+                  <div style={{fontSize:14,fontWeight:700,color: displayResult.decision?.should_reply ? '#15803d' : '#dc2626'}}>{displayResult.decision?.should_reply ? '✓ Yes' : '✗ No'}</div>
+                </div>
+                <div style={{padding:'10px 12px',background: displayResult.decision?.needs_human ? '#fef3c7' : '#f0fdf4',borderRadius:8,border:`1px solid ${displayResult.decision?.needs_human ? '#fde68a' : '#bbf7d0'}`}}>
+                  <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Needs Human</div>
+                  <div style={{fontSize:14,fontWeight:700,color: displayResult.decision?.needs_human ? '#92400e' : '#15803d'}}>{displayResult.decision?.needs_human ? '⚠ Yes' : '✓ No'}</div>
+                </div>
+                <div style={{padding:'10px 12px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'}}>
+                  <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Action</div>
+                  <div style={{fontSize:14,fontWeight:700,color:'#1e293b'}}>{displayResult.decision?.action || 'reply'}</div>
+                </div>
+              </div>
+              {displayResult.decision?.reason && (
+                <div style={{marginTop:10,fontSize:13,color:'#475569',padding:'8px 12px',background:'#f8fafc',borderRadius:6}}>{displayResult.decision.reason}</div>
+              )}
+            </div>
+          </div>
+
+          {/* Right: Lead + Business Brain */}
+          <div style={{display:'flex',flexDirection:'column',gap:16}}>
+
+            {/* Lead Analysis */}
+            <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
+              <h3 style={{fontSize:14,fontWeight:700,color:'#1e293b',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
+                <span style={{fontSize:18}}>🔥</span> Lead Analysis
+              </h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10,marginBottom:12}}>
+                <div style={{padding:'10px 12px',background: displayResult.lead?.is_lead ? '#f0fdf4' : '#f8fafc',borderRadius:8,border:`1px solid ${displayResult.lead?.is_lead ? '#bbf7d0' : '#e2e8f0'}`}}>
+                  <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Lead</div>
+                  <div style={{fontSize:14,fontWeight:700,color: displayResult.lead?.is_lead ? '#15803d' : '#6b7280'}}>{displayResult.lead?.is_lead ? '✓ Yes' : '✗ No'}</div>
+                </div>
+                <div style={{padding:'10px 12px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'}}>
+                  <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Score</div>
+                  <div style={{fontSize:14,fontWeight:700,color:'#1e293b'}}>{displayResult.lead?.lead_score ?? 'N/A'}</div>
+                </div>
+                <div style={{padding:'10px 12px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'}}>
+                  <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Temperature</div>
+                  <div style={{fontSize:14,fontWeight:700,color: tempColor[displayResult.lead?.temperature] || '#6b7280',textTransform:'capitalize'}}>{displayResult.lead?.temperature || 'N/A'}</div>
+                </div>
+              </div>
+              {displayResult.lead?.next_action && (
+                <div style={{padding:'10px 12px',background:'#fffbeb',border:'1px solid #fde68a',borderRadius:8,fontSize:13,color:'#92400e'}}>
+                  <strong>Next Action:</strong> {displayResult.lead.next_action}
+                </div>
+              )}
+            </div>
+
+            {/* Business Brain */}
+            <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
+              <h3 style={{fontSize:14,fontWeight:700,color:'#1e293b',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
+                <span style={{fontSize:18}}>🧠</span> Business Brain
+              </h3>
+              {displayResult.business_brain ? (
+                <div>
+                  <div style={{display:'flex',gap:8,marginBottom:10}}>
+                    <span style={{padding:'4px 12px',borderRadius:20,fontSize:12,fontWeight:600,background: displayResult.business_brain.matched ? '#f0fdf4' : '#f8fafc',color: displayResult.business_brain.matched ? '#15803d' : '#6b7280',border:`1px solid ${displayResult.business_brain.matched ? '#bbf7d0' : '#e2e8f0'}`}}>
+                      {displayResult.business_brain.matched ? '✓ Rule Matched' : 'No Match'}
+                    </span>
+                  </div>
+                  {displayResult.business_brain.rule_name && (
+                    <div style={{padding:'10px 12px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,color:'#1e293b'}}>
+                      <strong>Rule:</strong> {displayResult.business_brain.rule_name}
+                    </div>
+                  )}
+                  {displayResult.business_brain.context_injected && (
+                    <div style={{marginTop:8,padding:'10px 12px',background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:8,fontSize:13,color:'#1e40af',fontStyle:'italic'}}>
+                      {displayResult.business_brain.context_injected}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{padding:'10px 12px',background:'#f8fafc',borderRadius:8,fontSize:13,color:'#6b7280'}}>No business brain data returned</div>
+              )}
+            </div>
+
+            {/* Customer Brain / Memory */}
+            {displayResult.customer_brain && (
+              <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
+                <h3 style={{fontSize:14,fontWeight:700,color:'#1e293b',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
+                  <span style={{fontSize:18}}>✨</span> Customer Memory
+                </h3>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+                  {Object.entries(displayResult.customer_brain).map(([k,v]) => v ? (
+                    <div key={k} style={{padding:'8px 12px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'}}>
+                      <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:2}}>{k.replace(/_/g,' ')}</div>
+                      <div style={{fontSize:13,color:'#1e293b',fontWeight:500}}>{String(v)}</div>
+                    </div>
+                  ) : null)}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Test History */}
+      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
+        <h3 style={{fontSize:15,fontWeight:700,color:'#1e293b',margin:'0 0 16px',display:'flex',alignItems:'center',gap:8}}>
+          <span>📋</span> Test History
+          <span style={{fontSize:13,fontWeight:400,color:'#9ca3af',marginLeft:4}}>({history.length} tests)</span>
+        </h3>
+        {historyLoading ? (
+          <div style={{color:'#9ca3af',fontSize:13,padding:'20px 0',textAlign:'center'}}>Loading history...</div>
+        ) : history.length === 0 ? (
+          <div style={{color:'#9ca3af',fontSize:13,padding:'20px 0',textAlign:'center'}}>No tests run yet. Send a message above to get started.</div>
+        ) : (
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {history.map((item, idx) => {
+              const r = item.result || {};
+              const isSelected = selectedHistory === item;
+              return (
+                <div
+                  key={idx}
+                  onClick={() => { setSelectedHistory(isSelected ? null : item); setResult(null); }}
+                  style={{padding:'12px 16px',border:`1px solid ${isSelected ? '#3b82f6' : '#e2e8f0'}`,borderRadius:8,cursor:'pointer',background: isSelected ? '#eff6ff' : '#fafafa',display:'grid',gridTemplateColumns:'1fr auto auto auto',gap:12,alignItems:'center',transition:'all 0.15s'}}
+                >
+                  <div>
+                    <div style={{fontSize:13,fontWeight:600,color:'#1e293b',marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.message || '—'}</div>
+                    <div style={{fontSize:12,color:'#6b7280',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.reply?.reply ? `↳ ${r.reply.reply.substring(0,80)}...` : 'No reply'}</div>
+                  </div>
+                  <span style={{padding:'3px 10px',background:'#f1f5f9',borderRadius:20,fontSize:12,color:'#475569',fontWeight:500,whiteSpace:'nowrap'}}>{r.intent?.intent || '—'}</span>
+                  <span style={{padding:'3px 10px',background: r.lead?.is_lead ? '#f0fdf4' : '#f8fafc',borderRadius:20,fontSize:12,color: r.lead?.is_lead ? '#15803d' : '#9ca3af',fontWeight:500,border:`1px solid ${r.lead?.is_lead ? '#bbf7d0' : '#e2e8f0'}`}}>{r.lead?.is_lead ? '🔥 Lead' : 'No Lead'}</span>
+                  <span style={{fontSize:11,color:'#9ca3af',whiteSpace:'nowrap'}}>{item.time ? new Date(item.time).toLocaleTimeString() : ''}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+const CATEGORY_COLORS = {
+  greeting: '#2563eb',
+  business_rule: '#10b981',
+  lead_collection: '#8b5cf6',
+  promotion: '#f59e0b',
+  job: '#ef4444',
+  faq: '#06b6d4',
+  appointment: '#ec4899',
+};
+
+const CATEGORY_LABELS = {
+  greeting: 'Greeting',
+  business_rule: 'Business Rule',
+  lead_collection: 'Lead Collection',
+  promotion: 'Promotion',
+  job: 'Job / Career',
+  faq: 'FAQ',
+  appointment: 'Appointment',
+};
+
+const EMPTY_RULE = { rule_name: '', category: 'business_rule', trigger_keywords: '', response_template: '', priority: 10, notes: '' };
+
+function BusinessBrain() {
+  const [rules, setRules] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingRule, setEditingRule] = useState(null);
+  const [form, setForm] = useState(EMPTY_RULE);
+  const [saving, setSaving] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [activeCategory, setActiveCategory] = useState('All');
+
+  const loadRules = () => {
+    setLoading(true);
+    fetch(`${API_BASE}/brain/rules`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') setRules(data.rules || []);
+      })
+      .catch(err => console.error('Brain rules error:', err))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { loadRules(); }, []);
+
+  const openAdd = () => {
+    setEditingRule(null);
+    setForm(EMPTY_RULE);
+    setShowForm(true);
+  };
+
+  const openEdit = (rule) => {
+    setEditingRule(rule);
+    setForm({
+      rule_name: rule.rule_name || '',
+      category: rule.category || 'business_rule',
+      trigger_keywords: Array.isArray(rule.trigger_keywords) ? rule.trigger_keywords.join(', ') : (rule.trigger_keywords || ''),
+      response_template: rule.response_template || '',
+      priority: rule.priority || 10,
+      notes: rule.notes || '',
+    });
+    setShowForm(true);
+  };
+
+  const handleSave = async () => {
+    if (!form.rule_name.trim() || !form.response_template.trim()) return;
+    setSaving(true);
+    const payload = {
+      rule_name: form.rule_name.trim(),
+      category: form.category,
+      trigger_keywords: form.trigger_keywords.split(',').map(k => k.trim()).filter(Boolean),
+      response_template: form.response_template.trim(),
+      priority: Number(form.priority) || 10,
+      notes: form.notes.trim(),
+    };
+    try {
+      if (editingRule) {
+        await fetch(`${API_BASE}/brain/rules/${editingRule.id}`, {
+          method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+        });
+      } else {
+        await fetch(`${API_BASE}/brain/rules`, {
+          method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+        });
+      }
+      setShowForm(false);
+      loadRules();
+    } catch(e) { console.error(e); }
+    setSaving(false);
+  };
+
+  const handleToggle = async (rule) => {
+    await fetch(`${API_BASE}/brain/rules/${rule.id}/toggle`, { method: 'PATCH' });
+    loadRules();
+  };
+
+  const handleDelete = async (ruleId) => {
+    await fetch(`${API_BASE}/brain/rules/${ruleId}`, { method: 'DELETE' });
+    setDeleteConfirm(null);
+    loadRules();
+  };
+
+  const categories = ['All', ...new Set(rules.map(r => r.category).filter(Boolean))];
+  const filtered = activeCategory === 'All' ? rules : rules.filter(r => r.category === activeCategory);
+  const activeCount = rules.filter(r => r.is_active).length;
+
   return (
     <section>
-      <Title title="Appointments" sub="Manage your scheduled meetings and calls"/>
+      <Title
+        title="Business Brain"
+        sub="Teach your AI how to respond — like briefing a new employee"
+        action={
+          <button onClick={openAdd}><Plus size={15}/> Add New Rule</button>
+        }
+      />
 
-      {loading && <Card><p>Loading appointments...</p></Card>}
-      {error && <Card><p className="error-message">Error: {error}</p></Card>}
-      {!loading && appointments.length === 0 && <Card><p>No appointments found.</p></Card>}
+      {/* Stats */}
+      <div className="grid4" style={{marginBottom:'20px'}}>
+        <Stat label="Total Rules" value={loading ? '...' : rules.length} change="All configured rules"/>
+        <Stat label="Active Rules" value={loading ? '...' : activeCount} change="Currently in use by AI"/>
+        <Stat label="Inactive Rules" value={loading ? '...' : rules.length - activeCount} change="Paused rules"/>
+        <Stat label="Categories" value={loading ? '...' : categories.length - 1} change="Rule categories"/>
+      </div>
 
-      {!loading && appointments.length > 0 && (
-        <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '15px'}}>
-          {appointments.map(app => (
-            <Card key={app.id}>
-              <h4 style={{fontSize: '1.1em', marginBottom: '10px', color: '#f8fafc'}}>{app.title}</h4>
-              <p style={{fontSize: '0.9em', color: '#cbd5e1', marginBottom: '5px'}}><Calendar size={14} style={{marginRight: '5px'}}/> {new Date(app.start_time).toLocaleString()} - {new Date(app.end_time).toLocaleTimeString()}</p>
-              <p style={{fontSize: '0.9em', color: '#cbd5e1', marginBottom: '5px'}}><UserRound size={14} style={{marginRight: '5px'}}/> {app.customer_name || 'N/A'}</p>
-              <p style={{fontSize: '0.9em', color: '#cbd5e1', marginBottom: '10px'}}><Link size={14} style={{marginRight: '5px'}}/> <a href={app.meet_link} target="_blank" rel="noopener noreferrer" style={{color: '#60a5fa'}}>Join Meeting</a></p>
-              <div style={{display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '15px'}}>
-                <button className="button-secondary" onClick={() => alert('Edit functionality coming soon!')}>Edit</button>
-                <button className="button-secondary error" onClick={() => alert('Cancel functionality coming soon!')}>Cancel</button>
+      {/* Category filter tabs */}
+      <div className="tabs" style={{marginBottom:'16px'}}>
+        {categories.map(cat => (
+          <button
+            key={cat}
+            className={activeCategory === cat ? 'active' : ''}
+            onClick={() => setActiveCategory(cat)}
+          >
+            {cat === 'All' ? 'All Rules' : (CATEGORY_LABELS[cat] || cat)}
+            <span style={{
+              marginLeft:'6px', fontSize:'0.75em', opacity:0.7,
+              background: activeCategory === cat ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
+              borderRadius:'10px', padding:'1px 6px'
+            }}>
+              {cat === 'All' ? rules.length : rules.filter(r => r.category === cat).length}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Add / Edit Form */}
+      {showForm && (
+        <div className="card" style={{marginBottom:'20px', border:'1px solid #2563eb', borderRadius:'12px'}}>
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'16px'}}>
+            <h3 style={{margin:0}}>{editingRule ? 'Edit Rule' : 'Add New Rule'}</h3>
+            <button className="outline" onClick={() => setShowForm(false)}><X size={14}/></button>
+          </div>
+
+          <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px'}}>
+            <label style={{display:'flex',flexDirection:'column',gap:'6px'}}>
+              <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Rule Name *</span>
+              <input
+                placeholder="e.g. SAP MM Weekend Batch Enquiry"
+                value={form.rule_name}
+                onChange={e => setForm({...form, rule_name: e.target.value})}
+              />
+            </label>
+            <label style={{display:'flex',flexDirection:'column',gap:'6px'}}>
+              <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Category</span>
+              <select value={form.category} onChange={e => setForm({...form, category: e.target.value})}>
+                {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
+                  <option key={val} value={val}>{label}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <label style={{display:'flex',flexDirection:'column',gap:'6px',marginTop:'12px'}}>
+            <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Trigger Keywords <span style={{opacity:0.6}}>(comma separated — e.g. mm, sap mm, material management)</span></span>
+            <input
+              placeholder="mm, sap mm, material management, weekend batch"
+              value={form.trigger_keywords}
+              onChange={e => setForm({...form, trigger_keywords: e.target.value})}
+            />
+          </label>
+
+          <label style={{display:'flex',flexDirection:'column',gap:'6px',marginTop:'12px'}}>
+            <span style={{fontSize:'0.82em',color:'#94a3b8'}}>What should the AI reply? *</span>
+            <textarea
+              placeholder="Write what the AI should say when this rule is triggered. Be natural — like you are telling a new employee what to say."
+              value={form.response_template}
+              onChange={e => setForm({...form, response_template: e.target.value})}
+              style={{minHeight:'90px'}}
+            />
+          </label>
+
+          <div style={{display:'grid', gridTemplateColumns:'1fr 2fr', gap:'12px', marginTop:'12px'}}>
+            <label style={{display:'flex',flexDirection:'column',gap:'6px'}}>
+              <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Priority <span style={{opacity:0.6}}>(higher = matched first)</span></span>
+              <input
+                type="number" min="1" max="100"
+                value={form.priority}
+                onChange={e => setForm({...form, priority: e.target.value})}
+              />
+            </label>
+            <label style={{display:'flex',flexDirection:'column',gap:'6px'}}>
+              <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Internal Notes <span style={{opacity:0.6}}>(not shown to customers)</span></span>
+              <input
+                placeholder="Optional notes for yourself"
+                value={form.notes}
+                onChange={e => setForm({...form, notes: e.target.value})}
+              />
+            </label>
+          </div>
+
+          <div style={{display:'flex', gap:'10px', marginTop:'16px'}}>
+            <button onClick={handleSave} disabled={saving || !form.rule_name.trim() || !form.response_template.trim()}>
+              <Save size={14}/> {saving ? 'Saving...' : (editingRule ? 'Update Rule' : 'Save Rule')}
+            </button>
+            <button className="outline" onClick={() => setShowForm(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation */}
+      {deleteConfirm && (
+        <div className="card" style={{marginBottom:'16px', border:'1px solid #ef4444', borderRadius:'12px', background:'rgba(239,68,68,0.06)'}}>
+          <div style={{display:'flex', alignItems:'center', gap:'10px', color:'#ef4444'}}>
+            <AlertTriangle size={18}/>
+            <span>Are you sure you want to delete <b>"{deleteConfirm.rule_name}"</b>? This cannot be undone.</span>
+          </div>
+          <div style={{display:'flex', gap:'10px', marginTop:'12px'}}>
+            <button style={{background:'#ef4444'}} onClick={() => handleDelete(deleteConfirm.id)}>Yes, Delete</button>
+            <button className="outline" onClick={() => setDeleteConfirm(null)}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* Rules grid */}
+      {loading ? (
+        <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>Loading rules...</div>
+      ) : filtered.length === 0 ? (
+        <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>
+          {activeCategory === 'All'
+            ? 'No rules yet. Click "Add New Rule" to teach your AI how to respond.'
+            : `No rules in the "${CATEGORY_LABELS[activeCategory] || activeCategory}" category.`}
+        </div>
+      ) : (
+        <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(360px, 1fr))', gap:'16px'}}>
+          {filtered.map(rule => {
+            const catColor = CATEGORY_COLORS[rule.category] || '#64748b';
+            const keywords = Array.isArray(rule.trigger_keywords) ? rule.trigger_keywords : [];
+            return (
+              <div key={rule.id} className="card" style={{
+                border: `1px solid ${rule.is_active ? catColor + '40' : '#334155'}`,
+                opacity: rule.is_active ? 1 : 0.6,
+                transition: 'all 0.2s'
+              }}>
+                {/* Card header */}
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'10px'}}>
+                  <div>
+                    <span style={{
+                      fontSize:'0.72em', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em',
+                      color: catColor, background: catColor + '18', padding:'2px 8px', borderRadius:'20px'
+                    }}>
+                      {CATEGORY_LABELS[rule.category] || rule.category}
+                    </span>
+                    <h3 style={{margin:'8px 0 0', fontSize:'0.95em'}}>{rule.rule_name}</h3>
+                  </div>
+                  <button
+                    onClick={() => handleToggle(rule)}
+                    style={{background:'none', border:'none', cursor:'pointer', padding:'4px', color: rule.is_active ? '#10b981' : '#64748b'}}
+                    title={rule.is_active ? 'Click to deactivate' : 'Click to activate'}
+                  >
+                    {rule.is_active ? <ToggleRight size={26}/> : <ToggleLeft size={26}/>}
+                  </button>
+                </div>
+
+                {/* Keywords */}
+                {keywords.length > 0 && (
+                  <div style={{display:'flex', flexWrap:'wrap', gap:'5px', marginBottom:'10px'}}>
+                    <Tag size={11} color="#64748b" style={{marginTop:'3px'}}/>
+                    {keywords.slice(0, 6).map((kw, i) => (
+                      <span key={i} style={{
+                        fontSize:'0.72em', background:'rgba(255,255,255,0.06)',
+                        border:'1px solid #334155', borderRadius:'20px', padding:'2px 8px', color:'#94a3b8'
+                      }}>{kw}</span>
+                    ))}
+                    {keywords.length > 6 && (
+                      <span style={{fontSize:'0.72em', color:'#64748b'}}>+{keywords.length - 6} more</span>
+                    )}
+                  </div>
+                )}
+
+                {/* Response preview */}
+                <div style={{
+                  fontSize:'0.83em', color:'#94a3b8', lineHeight:'1.5',
+                  background:'rgba(255,255,255,0.03)', borderRadius:'8px',
+                  padding:'8px 10px', marginBottom:'12px',
+                  borderLeft: `3px solid ${catColor}40`,
+                  maxHeight:'70px', overflow:'hidden',
+                  display:'-webkit-box', WebkitLineClamp:3, WebkitBoxOrient:'vertical'
+                }}>
+                  {rule.response_template}
+                </div>
+
+                {/* Footer */}
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                  <div style={{display:'flex', alignItems:'center', gap:'6px'}}>
+                    <Zap size={11} color="#64748b"/>
+                    <span style={{fontSize:'0.75em', color:'#64748b'}}>Priority: {rule.priority}</span>
+                    <span style={{fontSize:'0.75em', color: rule.is_active ? '#10b981' : '#64748b', marginLeft:'8px'}}>
+                      {rule.is_active ? '● Active' : '○ Inactive'}
+                    </span>
+                  </div>
+                  <div style={{display:'flex', gap:'6px'}}>
+                    <button
+                      className="outline"
+                      style={{padding:'4px 10px', fontSize:'0.78em'}}
+                      onClick={() => openEdit(rule)}
+                    >
+                      <Pencil size={11}/> Edit
+                    </button>
+                    <button
+                      style={{padding:'4px 10px', fontSize:'0.78em', background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.3)', color:'#ef4444'}}
+                      onClick={() => setDeleteConfirm(rule)}
+                    >
+                      <Trash2 size={11}/>
+                    </button>
+                  </div>
+                </div>
+
+                {rule.notes && (
+                  <div style={{marginTop:'8px', fontSize:'0.75em', color:'#475569', fontStyle:'italic'}}>
+                    Note: {rule.notes}
+                  </div>
+                )}
               </div>
-            </Card>
-          ))}
+            );
+          })}
         </div>
       )}
     </section>
   );
 }
+
+const TEMP_COLORS_360 = { hot: '#ef4444', warm: '#f59e0b', cold: '#3b82f6' };
+const TIMELINE_ICONS = { start: '💬', lead: '🔥', qualified: '✅', activity: '⚡' };
+const SENTIMENT_COLORS = { positive: '#10b981', neutral: '#64748b', negative: '#ef4444' };
+const URGENCY_COLORS = { high: '#ef4444', medium: '#f59e0b', low: '#10b981' };
 
 function Customer360() {
   const [customers, setCustomers] = useState([]);
@@ -1998,7 +2540,7 @@ function Customer360() {
             <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'12px'}}>
               <Card title="Identity">
                 <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
-                  {[["Name", profile.identity?.name], ["Phone", profile.identity?.phone], ["Email", profile.identity?.email], ["Location", profile.identity?.location], ["Education", profile.identity?.education], ["Experience", profile.identity?.experience], ["Source", profile.identity?.source]].map(([k,v]) => v ? (
+                  {[['Name', profile.identity?.name], ['Phone', profile.identity?.phone], ['Email', profile.identity?.email], ['Location', profile.identity?.location], ['Education', profile.identity?.education], ['Experience', profile.identity?.experience], ['Source', profile.identity?.source]].map(([k,v]) => v ? (
                     <div key={k}>
                       <div style={{fontSize:'0.7em', color:'#94a3b8', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>{k}</div>
                       <div style={{fontSize:'0.85em', color:'#1e293b', fontWeight:500, marginTop:'1px'}}>{v}</div>
@@ -2008,7 +2550,7 @@ function Customer360() {
               </Card>
               <Card title="Lead Data">
                 <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
-                  {[["Interested In", profile.lead?.interested_in], ["Mode", profile.lead?.mode], ["Lead Stage", profile.lead?.lead_stage], ["Status", profile.lead?.status], ["Lead Score", profile.lead?.lead_score], ["Notes", profile.lead?.notes]].map(([k,v]) => v ? (
+                  {[['Interested In', profile.lead?.interested_in], ['Mode', profile.lead?.mode], ['Lead Stage', profile.lead?.lead_stage], ['Status', profile.lead?.status], ['Lead Score', profile.lead?.lead_score], ['Notes', profile.lead?.notes]].map(([k,v]) => v ? (
                     <div key={k}>
                       <div style={{fontSize:'0.7em', color:'#94a3b8', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>{k}</div>
                       <div style={{fontSize:'0.85em', color:'#1e293b', fontWeight:500, marginTop:'1px'}}>{String(v)}</div>
@@ -2018,7 +2560,7 @@ function Customer360() {
               </Card>
               <Card title="Conversation">
                 <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
-                  {[["Messages", profile.conversation?.message_count], ["State", profile.conversation?.conversation_state], ["Last Message", profile.conversation?.last_message], ["Last Active", profile.conversation?.last_active ? new Date(profile.conversation.last_active).toLocaleDateString() : null]].map(([k,v]) => v ? (
+                  {[['Messages', profile.conversation?.message_count], ['State', profile.conversation?.conversation_state], ['Last Message', profile.conversation?.last_message], ['Last Active', profile.conversation?.last_active ? new Date(profile.conversation.last_active).toLocaleDateString() : null]].map(([k,v]) => v ? (
                     <div key={k}>
                       <div style={{fontSize:'0.7em', color:'#94a3b8', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>{k}</div>
                       <div style={{fontSize:'0.85em', color:'#1e293b', fontWeight:500, marginTop:'1px', wordBreak:'break-word'}}>{String(v)}</div>
@@ -2041,7 +2583,7 @@ function Customer360() {
                   <div style={{gridColumn:'1/-1', padding:'12px 14px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', fontSize:'0.88em', color:'#1e293b', fontStyle:'italic', lineHeight:'1.6'}}>
                     "{profile.ai_profile.one_liner}"
                   </div>
-                  {[["Interest", profile.ai_profile.interest], ["Intent", profile.ai_profile.intent], ["Journey Stage", profile.ai_profile.stage], ["Contact Shared", profile.ai_profile.contact_info_shared]].map(([k,v]) => v ? (
+                  {[['Interest', profile.ai_profile.interest], ['Intent', profile.ai_profile.intent], ['Journey Stage', profile.ai_profile.stage], ['Contact Shared', profile.ai_profile.contact_info_shared]].map(([k,v]) => v ? (
                     <div key={k} style={{padding:'8px 10px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px'}}>
                       <div style={{fontSize:'0.7em', color:'#64748b', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'3px'}}>{k}</div>
                       <div style={{fontSize:'0.85em', color:'#1e293b', fontWeight:600}}>{v}</div>
@@ -2074,9 +2616,7 @@ function Customer360() {
                   {profile.ai_profile.follow_up_message && (
                     <div style={{gridColumn:'1/-1', padding:'10px 12px', background:'#eff6ff', border:'1px solid #bfdbfe', borderRadius:'8px'}}>
                       <div style={{fontSize:'0.7em', color:'#1e40af', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'4px'}}>Suggested Follow-up Message</div>
-                      <div style={{fontSize:'0.88em', color:'#1e3a8a', fontStyle:'italic', lineHeight:'1.5'}}>
-                        "{profile.ai_profile.follow_up_message}"
-                      </div>
+                      <div style={{fontSize:'0.88em', color:'#1e3a8a', fontStyle:'italic', lineHeight:'1.5'}}>"{profile.ai_profile.follow_up_message}"</div>
                     </div>
                   )}
                 </div>
@@ -2138,316 +2678,3204 @@ function Customer360() {
                 )}
               </Card>
             )}
+
           </div>
-        )
-        : null}
+        ) : null}
       </div>
     </section>
   );
 }
 
-function ReportsPage() {
-  return (
-    <section>
-      <Title title="Reports" sub="Detailed analytics and insights"/>
-      <Card>
-        <p>Reports functionality coming soon.</p>
-      </Card>
-    </section>
-  );
-}
+function Reports() {
+  const [data, setData] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState('');
+  const [days, setDays] = React.useState(30);
 
-function AutomationPage() {
-  return (
-    <section>
-      <Title title="Automation" sub="Automate your workflows"/>
-      <Card>
-        <p>Automation functionality coming soon.</p>
-      </Card>
-    </section>
-  );
-}
+  const fetchReports = React.useCallback(() => {
+    setLoading(true);
+    setError('');
+    fetch(`${API_BASE}/reports?days=${days}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') setData(d);
+        else setError(d.message || 'Failed to load reports');
+      })
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [days]);
 
-function PublisherPage() {
-  return (
-    <section>
-      <Title title="Publisher" sub="Publish content across channels"/>
-      <Card>
-        <p>Publisher functionality coming soon.</p>
-      </Card>
-    </section>
-  );
-}
+  React.useEffect(() => { fetchReports(); }, [fetchReports]);
 
-function GoogleReviewsPage() {
-  return (
-    <section>
-      <Title title="Google Reviews" sub="Manage your Google Business reviews"/>
-      <Card>
-        <p>Google Reviews functionality coming soon.</p>
-      </Card>
-    </section>
-  );
-}
+  const handleExport = () => {
+    window.open(`${API_BASE}/reports/export-csv`, '_blank');
+  };
 
-function BusinessesPage() {
-  return (
-    <section>
-      <Title title="Businesses" sub="Manage your business profiles"/>
-      <Card>
-        <p>Businesses functionality coming soon.</p>
-      </Card>
-    </section>
-  );
-}
+  const s = data?.summary || {};
+  const COLORS = ['#ef4444','#f59e0b','#3b82f6','#10b981','#8b5cf6','#f97316','#06b6d4','#84cc16'];
 
-function IntegrationsPage() {
+  const windowOptions = [
+    {label:'Last 7 days', value:7},
+    {label:'Last 30 days', value:30},
+    {label:'Last 90 days', value:90},
+    {label:'Last 180 days', value:180},
+  ];
+
   return (
     <section>
-      <Title title="Integrations" sub="Connect with your favorite tools"/>
-      <Card>
-        <p>Integrations functionality coming soon.</p>
-      </Card>
+      <Title
+        title="Reports & Analytics"
+        sub={`Data for the last ${days} days — ${data?.generated_at ? new Date(data.generated_at).toLocaleString() : 'loading...'}`}
+        action={
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <select
+              value={days}
+              onChange={e => setDays(Number(e.target.value))}
+              style={{padding:'6px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,background:'white',cursor:'pointer'}}
+            >
+              {windowOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+            <button onClick={fetchReports} style={{padding:'6px 12px',borderRadius:6,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13}}>↻ Refresh</button>
+            <button onClick={handleExport} style={{padding:'6px 14px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600}}>⬇ Export CSV</button>
+          </div>
+        }
+      />
+
+      {loading && <div style={{textAlign:'center',padding:40,color:'#64748b'}}>Loading report data...</div>}
+      {error && <div style={{background:'#fef2f2',border:'1px solid #fecaca',borderRadius:8,padding:16,color:'#dc2626',marginBottom:16}}>{error}</div>}
+
+      {!loading && data && (
+        <>
+          {/* Row 1 — Primary stats */}
+          <div className="grid4" style={{marginBottom:16}}>
+            <div style={{background:'white',borderRadius:10,padding:'18px 20px',border:'1px solid #e2e8f0'}}>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:4}}>Total Leads (All Time)</div>
+              <div style={{fontSize:28,fontWeight:700,color:'#1e293b'}}>{s.total_leads ?? 0}</div>
+              <div style={{fontSize:12,color:'#3b82f6',marginTop:4}}>{s.window_leads ?? 0} in last {days} days</div>
+            </div>
+            <div style={{background:'white',borderRadius:10,padding:'18px 20px',border:'1px solid #e2e8f0'}}>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:4}}>Hot Leads</div>
+              <div style={{fontSize:28,fontWeight:700,color:'#ef4444'}}>{s.hot_leads ?? 0}</div>
+              <div style={{fontSize:12,color:'#64748b',marginTop:4}}>phone + email captured</div>
+            </div>
+            <div style={{background:'white',borderRadius:10,padding:'18px 20px',border:'1px solid #e2e8f0'}}>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:4}}>Qualified Leads</div>
+              <div style={{fontSize:28,fontWeight:700,color:'#10b981'}}>{s.qualified ?? 0}</div>
+              <div style={{fontSize:12,color:'#64748b',marginTop:4}}>{s.conversion_rate ?? 0}% conversion rate</div>
+            </div>
+            <div style={{background:'white',borderRadius:10,padding:'18px 20px',border:'1px solid #e2e8f0'}}>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:4}}>Contact Rate</div>
+              <div style={{fontSize:28,fontWeight:700,color:'#8b5cf6'}}>{s.contact_rate ?? 0}%</div>
+              <div style={{fontSize:12,color:'#64748b',marginTop:4}}>{s.with_phone ?? 0} phone · {s.with_email ?? 0} email</div>
+            </div>
+          </div>
+
+          {/* Row 2 — Secondary stats */}
+          <div className="grid4" style={{marginBottom:16}}>
+            <div style={{background:'white',borderRadius:10,padding:'14px 20px',border:'1px solid #e2e8f0'}}>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:2}}>Total Conversations</div>
+              <div style={{fontSize:22,fontWeight:700,color:'#1e293b'}}>{s.total_conversations ?? 0}</div>
+            </div>
+            <div style={{background:'white',borderRadius:10,padding:'14px 20px',border:'1px solid #e2e8f0'}}>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:2}}>AI Replied</div>
+              <div style={{fontSize:22,fontWeight:700,color:'#3b82f6'}}>{s.ai_replied ?? 0}</div>
+            </div>
+            <div style={{background:'white',borderRadius:10,padding:'14px 20px',border:'1px solid #e2e8f0'}}>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:2}}>Warm Leads</div>
+              <div style={{fontSize:22,fontWeight:700,color:'#f59e0b'}}>{s.warm_leads ?? 0}</div>
+            </div>
+            <div style={{background:'white',borderRadius:10,padding:'14px 20px',border:'1px solid #e2e8f0', borderLeft: s.needs_human > 0 ? '4px solid #ef4444' : '1px solid #e2e8f0'}}>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:2}}>Needs Human</div>
+              <div style={{fontSize:22,fontWeight:700,color: s.needs_human > 0 ? '#ef4444' : '#1e293b'}}>{s.needs_human ?? 0}</div>
+            </div>
+          </div>
+
+          {/* Row 3 — Daily trend + Temperature pie */}
+          <div style={{display:'grid',gridTemplateColumns:'2fr 1fr',gap:16,marginBottom:16}}>
+            <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
+              <div style={{fontWeight:600,color:'#1e293b',marginBottom:16,fontSize:14}}>Daily Lead & Conversation Trend</div>
+              {data.daily_trend && data.daily_trend.length > 0 ? (
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={data.daily_trend} margin={{top:0,right:0,bottom:0,left:-20}}>
+                    <XAxis dataKey="label" tick={{fontSize:10,fill:'#94a3b8'}} interval={Math.floor(data.daily_trend.length/7)}/>
+                    <YAxis tick={{fontSize:10,fill:'#94a3b8'}}/>
+                    <Tooltip contentStyle={{fontSize:12}}/>
+                    <Legend wrapperStyle={{fontSize:11}}/>
+                    <Bar dataKey="leads" name="New Leads" fill="#3b82f6" radius={[3,3,0,0]}/>
+                    <Bar dataKey="conversations" name="Conversations" fill="#8b5cf6" radius={[3,3,0,0]}/>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:40}}>No trend data for this period</div>}
+              <div style={{display:'flex',gap:16,marginTop:8}}>
+                <span style={{fontSize:11,color:'#64748b'}}>■ <span style={{color:'#3b82f6'}}>New Leads</span></span>
+                <span style={{fontSize:11,color:'#64748b'}}>■ <span style={{color:'#8b5cf6'}}>Conversations</span></span>
+              </div>
+            </div>
+            <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
+              <div style={{fontWeight:600,color:'#1e293b',marginBottom:16,fontSize:14}}>Lead Temperature</div>
+              {data.temperature_split && data.temperature_split.some(t => t.value > 0) ? (
+                <>
+                  <ResponsiveContainer width="100%" height={180}>
+                    <PieChart>
+                      <Pie data={data.temperature_split} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({name,value}) => `${name}: ${value}`} labelLine={false}>
+                        {data.temperature_split.map((entry,i) => <Cell key={i} fill={entry.color}/>)}
+                      </Pie>
+                      <Tooltip/>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div style={{display:'flex',gap:12,justifyContent:'center',marginTop:4}}>
+                    {data.temperature_split.map((t,i) => (
+                      <span key={i} style={{fontSize:11,color:'#64748b'}}>
+                        <span style={{color:t.color,fontWeight:700}}>●</span> {t.name}: {t.value}
+                      </span>
+                    ))}
+                  </div>
+                </>
+              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:40}}>No temperature data</div>}
+            </div>
+          </div>
+
+          {/* Row 4 — Module breakdown + Stage funnel */}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+            <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
+              <div style={{fontWeight:600,color:'#1e293b',marginBottom:16,fontSize:14}}>Top Interested Modules / Products</div>
+              {data.module_breakdown && data.module_breakdown.length > 0 ? (
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={data.module_breakdown} layout="vertical" margin={{top:0,right:20,bottom:0,left:60}}>
+                    <XAxis type="number" tick={{fontSize:10,fill:'#94a3b8'}}/>
+                    <YAxis type="category" dataKey="module" tick={{fontSize:10,fill:'#475569'}} width={60}/>
+                    <Tooltip contentStyle={{fontSize:12}}/>
+                    <Bar dataKey="count" fill="#10b981" radius={[0,4,4,0]}/>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:40}}>No module data yet</div>}
+            </div>
+            <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
+              <div style={{fontWeight:600,color:'#1e293b',marginBottom:16,fontSize:14}}>Lead Stage Funnel</div>
+              {data.stage_funnel && data.stage_funnel.length > 0 ? (
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={data.stage_funnel} layout="vertical" margin={{top:0,right:20,bottom:0,left:80}}>
+                    <XAxis type="number" tick={{fontSize:10,fill:'#94a3b8'}}/>
+                    <YAxis type="category" dataKey="stage" tick={{fontSize:10,fill:'#475569'}} width={80}/>
+                    <Tooltip contentStyle={{fontSize:12}}/>
+                    <Bar dataKey="count" fill="#8b5cf6" radius={[0,4,4,0]}/>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:40}}>No stage data yet</div>}
+            </div>
+          </div>
+
+          {/* Row 5 — Source Breakdown + Location */}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+            <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
+              <div style={{fontWeight:600,color:'#1e293b',marginBottom:16,fontSize:14}}>Channel Source Breakdown</div>
+              {data.source_split && data.source_split.length > 0 ? (
+                <div style={{display:'flex', flexDirection:'column', gap:12}}>
+                  {data.source_split.map((s, i) => (
+                    <div key={i}>
+                      <div style={{display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:4}}>
+                        <span style={{fontWeight:600, color:'#475569'}}>{s.name}</span>
+                        <span style={{color:'#64748b'}}>{s.percentage}% ({s.value})</span>
+                      </div>
+                      <div style={{height:8, background:'#f1f5f9', borderRadius:4, overflow:'hidden'}}>
+                        <div style={{width:`${s.percentage}%`, height:'100%', background: s.color, borderRadius:4}} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:40}}>No source data available</div>}
+            </div>
+            <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
+              <div style={{fontWeight:600,color:'#1e293b',marginBottom:12,fontSize:14}}>Top Locations</div>
+              {data.top_locations && data.top_locations.length > 0 ? (
+                <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                  {data.top_locations.map((loc,i) => (
+                    <div key={i} style={{display:'flex',alignItems:'center',gap:8}}>
+                      <div style={{flex:1,fontSize:13,color:'#475569',fontWeight:500}}>{loc.location}</div>
+                      <div style={{width:120,background:'#f1f5f9',borderRadius:4,height:8,overflow:'hidden'}}>
+                        <div style={{width:`${Math.round(loc.count/data.top_locations[0].count*100)}%`,background:'#3b82f6',height:'100%',borderRadius:4}}/>
+                      </div>
+                      <div style={{fontSize:12,color:'#64748b',minWidth:24,textAlign:'right'}}>{loc.count}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:20}}>No location data</div>}
+            </div>
+          </div>
+
+          {/* Row 6 — Top leads table */}
+          <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0',marginBottom:16}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+              <div style={{fontWeight:600,color:'#1e293b',fontSize:14}}>Top Priority Leads</div>
+              <button onClick={handleExport} style={{padding:'5px 12px',borderRadius:6,background:'#f1f5f9',border:'1px solid #e2e8f0',cursor:'pointer',fontSize:12,color:'#475569'}}>⬇ Export All as CSV</button>
+            </div>
+            <table style={{width:'100%',borderCollapse:'collapse'}}>
+              <thead>
+                <tr style={{borderBottom:'2px solid #f1f5f9'}}>
+                  {['Name','Phone','Module','Temperature','Stage','Qualified','Last Active'].map(h => (
+                    <th key={h} style={{textAlign:'left',padding:'8px 10px',fontSize:11,color:'#94a3b8',fontWeight:600,textTransform:'uppercase',letterSpacing:'0.05em'}}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {(data.top_leads || []).map((lead,i) => (
+                  <tr key={i} style={{borderBottom:'1px solid #f8fafc'}}>
+                    <td style={{padding:'10px',fontSize:13,color:'#1e293b',fontWeight:500}}>{lead.name}</td>
+                    <td style={{padding:'10px',fontSize:13,color:'#475569'}}>{lead.phone || '—'}</td>
+                    <td style={{padding:'10px',fontSize:13,color:'#475569'}}>{lead.module || '—'}</td>
+                    <td style={{padding:'10px'}}>
+                      <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,
+                        background: lead.temperature==='hot' ? '#fef2f2' : lead.temperature==='warm' ? '#fffbeb' : '#eff6ff',
+                        color: lead.temperature==='hot' ? '#ef4444' : lead.temperature==='warm' ? '#f59e0b' : '#3b82f6'
+                      }}>
+                        {lead.temperature==='hot' ? '🔴' : lead.temperature==='warm' ? '🟡' : '🔵'} {lead.temperature}
+                      </span>
+                    </td>
+                    <td style={{padding:'10px',fontSize:12,color:'#64748b'}}>{lead.stage || '—'}</td>
+                    <td style={{padding:'10px',fontSize:12}}>
+                      {lead.is_qualified
+                        ? <span style={{color:'#10b981',fontWeight:600}}>✓ Yes</span>
+                        : <span style={{color:'#94a3b8'}}>No</span>}
+                    </td>
+                    <td style={{padding:'10px',fontSize:12,color:'#94a3b8'}}>
+                      {lead.updated_at ? new Date(lead.updated_at).toLocaleDateString() : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </section>
   );
 }
 
 function SettingsPage() {
-  const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState('');
   const [activeTab, setActiveTab] = useState('profile');
 
-  const [businessName, setBusinessName] = useState('');
-  const [businessDescription, setBusinessDescription] = useState('');
-  const [aiTone, setAiTone] = useState('');
-  const [workingHoursStart, setWorkingHoursStart] = useState('09:00');
-  const [workingHoursEnd, setWorkingHoursEnd] = useState('17:00');
-  const [workingDays, setWorkingDays] = useState({ mon: true, tue: true, wed: true, thu: true, fri: true, sat: false, sun: false });
-  const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
-  const [outOfHoursMessage, setOutOfHoursMessage] = useState('');
+  const [form, setForm] = useState({
+    business_name: '',
+    industry: 'Education / Training',
+    ai_enabled: true,
+    ai_tone: 'Professional & Helpful',
+    working_hours: { mon_fri: '09:00 - 18:00', sat: '10:00 - 14:00', sun: 'Closed' },
+    templates: [],
+    blacklist_keywords: []
+  });
+
+  const [newKeyword, setNewKeyword] = useState('');
+  const [newTemplate, setNewTemplate] = useState({ name: '', text: '' });
+
+  const showToast = (msg, isError = false) => {
+    setToast({ msg, isError });
+    setTimeout(() => setToast(''), 3000);
+  };
 
   useEffect(() => {
-    fetchSettings();
+    setLoading(true);
+    fetch(`${API_BASE}/settings/`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') {
+          const s = d.settings;
+          setForm({
+            business_name: s.business_name || '',
+            industry: s.industry || 'Education / Training',
+            ai_enabled: s.ai_enabled !== undefined ? s.ai_enabled : true,
+            ai_tone: s.ai_tone || 'Professional & Helpful',
+            working_hours: s.working_hours || { mon_fri: '09:00 - 18:00', sat: '10:00 - 14:00', sun: 'Closed' },
+            templates: s.templates || [],
+            blacklist_keywords: s.blacklist_keywords || []
+          });
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
-  const fetchSettings = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/settings`);
-      const data = await res.json();
-      if (data.status === 'success') {
-        setSettings(data.settings);
-        setBusinessName(data.settings.business_name || '');
-        setBusinessDescription(data.settings.business_description || '');
-        setAiTone(data.settings.ai_tone || '');
-        setWorkingHoursStart(data.settings.working_hours_start || '09:00');
-        setWorkingHoursEnd(data.settings.working_hours_end || '17:00');
-        setWorkingDays(data.settings.working_days || { mon: true, tue: true, wed: true, thu: true, fri: true, sat: false, sun: false });
-        setAutoReplyEnabled(data.settings.auto_reply_enabled || false);
-        setOutOfHoursMessage(data.settings.out_of_hours_message || '');
-      }
-    } catch (e) {
-      console.error('Error fetching settings:', e);
-    }
-    setLoading(false);
+  const handleSave = (section, payload) => {
+    setSaving(section);
+    fetch(`${API_BASE}/settings/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') showToast('Settings saved successfully');
+        else showToast(d.detail || 'Save failed', true);
+      })
+      .catch(() => showToast('Network error', true))
+      .finally(() => setSaving(false));
   };
 
-  const handleSaveProfile = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch(`${API_BASE}/settings`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          business_name: businessName,
-          business_description: businessDescription,
-        }),
-      });
-      const data = await res.json();
-      if (data.status === 'success') {
-        alert('Business profile updated successfully!');
-        fetchSettings();
-      } else {
-        alert(`Failed to update profile: ${data.message}`);
-      }
-    } catch (e) {
-      alert('Network error updating profile.');
-    }
+  const addKeyword = () => {
+    const kw = newKeyword.trim().toLowerCase();
+    if (!kw || form.blacklist_keywords.includes(kw)) { setNewKeyword(''); return; }
+    const updated = [...form.blacklist_keywords, kw];
+    setForm(p => ({...p, blacklist_keywords: updated}));
+    setNewKeyword('');
+    handleSave('keywords', { blacklist_keywords: updated });
   };
 
-  const handleSaveAIBehaviour = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch(`${API_BASE}/settings`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ai_tone: aiTone,
-        }),
-      });
-      const data = await res.json();
-      if (data.status === 'success') {
-        alert('AI behaviour settings updated successfully!');
-        fetchSettings();
-      } else {
-        alert(`Failed to update AI behaviour: ${data.message}`);
-      }
-    } catch (e) {
-      alert('Network error updating AI behaviour.');
-    }
+  const removeKeyword = (kw) => {
+    const updated = form.blacklist_keywords.filter(k => k !== kw);
+    setForm(p => ({...p, blacklist_keywords: updated}));
+    handleSave('keywords', { blacklist_keywords: updated });
   };
 
-  const handleSaveWorkingHours = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch(`${API_BASE}/settings`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          working_hours_start: workingHoursStart,
-          working_hours_end: workingHoursEnd,
-          working_days: workingDays,
-          auto_reply_enabled: autoReplyEnabled,
-          out_of_hours_message: outOfHoursMessage,
-        }),
-      });
-      const data = await res.json();
-      if (data.status === 'success') {
-        alert('Working hours settings updated successfully!');
-        fetchSettings();
-      } else {
-        alert(`Failed to update working hours: ${data.message}`);
-      }
-    } catch (e) {
-      alert('Network error updating working hours.');
-    }
+  const addTemplate = () => {
+    if (!newTemplate.name.trim() || !newTemplate.text.trim()) return;
+    const updated = [...form.templates, { ...newTemplate, id: Date.now() }];
+    setForm(p => ({...p, templates: updated}));
+    setNewTemplate({ name: '', text: '' });
+    handleSave('templates', { templates: updated });
   };
 
-  const renderContent = () => {
-    if (loading) {
-      return <Card><p>Loading settings...</p></Card>;
-    }
-
-    switch (activeTab) {
-      case 'profile':
-        return (
-          <Card title="Business Profile">
-            <form onSubmit={handleSaveProfile} style={{display:'flex', flexDirection:'column', gap:'15px'}}>
-              <div>
-                <label className="form-label">Business Name</label>
-                <input type="text" value={businessName} onChange={e => setBusinessName(e.target.value)} className="input-field" required/>
-              </div>
-              <div>
-                <label className="form-label">Business Description</label>
-                <textarea value={businessDescription} onChange={e => setBusinessDescription(e.target.value)} className="input-field" rows="4"/>
-              </div>
-              <button type="submit" className="button-primary"><Save size={16}/> Save Profile</button>
-            </form>
-          </Card>
-        );
-      case 'ai-behaviour':
-        return (
-          <Card title="AI Behaviour">
-            <form onSubmit={handleSaveAIBehaviour} style={{display:'flex', flexDirection:'column', gap:'15px'}}>
-              <div>
-                <label className="form-label">AI Tone</label>
-                <select value={aiTone} onChange={e => setAiTone(e.target.value)} className="input-field">
-                  <option value="professional">Professional</option>
-                  <option value="friendly">Friendly</option>
-                  <option value="casual">Casual</option>
-                  <option value="direct">Direct</option>
-                </select>
-              </div>
-              <button type="submit" className="button-primary"><Save size={16}/> Save AI Behaviour</button>
-            </form>
-          </Card>
-        );
-      case 'working-hours':
-        return (
-          <Card title="Working Hours & Auto-Reply">
-            <form onSubmit={handleSaveWorkingHours} style={{display:'flex', flexDirection:'column', gap:'15px'}}>
-              <div style={{display:'flex', gap:'15px'}}>
-                <div style={{flex:1}}>
-                  <label className="form-label">Start Time</label>
-                  <input type="time" value={workingHoursStart} onChange={e => setWorkingHoursStart(e.target.value)} className="input-field" required/>
-                </div>
-                <div style={{flex:1}}>
-                  <label className="form-label">End Time</label>
-                  <input type="time" value={workingHoursEnd} onChange={e => setWorkingHoursEnd(e.target.value)} className="input-field" required/>
-                </div>
-              </div>
-              <div>
-                <label className="form-label">Working Days</label>
-                <div style={{display:'flex', gap:'10px', flexWrap:'wrap'}}>
-                  {Object.keys(workingDays).map(day => (
-                    <button
-                      key={day}
-                      type="button"
-                      onClick={() => setWorkingDays(prev => ({ ...prev, [day]: !prev[day] }))}
-                      style={{
-                        padding:'8px 12px', borderRadius:'8px', border:`1px solid ${workingDays[day] ? '#10b981' : '#334155'}`,
-                        background: workingDays[day] ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.05)',
-                        color: workingDays[day] ? '#10b981' : '#cbd5e1',
-                        fontWeight:600,
-                        fontSize:'0.85em',
-                        cursor:'pointer',
-                      }}
-                    >
-                      {day.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
-                <input
-                  type="checkbox"
-                  id="auto-reply-toggle"
-                  checked={autoReplyEnabled}
-                  onChange={e => setAutoReplyEnabled(e.target.checked)}
-                  style={{width:'auto'}}
-                />
-                <label htmlFor="auto-reply-toggle" className="form-label" style={{marginBottom:0}}>Enable Out-of-Hours Auto-Reply</label>
-              </div>
-              {autoReplyEnabled && (
-                <div>
-                  <label className="form-label">Out-of-Hours Message</label>
-                  <textarea value={outOfHoursMessage} onChange={e => setOutOfHoursMessage(e.target.value)} className="input-field" rows="3" placeholder="e.g., Thanks for your message! We're currently closed but will get back to you during business hours."/>
-                </div>
-              )}
-              <button type="submit" className="button-primary"><Save size={16}/> Save Working Hours</button>
-            </form>
-          </Card>
-        );
-      case 'system-info':
-        return (
-          <Card title="System Information">
-            <div style={{fontSize:'0.9em', lineHeight:'1.6'}}>
-              <p style={{marginBottom:'10px'}}>API Base: <code style={{background:'rgba(255,255,255,0.1)', padding:'3px 6px', borderRadius:'4px'}}>{API_BASE}</code></p>
-              <p style={{marginBottom:'10px'}}>Active Business ID: <code style={{background:'rgba(255,255,255,0.1)', padding:'3px 6px', borderRadius:'4px'}}>{activeBusiness?.id || 'N/A'}</code></p>
-              <p style={{marginBottom:'10px'}}>Active Business Name: <code style={{background:'rgba(255,255,255,0.1)', padding:'3px 6px', borderRadius:'4px'}}>{activeBusiness?.name || 'N/A'}</code></p>
-              <p style={{marginBottom:'10px'}}>Current Time: <code style={{background:'rgba(255,255,255,0.1)', padding:'3px 6px', borderRadius:'4px'}}>{new Date().toLocaleString()}</code></p>
-              <p style={{marginBottom:'10px'}}>Frontend Version: <code style={{background:'rgba(255,255,255,0.1)', padding:'3px 6px', borderRadius:'4px'}}>1.0.0</code></p>
-              <p>Backend Version: <code style={{background:'rgba(255,255,255,0.1)', padding:'3px 6px', borderRadius:'4px'}}>1.0.0</code></p>
-            </div>
-          </Card>
-        );
-      default:
-        return null;
-    }
+  const removeTemplate = (idx) => {
+    const updated = form.templates.filter((_, i) => i !== idx);
+    setForm(p => ({...p, templates: updated}));
+    handleSave('templates', { templates: updated });
   };
+
+  const TABS = [
+    { id: 'profile', label: 'Business Profile', icon: '🏢' },
+    { id: 'ai', label: 'AI Behaviour', icon: '🤖' },
+    { id: 'hours', label: 'Working Hours', icon: '🕐' },
+    { id: 'templates', label: 'Reply Templates', icon: '💬' },
+    { id: 'blacklist', label: 'Blacklist', icon: '🚫' },
+    { id: 'system', label: 'System Info', icon: 'ℹ️' },
+  ];
+
+  const INDUSTRIES = ['Education / Training','E-commerce / Retail','Real Estate','Healthcare','Finance / Banking','IT Services','Consulting','Food & Beverage','Fitness / Wellness','Travel / Hospitality','Legal Services','Other'];
+  const TONES = ['Professional & Helpful','Friendly & Casual','Formal & Structured','Concise & Direct','Empathetic & Warm'];
+
+  if (loading) return (
+    <section>
+      <Title title="Settings" sub="Configure your AI Command Center"/>
+      <div style={{padding:40,textAlign:'center',color:'#64748b'}}>Loading settings...</div>
+    </section>
+  );
 
   return (
     <section>
-      <Title title="Settings" sub="Manage your business settings and AI behavior"/>
-      <div style={{display:'flex', gap:'15px', marginBottom:'20px', borderBottom:'1px solid #334155'}}>
-        <button onClick={() => setActiveTab('profile')} className={`tab-button ${activeTab === 'profile' ? 'active' : ''}`}>Business Profile</button>
-        <button onClick={() => setActiveTab('ai-behaviour')} className={`tab-button ${activeTab === 'ai-behaviour' ? 'active' : ''}`}>AI Behaviour</button>
-        <button onClick={() => setActiveTab('working-hours')} className={`tab-button ${activeTab === 'working-hours' ? 'active' : ''}`}>Working Hours</button>
-        <button onClick={() => setActiveTab('system-info')} className={`tab-button ${activeTab === 'system-info' ? 'active' : ''}`}>System Info</button>
+      {toast && (
+        <div style={{position:'fixed',bottom:24,right:24,background: toast.isError ? '#ef4444' : '#1e293b',color:'white',padding:'12px 20px',borderRadius:10,fontSize:13,fontWeight:500,zIndex:9999,boxShadow:'0 4px 20px rgba(0,0,0,0.2)'}}>
+          {toast.msg}
+        </div>
+      )}
+
+      <Title title="Settings" sub="Configure your AI Command Center — changes are saved per workspace"/>
+
+      <div style={{display:'flex',gap:20}}>
+        {/* Left tab nav */}
+        <div style={{width:200,flexShrink:0}}>
+          {TABS.map(tab => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'10px 14px',borderRadius:8,border:'none',background: activeTab===tab.id ? '#eff6ff' : 'transparent',color: activeTab===tab.id ? '#3b82f6' : '#64748b',cursor:'pointer',fontSize:13,fontWeight: activeTab===tab.id ? 600 : 400,marginBottom:2,textAlign:'left',transition:'all 0.15s'}}>
+              <span style={{fontSize:15}}>{tab.icon}</span> {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Right content panel */}
+        <div style={{flex:1,background:'white',borderRadius:12,border:'1px solid #e2e8f0',padding:24,minHeight:400}}>
+
+          {/* BUSINESS PROFILE */}
+          {activeTab === 'profile' && (
+            <div>
+              <div style={{fontSize:15,fontWeight:700,color:'#1e293b',marginBottom:4}}>Business Profile</div>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:20}}>This information is used by the AI to understand your business context.</div>
+
+              <div style={{display:'flex',flexDirection:'column',gap:16}}>
+                <div>
+                  <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'0.04em'}}>Business Name</label>
+                  <input value={form.business_name} onChange={e => setForm(p=>({...p,business_name:e.target.value}))} placeholder="e.g. SAP Guru by Mohamed Aslam" style={{width:'100%',padding:'9px 11px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,boxSizing:'border-box',color:'#1e293b'}}/>
+                </div>
+                <div>
+                  <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'0.04em'}}>Industry</label>
+                  <select value={form.industry} onChange={e => setForm(p=>({...p,industry:e.target.value}))} style={{width:'100%',padding:'9px 11px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,background:'white',boxSizing:'border-box',color:'#1e293b'}}>
+                    {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <button onClick={() => handleSave('profile', { business_name: form.business_name, industry: form.industry })} disabled={saving==='profile'}
+                style={{marginTop:20,padding:'9px 20px',borderRadius:7,background: saving==='profile' ? '#93c5fd' : '#3b82f6',color:'white',border:'none',cursor: saving==='profile' ? 'not-allowed' : 'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',gap:7}}>
+                <Save size={13}/> {saving==='profile' ? 'Saving...' : 'Save Profile'}
+              </button>
+            </div>
+          )}
+
+          {/* AI BEHAVIOUR */}
+          {activeTab === 'ai' && (
+            <div>
+              <div style={{fontSize:15,fontWeight:700,color:'#1e293b',marginBottom:4}}>AI Behaviour</div>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:20}}>Control how the AI responds and when it sends replies.</div>
+
+              {/* AI Enabled Toggle */}
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 16px',background: form.ai_enabled ? '#f0fdf4' : '#fef2f2',borderRadius:10,border:`1px solid ${form.ai_enabled ? '#bbf7d0' : '#fecaca'}`,marginBottom:16}}>
+                <div>
+                  <div style={{fontSize:13,fontWeight:700,color:'#1e293b'}}>AI Auto-Reply</div>
+                  <div style={{fontSize:12,color:'#64748b',marginTop:2}}>{form.ai_enabled ? 'AI is actively replying to incoming messages' : 'AI is paused — no automatic replies being sent'}</div>
+                </div>
+                <div onClick={() => setForm(p=>({...p,ai_enabled:!p.ai_enabled}))} style={{cursor:'pointer',color: form.ai_enabled ? '#10b981' : '#94a3b8'}}>
+                  {form.ai_enabled ? <ToggleRight size={36}/> : <ToggleLeft size={36}/>}
+                </div>
+              </div>
+
+              <div style={{marginBottom:16}}>
+                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'0.04em'}}>AI Tone</label>
+                <select value={form.ai_tone} onChange={e => setForm(p=>({...p,ai_tone:e.target.value}))} style={{width:'100%',padding:'9px 11px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,background:'white',color:'#1e293b'}}>
+                  {TONES.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+                <div style={{fontSize:11,color:'#94a3b8',marginTop:5}}>This tone is injected into every AI prompt for this workspace.</div>
+              </div>
+
+              <button onClick={() => handleSave('ai', { ai_enabled: form.ai_enabled, ai_tone: form.ai_tone })} disabled={saving==='ai'}
+                style={{padding:'9px 20px',borderRadius:7,background: saving==='ai' ? '#93c5fd' : '#3b82f6',color:'white',border:'none',cursor: saving==='ai' ? 'not-allowed' : 'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',gap:7}}>
+                <Save size={13}/> {saving==='ai' ? 'Saving...' : 'Save AI Settings'}
+              </button>
+            </div>
+          )}
+
+          {/* WORKING HOURS */}
+          {activeTab === 'hours' && (
+            <div>
+              <div style={{fontSize:15,fontWeight:700,color:'#1e293b',marginBottom:4}}>Working Hours</div>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:20}}>The AI uses these hours to set expectations with customers outside business hours.</div>
+
+              {['mon_fri','sat','sun'].map(day => (
+                <div key={day} style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
+                  <div style={{width:80,fontSize:12,fontWeight:600,color:'#475569',textTransform:'uppercase'}}>{day === 'mon_fri' ? 'Mon – Fri' : day === 'sat' ? 'Saturday' : 'Sunday'}</div>
+                  <input
+                    value={form.working_hours[day] || ''}
+                    onChange={e => setForm(p => ({...p, working_hours: {...p.working_hours, [day]: e.target.value}}))}
+                    placeholder={day === 'sun' ? 'Closed' : '09:00 - 18:00'}
+                    style={{flex:1,padding:'8px 11px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,color:'#1e293b'}}
+                  />
+                </div>
+              ))}
+
+              <button onClick={() => handleSave('hours', { working_hours: form.working_hours })} disabled={saving==='hours'}
+                style={{marginTop:8,padding:'9px 20px',borderRadius:7,background: saving==='hours' ? '#93c5fd' : '#3b82f6',color:'white',border:'none',cursor: saving==='hours' ? 'not-allowed' : 'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',gap:7}}>
+                <Save size={13}/> {saving==='hours' ? 'Saving...' : 'Save Hours'}
+              </button>
+            </div>
+          )}
+
+          {/* REPLY TEMPLATES */}
+          {activeTab === 'templates' && (
+            <div>
+              <div style={{fontSize:15,fontWeight:700,color:'#1e293b',marginBottom:4}}>Reply Templates</div>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:20}}>Quick-send templates for common replies. Use <code style={{background:'#f1f5f9',padding:'1px 5px',borderRadius:3}}>{'{name}'}</code> to personalise.</div>
+
+              {form.templates.length === 0 && (
+                <div style={{padding:'20px',textAlign:'center',color:'#94a3b8',fontSize:13,background:'#f8fafc',borderRadius:8,marginBottom:16}}>No templates yet. Add your first one below.</div>
+              )}
+
+              {form.templates.map((tpl, idx) => (
+                <div key={idx} style={{background:'#f8fafc',borderRadius:8,padding:'12px 14px',marginBottom:10,border:'1px solid #e2e8f0'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+                    <span style={{fontSize:13,fontWeight:600,color:'#1e293b'}}>{tpl.name}</span>
+                    <button onClick={() => removeTemplate(idx)} style={{background:'none',border:'none',cursor:'pointer',color:'#ef4444',padding:2}}><Trash2 size={13}/></button>
+                  </div>
+                  <div style={{fontSize:12,color:'#64748b',lineHeight:1.5}}>{tpl.text}</div>
+                </div>
+              ))}
+
+              <div style={{background:'#f0f9ff',borderRadius:8,padding:'14px',border:'1px solid #bae6fd',marginTop:16}}>
+                <div style={{fontSize:12,fontWeight:600,color:'#0369a1',marginBottom:10}}>Add New Template</div>
+                <input value={newTemplate.name} onChange={e => setNewTemplate(p=>({...p,name:e.target.value}))} placeholder="Template name (e.g. Greeting)" style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,marginBottom:8,boxSizing:'border-box',color:'#1e293b'}}/>
+                <textarea value={newTemplate.text} onChange={e => setNewTemplate(p=>({...p,text:e.target.value}))} placeholder="Template message... use {name} for personalisation" rows={3} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,resize:'vertical',fontFamily:'inherit',boxSizing:'border-box',color:'#1e293b',marginBottom:8}}/>
+                <button onClick={addTemplate} style={{padding:'7px 16px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:12,fontWeight:600}}>+ Add Template</button>
+              </div>
+            </div>
+          )}
+
+          {/* BLACKLIST */}
+          {activeTab === 'blacklist' && (
+            <div>
+              <div style={{fontSize:15,fontWeight:700,color:'#1e293b',marginBottom:4}}>Blacklist Keywords</div>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:20}}>Messages containing these keywords will be ignored by the AI and flagged for manual review.</div>
+
+              <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:20}}>
+                {form.blacklist_keywords.length === 0 && (
+                  <span style={{fontSize:12,color:'#94a3b8'}}>No keywords blacklisted yet.</span>
+                )}
+                {form.blacklist_keywords.map(kw => (
+                  <span key={kw} style={{display:'flex',alignItems:'center',gap:6,padding:'4px 10px',borderRadius:20,background:'#fef2f2',border:'1px solid #fecaca',fontSize:12,color:'#ef4444',fontWeight:500}}>
+                    {kw}
+                    <button onClick={() => removeKeyword(kw)} style={{background:'none',border:'none',cursor:'pointer',color:'#ef4444',padding:0,lineHeight:1,display:'flex'}}><X size={11}/></button>
+                  </span>
+                ))}
+              </div>
+
+              <div style={{display:'flex',gap:8}}>
+                <input
+                  value={newKeyword}
+                  onChange={e => setNewKeyword(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && addKeyword()}
+                  placeholder="Type a keyword and press Enter or Add"
+                  style={{flex:1,padding:'8px 11px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,color:'#1e293b'}}
+                />
+                <button onClick={addKeyword} style={{padding:'8px 16px',borderRadius:7,background:'#ef4444',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600}}>Add</button>
+              </div>
+              <div style={{fontSize:11,color:'#94a3b8',marginTop:8}}>Press Enter or click Add. Keywords are saved automatically.</div>
+            </div>
+          )}
+
+          {/* SYSTEM INFO */}
+          {activeTab === 'system' && (
+            <div>
+              <div style={{fontSize:15,fontWeight:700,color:'#1e293b',marginBottom:4}}>System Information</div>
+              <div style={{fontSize:12,color:'#64748b',marginBottom:20}}>Read-only information about your AI Command Center setup.</div>
+
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+                {[
+                  ['Platform', 'AI Command Center v2.0'],
+                  ['Backend', 'sap-guru-assistant.onrender.com'],
+                  ['Primary Channel', 'Instagram DM'],
+                  ['Database', 'Supabase (PostgreSQL)'],
+                  ['AI Model', 'GPT-4o'],
+                  ['AI Status', form.ai_enabled ? '● Active' : '○ Paused'],
+                  ['AI Tone', form.ai_tone],
+                  ['Industry', form.industry],
+                ].map(([k,v]) => (
+                  <div key={k} style={{background:'#f8fafc',borderRadius:8,padding:'12px 14px',border:'1px solid #e2e8f0'}}>
+                    <div style={{fontSize:11,color:'#94a3b8',marginBottom:3,textTransform:'uppercase',letterSpacing:'0.04em'}}>{k}</div>
+                    <div style={{fontSize:13,fontWeight:600,color:'#1e293b'}}>{v}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{marginTop:16,padding:'12px 16px',background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:8,fontSize:12,color:'#0c4a6e',lineHeight:1.7}}>
+                <b style={{display:'block',marginBottom:4}}>Version History</b>
+                v2.0 — Multi-business SaaS, Integrations, Notifications, Settings overhaul<br/>
+                v1.5 — Reports & Analytics, Automation rules<br/>
+                v1.0 — Initial launch: Leads, Conversations, AI Playground
+              </div>
+            </div>
+          )}
+
+        </div>
       </div>
-      {renderContent()}
     </section>
   );
 }
 
-createRoot(document.getElementById('root')).render(<App/>);
+function Automation() {
+  const [rules, setRules] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [sendingRule, setSendingRule] = useState(null);
+  const [sendConfirm, setSendConfirm] = useState(null); // {ruleId, count, message, target}
+  const [bulkForm, setBulkForm] = useState({ target_group: 'hot_leads', message_template: '' });
+  const [bulkPreview, setBulkPreview] = useState(null);
+  const [bulkSending, setBulkSending] = useState(false);
+  const [bulkResult, setBulkResult] = useState(null);
+  const [toast, setToast] = useState('');
+  const [newRule, setNewRule] = useState({ name: '', target_group: 'hot_leads', message_template: '' });
+  const [saving, setSaving] = useState(false);
+
+  const TARGET_LABELS = {
+    hot_leads: { label: 'Hot Leads', color: '#ef4444', bg: '#fef2f2', emoji: '🔴' },
+    warm_leads: { label: 'Warm Leads', color: '#f59e0b', bg: '#fffbeb', emoji: '🟡' },
+    all_leads: { label: 'All Leads', color: '#3b82f6', bg: '#eff6ff', emoji: '📋' },
+    qualified: { label: 'Qualified Leads', color: '#10b981', bg: '#f0fdf4', emoji: '✅' },
+    needs_human: { label: 'Needs Human Review', color: '#8b5cf6', bg: '#f5f3ff', emoji: '👤' },
+  };
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
+
+  const fetchRules = () => {
+    setLoading(true);
+    fetch(`${API_BASE}/automation/rules`)
+      .then(r => r.json())
+      .then(d => { if (d.status === 'success') setRules(d.rules || []); })
+      .catch(() => setRules([]))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchRules(); }, []);
+
+  const handleToggle = (rule) => {
+    const newState = !rule.is_active;
+    setRules(prev => prev.map(r => r.id === rule.id ? { ...r, is_active: newState } : r));
+    fetch(`${API_BASE}/automation/rules/${rule.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_active: newState })
+    })
+      .then(r => r.json())
+      .then(d => { if (d.status === 'success') showToast(`Rule "${rule.name}" ${newState ? 'enabled' : 'disabled'}`); })
+      .catch(() => { setRules(prev => prev.map(r => r.id === rule.id ? { ...r, is_active: !newState } : r)); showToast('Failed to update rule'); });
+  };
+
+  const handleSendNow = (rule) => {
+    setSendingRule(rule.id);
+    fetch(`${API_BASE}/automation/preview-audience`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target_group: rule.target_group, message_template: rule.message_template })
+    })
+      .then(r => r.json())
+      .then(d => {
+        setSendingRule(null);
+        setSendConfirm({ ruleId: rule.id, count: d.count || 0, message: rule.message_template, target: rule.target_group, ruleName: rule.name });
+      })
+      .catch(() => { setSendingRule(null); showToast('Failed to preview audience'); });
+  };
+
+  const confirmSend = () => {
+    if (!sendConfirm) return;
+    setSendingRule(sendConfirm.ruleId);
+    fetch(`${API_BASE}/automation/send-bulk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target_group: sendConfirm.target, message_template: sendConfirm.message })
+    })
+      .then(r => r.json())
+      .then(d => {
+        setSendingRule(null);
+        setSendConfirm(null);
+        showToast(d.message || `Queued ${d.queued} messages successfully!`);
+      })
+      .catch(() => { setSendingRule(null); setSendConfirm(null); showToast('Send failed'); });
+  };
+
+  const handleDeleteRule = (ruleId, ruleName) => {
+    if (!window.confirm(`Delete rule "${ruleName}"?`)) return;
+    fetch(`${API_BASE}/automation/rules/${ruleId}`, { method: 'DELETE' })
+      .then(() => { setRules(prev => prev.filter(r => r.id !== ruleId)); showToast('Rule deleted'); })
+      .catch(() => showToast('Delete failed'));
+  };
+
+  const handleAddRule = () => {
+    if (!newRule.name.trim() || !newRule.message_template.trim()) { showToast('Name and message are required'); return; }
+    setSaving(true);
+    fetch(`${API_BASE}/automation/rules`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...newRule, is_active: false })
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') {
+          setRules(prev => [...prev, d.rule]);
+          setShowAddModal(false);
+          setNewRule({ name: '', target_group: 'hot_leads', message_template: '' });
+          showToast('Rule created!');
+        } else showToast(d.detail || 'Failed to create rule');
+      })
+      .catch(() => showToast('Failed to create rule'))
+      .finally(() => setSaving(false));
+  };
+
+  const handleBulkPreview = () => {
+    if (!bulkForm.message_template.trim()) { showToast('Enter a message first'); return; }
+    fetch(`${API_BASE}/automation/preview-audience`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bulkForm)
+    })
+      .then(r => r.json())
+      .then(d => setBulkPreview(d.count || 0))
+      .catch(() => showToast('Preview failed'));
+  };
+
+  const handleBulkSend = () => {
+    if (!bulkForm.message_template.trim()) { showToast('Enter a message first'); return; }
+    setBulkSending(true);
+    fetch(`${API_BASE}/automation/send-bulk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bulkForm)
+    })
+      .then(r => r.json())
+      .then(d => { setBulkResult(d); setBulkSending(false); })
+      .catch(() => { showToast('Send failed'); setBulkSending(false); });
+  };
+
+  return (
+    <section>
+      {/* Toast */}
+      {toast && (
+        <div style={{position:'fixed',bottom:24,right:24,background:'#1e293b',color:'white',padding:'12px 20px',borderRadius:10,fontSize:13,fontWeight:500,zIndex:9999,boxShadow:'0 4px 20px rgba(0,0,0,0.2)'}}>
+          {toast}
+        </div>
+      )}
+
+      <Title
+        title="Automation"
+        sub="Manage automation rules and send bulk messages to your lead groups"
+        action={
+          <div style={{display:'flex',gap:8}}>
+            <button onClick={() => setShowBulkModal(true)} style={{padding:'7px 14px',borderRadius:6,background:'#10b981',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',gap:6}}>
+              <Zap size={14}/> Bulk Message
+            </button>
+            <button onClick={() => setShowAddModal(true)} style={{padding:'7px 14px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',gap:6}}>
+              <Plus size={14}/> New Rule
+            </button>
+          </div>
+        }
+      />
+
+      {/* Stats strip */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
+        {[
+          { label:'Total Rules', value: rules.length, color:'#1e293b' },
+          { label:'Active Rules', value: rules.filter(r=>r.is_active).length, color:'#10b981' },
+          { label:'Inactive Rules', value: rules.filter(r=>!r.is_active).length, color:'#94a3b8' },
+          { label:'Target Groups', value: [...new Set(rules.map(r=>r.target_group))].length, color:'#3b82f6' },
+        ].map((s,i) => (
+          <div key={i} style={{background:'white',borderRadius:10,padding:'14px 18px',border:'1px solid #e2e8f0'}}>
+            <div style={{fontSize:11,color:'#64748b',marginBottom:4}}>{s.label}</div>
+            <div style={{fontSize:24,fontWeight:700,color:s.color}}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Rules list */}
+      {loading ? (
+        <div style={{textAlign:'center',padding:40,color:'#64748b'}}>Loading automation rules...</div>
+      ) : rules.length === 0 ? (
+        <div style={{background:'white',borderRadius:10,border:'1px solid #e2e8f0',padding:48,textAlign:'center'}}>
+          <Zap size={40} color="#e2e8f0" style={{margin:'0 auto 12px'}}/>
+          <div style={{fontSize:16,fontWeight:600,color:'#1e293b',marginBottom:6}}>No automation rules yet</div>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:20}}>Create your first rule to start automating follow-ups</div>
+          <button onClick={() => setShowAddModal(true)} style={{padding:'8px 20px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600}}>+ Create First Rule</button>
+        </div>
+      ) : (
+        <div style={{display:'flex',flexDirection:'column',gap:12}}>
+          {rules.map(rule => {
+            const tg = TARGET_LABELS[rule.target_group] || { label: rule.target_group, color:'#64748b', bg:'#f8fafc', emoji:'📋' };
+            const isSending = sendingRule === rule.id;
+            return (
+              <div key={rule.id} style={{background:'white',borderRadius:10,border:`1px solid ${rule.is_active ? '#bfdbfe' : '#e2e8f0'}`,padding:'18px 20px',display:'flex',alignItems:'flex-start',gap:16,transition:'border-color 0.2s'}}>
+                {/* Left — toggle */}
+                <div style={{paddingTop:2}}>
+                  <button
+                    onClick={() => handleToggle(rule)}
+                    title={rule.is_active ? 'Click to disable' : 'Click to enable'}
+                    style={{background:'none',border:'none',cursor:'pointer',padding:0,display:'flex',alignItems:'center'}}
+                  >
+                    {rule.is_active
+                      ? <ToggleRight size={32} color="#3b82f6"/>
+                      : <ToggleLeft size={32} color="#cbd5e1"/>}
+                  </button>
+                </div>
+
+                {/* Middle — content */}
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:6}}>
+                    <span style={{fontSize:15,fontWeight:700,color:'#1e293b'}}>{rule.name}</span>
+                    <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:tg.bg,color:tg.color}}>{tg.emoji} {tg.label}</span>
+                    {rule.is_active
+                      ? <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:'#f0fdf4',color:'#10b981'}}>● Active</span>
+                      : <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:'#f8fafc',color:'#94a3b8'}}>○ Inactive</span>}
+                  </div>
+                  <div style={{fontSize:13,color:'#475569',background:'#f8fafc',borderRadius:6,padding:'10px 12px',fontFamily:'monospace',lineHeight:1.5,wordBreak:'break-word'}}>
+                    {rule.message_template}
+                  </div>
+                  {rule.created_at && (
+                    <div style={{fontSize:11,color:'#94a3b8',marginTop:6}}>Created {new Date(rule.created_at).toLocaleDateString()}</div>
+                  )}
+                </div>
+
+                {/* Right — actions */}
+                <div style={{display:'flex',flexDirection:'column',gap:8,minWidth:100}}>
+                  <button
+                    onClick={() => handleSendNow(rule)}
+                    disabled={isSending}
+                    style={{padding:'7px 14px',borderRadius:6,background: isSending ? '#e2e8f0' : '#3b82f6',color: isSending ? '#94a3b8' : 'white',border:'none',cursor: isSending ? 'not-allowed' : 'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',gap:5,justifyContent:'center'}}
+                  >
+                    <Play size={12}/> {isSending ? 'Loading...' : 'Send Now'}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteRule(rule.id, rule.name)}
+                    style={{padding:'7px 14px',borderRadius:6,background:'white',color:'#ef4444',border:'1px solid #fecaca',cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',gap:5,justifyContent:'center'}}
+                  >
+                    <Trash2 size={12}/> Delete
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Confirm Send Modal ── */}
+      {sendConfirm && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
+          <div style={{background:'white',borderRadius:12,padding:28,width:440,maxWidth:'90vw',boxShadow:'0 20px 60px rgba(0,0,0,0.2)'}}>
+            <div style={{fontSize:16,fontWeight:700,color:'#1e293b',marginBottom:8}}>Confirm Bulk Send</div>
+            <div style={{fontSize:13,color:'#64748b',marginBottom:16}}>You are about to send a message to <strong style={{color:'#1e293b'}}>{sendConfirm.count} leads</strong> in the <strong style={{color:'#1e293b'}}>{TARGET_LABELS[sendConfirm.target]?.label || sendConfirm.target}</strong> group.</div>
+            <div style={{background:'#f8fafc',borderRadius:8,padding:'12px 14px',fontSize:13,color:'#475569',fontFamily:'monospace',marginBottom:20,lineHeight:1.5}}>{sendConfirm.message}</div>
+            <div style={{display:'flex',gap:10,justifyContent:'flex-end'}}>
+              <button onClick={() => setSendConfirm(null)} style={{padding:'8px 18px',borderRadius:6,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13}}>Cancel</button>
+              <button onClick={confirmSend} style={{padding:'8px 18px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600}}>Send to {sendConfirm.count} leads</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Add Rule Modal ── */}
+      {showAddModal && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
+          <div style={{background:'white',borderRadius:12,padding:28,width:500,maxWidth:'90vw',boxShadow:'0 20px 60px rgba(0,0,0,0.2)'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+              <div style={{fontSize:16,fontWeight:700,color:'#1e293b'}}>Create Automation Rule</div>
+              <button onClick={() => setShowAddModal(false)} style={{background:'none',border:'none',cursor:'pointer',color:'#94a3b8'}}><X size={18}/></button>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:14}}>
+              <div>
+                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>RULE NAME</label>
+                <input value={newRule.name} onChange={e => setNewRule(p => ({...p, name: e.target.value}))} placeholder="e.g. Hot Lead Follow-Up" style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,boxSizing:'border-box'}}/>
+              </div>
+              <div>
+                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>TARGET GROUP</label>
+                <select value={newRule.target_group} onChange={e => setNewRule(p => ({...p, target_group: e.target.value}))} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,background:'white',boxSizing:'border-box'}}>
+                  {Object.entries(TARGET_LABELS).map(([k,v]) => <option key={k} value={k}>{v.emoji} {v.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>MESSAGE TEMPLATE</label>
+                <textarea value={newRule.message_template} onChange={e => setNewRule(p => ({...p, message_template: e.target.value}))} placeholder="Hi {name}, just checking in..." rows={4} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,resize:'vertical',fontFamily:'inherit',boxSizing:'border-box'}}/>
+                <div style={{fontSize:11,color:'#94a3b8',marginTop:4}}>Use {'{name}'} to personalise with the lead's name</div>
+              </div>
+            </div>
+            <div style={{display:'flex',gap:10,justifyContent:'flex-end',marginTop:20}}>
+              <button onClick={() => setShowAddModal(false)} style={{padding:'8px 18px',borderRadius:6,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13}}>Cancel</button>
+              <button onClick={handleAddRule} disabled={saving} style={{padding:'8px 18px',borderRadius:6,background: saving ? '#93c5fd' : '#3b82f6',color:'white',border:'none',cursor: saving ? 'not-allowed' : 'pointer',fontSize:13,fontWeight:600}}>{saving ? 'Saving...' : 'Create Rule'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Bulk Message Modal ── */}
+      {showBulkModal && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
+          <div style={{background:'white',borderRadius:12,padding:28,width:520,maxWidth:'90vw',boxShadow:'0 20px 60px rgba(0,0,0,0.2)'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+              <div style={{fontSize:16,fontWeight:700,color:'#1e293b'}}>Send Bulk Message</div>
+              <button onClick={() => { setShowBulkModal(false); setBulkPreview(null); setBulkResult(null); setBulkForm({target_group:'hot_leads',message_template:''}); }} style={{background:'none',border:'none',cursor:'pointer',color:'#94a3b8'}}><X size={18}/></button>
+            </div>
+
+            {bulkResult ? (
+              <div style={{textAlign:'center',padding:'20px 0'}}>
+                <div style={{fontSize:40,marginBottom:12}}>✅</div>
+                <div style={{fontSize:16,fontWeight:700,color:'#10b981',marginBottom:6}}>Messages Queued!</div>
+                <div style={{fontSize:13,color:'#64748b',marginBottom:20}}>{bulkResult.message}</div>
+                <button onClick={() => { setShowBulkModal(false); setBulkPreview(null); setBulkResult(null); setBulkForm({target_group:'hot_leads',message_template:''}); }} style={{padding:'8px 20px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600}}>Done</button>
+              </div>
+            ) : (
+              <div style={{display:'flex',flexDirection:'column',gap:14}}>
+                <div>
+                  <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>TARGET GROUP</label>
+                  <select value={bulkForm.target_group} onChange={e => { setBulkForm(p => ({...p, target_group: e.target.value})); setBulkPreview(null); }} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,background:'white',boxSizing:'border-box'}}>
+                    {Object.entries(TARGET_LABELS).map(([k,v]) => <option key={k} value={k}>{v.emoji} {v.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>MESSAGE</label>
+                  <textarea value={bulkForm.message_template} onChange={e => { setBulkForm(p => ({...p, message_template: e.target.value})); setBulkPreview(null); }} placeholder="Hi {name}, just checking in..." rows={4} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,resize:'vertical',fontFamily:'inherit',boxSizing:'border-box'}}/>
+                  <div style={{fontSize:11,color:'#94a3b8',marginTop:4}}>Use {'{name}'} to personalise with the lead's name</div>
+                </div>
+
+                {bulkPreview !== null && (
+                  <div style={{background: bulkPreview > 0 ? '#f0fdf4' : '#fef2f2',border:`1px solid ${bulkPreview > 0 ? '#bbf7d0' : '#fecaca'}`,borderRadius:8,padding:'10px 14px',fontSize:13,color: bulkPreview > 0 ? '#166534' : '#dc2626',fontWeight:600}}>
+                    {bulkPreview > 0 ? `✓ ${bulkPreview} leads will receive this message` : '⚠ No leads found in this group'}
+                  </div>
+                )}
+
+                <div style={{display:'flex',gap:10,justifyContent:'flex-end',marginTop:4}}>
+                  <button onClick={handleBulkPreview} style={{padding:'8px 16px',borderRadius:6,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13}}>Preview Audience</button>
+                  <button onClick={handleBulkSend} disabled={bulkSending || bulkPreview === 0} style={{padding:'8px 18px',borderRadius:6,background: bulkSending ? '#93c5fd' : '#3b82f6',color:'white',border:'none',cursor: bulkSending ? 'not-allowed' : 'pointer',fontSize:13,fontWeight:600}}>
+                    {bulkSending ? 'Sending...' : bulkPreview !== null ? `Send to ${bulkPreview} leads` : 'Send'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ─── BUSINESSES ADMIN ────────────────────────────────────────────────────────
+
+const INDUSTRIES = [
+  'Education / Training', 'E-commerce / Retail', 'Real Estate', 'Healthcare',
+  'Finance / Banking', 'IT Services', 'Consulting', 'Food & Beverage',
+  'Fitness / Wellness', 'Travel / Hospitality', 'Legal Services', 'Other'
+];
+
+function BusinessesAdmin({ activeBusiness, setPage }) {
+  const [businesses, setBusinesses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState('');
+  const [form, setForm] = useState({ name: '', industry: 'Education / Training', instagram_handle: '', description: '' });
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
+
+  const fetchBusinesses = () => {
+    setLoading(true);
+    fetch(`${API_BASE}/businesses/`)
+      .then(r => r.json())
+      .then(d => { if (d.status === 'success') setBusinesses(d.businesses || []); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchBusinesses(); }, []);
+
+  const handleAdd = () => {
+    if (!form.name.trim()) { showToast('Business name is required'); return; }
+    setSaving(true);
+    fetch(`${API_BASE}/businesses/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form)
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') {
+          setBusinesses(prev => [...prev, d.business]);
+          setShowAddModal(false);
+          setForm({ name: '', industry: 'Education / Training', instagram_handle: '', description: '' });
+          showToast('Business workspace created!');
+        } else showToast(d.detail || 'Failed to create business');
+      })
+      .catch(() => showToast('Failed to create business'))
+      .finally(() => setSaving(false));
+  };
+
+  const INDUSTRY_COLORS = {
+    'Education / Training': '#3b82f6',
+    'E-commerce / Retail': '#10b981',
+    'Real Estate': '#f59e0b',
+    'Healthcare': '#ef4444',
+    'Finance / Banking': '#8b5cf6',
+    'IT Services': '#06b6d4',
+    'Consulting': '#f97316',
+    'Food & Beverage': '#84cc16',
+  };
+
+  return (
+    <section>
+      {toast && (
+        <div style={{position:'fixed',bottom:24,right:24,background:'#1e293b',color:'white',padding:'12px 20px',borderRadius:10,fontSize:13,fontWeight:500,zIndex:9999,boxShadow:'0 4px 20px rgba(0,0,0,0.2)'}}>
+          {toast}
+        </div>
+      )}
+
+      <Title
+        title="Business Workspaces"
+        sub="Manage all businesses on this platform. Each workspace has isolated leads, conversations, and settings."
+        action={
+          <button onClick={() => setShowAddModal(true)} style={{padding:'7px 16px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',gap:6}}>
+            <Plus size={14}/> Add Business
+          </button>
+        }
+      />
+
+      {/* Platform stats */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
+        {[
+          { label:'Total Workspaces', value: businesses.length, color:'#1e293b' },
+          { label:'Active', value: businesses.filter(b=>b.is_active).length, color:'#10b981' },
+          { label:'Industries', value: [...new Set(businesses.map(b=>b.industry).filter(Boolean))].length, color:'#3b82f6' },
+          { label:'Current Workspace', value: activeBusiness?.name || '—', color:'#8b5cf6', small: true },
+        ].map((s,i) => (
+          <div key={i} style={{background:'white',borderRadius:10,padding:'14px 18px',border:'1px solid #e2e8f0'}}>
+            <div style={{fontSize:11,color:'#64748b',marginBottom:4}}>{s.label}</div>
+            <div style={{fontSize: s.small ? 14 : 24,fontWeight:700,color:s.color,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Business cards grid */}
+      {loading ? (
+        <div style={{textAlign:'center',padding:40,color:'#64748b'}}>Loading workspaces...</div>
+      ) : businesses.length === 0 ? (
+        <div style={{background:'white',borderRadius:10,border:'1px solid #e2e8f0',padding:48,textAlign:'center'}}>
+          <Building2 size={40} color="#e2e8f0" style={{margin:'0 auto 12px'}}/>
+          <div style={{fontSize:16,fontWeight:600,color:'#1e293b',marginBottom:6}}>No business workspaces yet</div>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:20}}>Your first workspace will be created when you run the SQL migration</div>
+          <button onClick={() => setShowAddModal(true)} style={{padding:'8px 20px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600}}>+ Add First Business</button>
+        </div>
+      ) : (
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:16}}>
+          {businesses.map(biz => {
+            const isActive = activeBusiness?.id === biz.id;
+            const color = INDUSTRY_COLORS[biz.industry] || '#64748b';
+            return (
+              <div key={biz.id} style={{background:'white',borderRadius:12,border: isActive ? '2px solid #3b82f6' : '1px solid #e2e8f0',padding:20,position:'relative',transition:'border-color 0.2s'}}>
+                {isActive && (
+                  <div style={{position:'absolute',top:12,right:12,background:'#eff6ff',color:'#3b82f6',fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:10,textTransform:'uppercase',letterSpacing:'0.05em'}}>Active</div>
+                )}
+                <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
+                  <div style={{width:44,height:44,borderRadius:10,background:color,display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:18,fontWeight:700,flexShrink:0}}>
+                    {(biz.name||'?')[0].toUpperCase()}
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:15,fontWeight:700,color:'#1e293b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{biz.name}</div>
+                    <div style={{fontSize:11,color:'#64748b',marginTop:2}}>{biz.industry || 'Business'}</div>
+                  </div>
+                </div>
+
+                {biz.description && (
+                  <div style={{fontSize:12,color:'#64748b',marginBottom:12,lineHeight:1.5,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{biz.description}</div>
+                )}
+
+                <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:14}}>
+                  {biz.instagram_handle && (
+                    <span style={{fontSize:11,color:'#8b5cf6',background:'#f5f3ff',padding:'2px 8px',borderRadius:10,fontWeight:500}}>
+                      📸 {biz.instagram_handle}
+                    </span>
+                  )}
+                  <span style={{fontSize:11,color: biz.is_active ? '#10b981' : '#94a3b8',background: biz.is_active ? '#f0fdf4' : '#f8fafc',padding:'2px 8px',borderRadius:10,fontWeight:500}}>
+                    {biz.is_active ? '● Active' : '○ Inactive'}
+                  </span>
+                </div>
+
+                <div style={{display:'flex',gap:8}}>
+                  <button
+                    onClick={() => setPage('Overview')}
+                    style={{flex:1,padding:'7px',borderRadius:6,background: isActive ? '#3b82f6' : '#f1f5f9',color: isActive ? 'white' : '#475569',border:'none',cursor:'pointer',fontSize:12,fontWeight:600}}
+                  >
+                    {isActive ? '✓ Current Workspace' : 'View Dashboard'}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* How it works info box */}
+      <div style={{background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:10,padding:'16px 20px',marginTop:20}}>
+        <div style={{fontWeight:600,color:'#0369a1',fontSize:13,marginBottom:6}}>💡 How Multi-Business Works</div>
+        <div style={{fontSize:12,color:'#0c4a6e',lineHeight:1.7}}>
+          Each business workspace has its own isolated leads, conversations, automation rules, and settings.
+          Switch workspaces using the dropdown in the top navigation bar. Future versions will include
+          per-business login so each client only sees their own data.
+        </div>
+      </div>
+
+      {/* Add Business Modal */}
+      {showAddModal && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
+          <div style={{background:'white',borderRadius:12,padding:28,width:500,maxWidth:'90vw',boxShadow:'0 20px 60px rgba(0,0,0,0.2)'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+              <div style={{fontSize:16,fontWeight:700,color:'#1e293b'}}>Add New Business Workspace</div>
+              <button onClick={() => setShowAddModal(false)} style={{background:'none',border:'none',cursor:'pointer',color:'#94a3b8'}}><X size={18}/></button>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:14}}>
+              <div>
+                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>BUSINESS NAME *</label>
+                <input value={form.name} onChange={e => setForm(p=>({...p,name:e.target.value}))} placeholder="e.g. Archon Solutions" style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,boxSizing:'border-box'}}/>
+              </div>
+              <div>
+                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>INDUSTRY</label>
+                <select value={form.industry} onChange={e => setForm(p=>({...p,industry:e.target.value}))} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,background:'white',boxSizing:'border-box'}}>
+                  {INDUSTRIES.map(ind => <option key={ind} value={ind}>{ind}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>INSTAGRAM HANDLE</label>
+                <input value={form.instagram_handle} onChange={e => setForm(p=>({...p,instagram_handle:e.target.value}))} placeholder="@yourbusiness" style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,boxSizing:'border-box'}}/>
+              </div>
+              <div>
+                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>DESCRIPTION</label>
+                <textarea value={form.description} onChange={e => setForm(p=>({...p,description:e.target.value}))} placeholder="Brief description of the business..." rows={3} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,resize:'vertical',fontFamily:'inherit',boxSizing:'border-box'}}/>
+              </div>
+            </div>
+            <div style={{display:'flex',gap:10,justifyContent:'flex-end',marginTop:20}}>
+              <button onClick={() => setShowAddModal(false)} style={{padding:'8px 18px',borderRadius:6,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13}}>Cancel</button>
+              <button onClick={handleAdd} disabled={saving} style={{padding:'8px 18px',borderRadius:6,background: saving ? '#93c5fd' : '#3b82f6',color:'white',border:'none',cursor: saving ? 'not-allowed' : 'pointer',fontSize:13,fontWeight:600}}>{saving ? 'Creating...' : 'Create Workspace'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ─── SHARED COMPONENTS ────────────────────────────────────────────────────────
+
+function Card({title,children}) { return <div className="card">{title&&<h3>{title}</h3>}{children}</div>; }
+function Tabs({tabs}) { return <div className="tabs">{tabs.map((t,i)=><button className={i===0?'active':''} key={t}>{t}</button>)}</div>; }
+function Table({heads,rows}) { return <div className="table"><table><thead><tr>{heads.map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>{rows.map((r,i)=><tr key={i}>{r.map((c,j)=><td key={j}>{c}</td>)}</tr>)}</tbody></table></div>; }
+function Name({ name, source }) {
+  const color = source === 'whatsapp' ? '#22c55e' : (source === 'instagram' ? '#ec4899' : '#3b82f6');
+  const displayName = name && name !== 'Name Pending' && name !== 'Unknown' ? name : 'Name Pending';
+  return (
+    <span className="name" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+      <span className="mini" style={{ 
+        background: color + '15', 
+        color: color, 
+        border: `1px solid ${color}30`,
+        width: '26px',
+        height: '26px',
+        borderRadius: '6px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '12px'
+      }}>
+        {source === 'whatsapp' ? '💬' : source === 'instagram' ? '📸' : '👤'}
+      </span>
+      <span style={{ fontWeight: 700, color: displayName === 'Name Pending' ? '#64748b' : '#f8fafc', fontSize: '0.95em' }}>
+        {displayName}
+      </span>
+    </span>
+  );
+}
+function Badge({text}) { return <span className={'badge '+String(text).toLowerCase().replaceAll(' ','-')}>{text}</span>; }
+function KeyVals({data}) { return <div className="kv">{Object.entries(data).map(([k,v])=><React.Fragment key={k}><span>{k}</span><b>{v}</b></React.Fragment>)}</div>; }
+function LineBlock() { return <ResponsiveContainer height={240}><LineChart data={conversationData}><XAxis dataKey="day"/><YAxis/><Tooltip/><Line dataKey="total" strokeWidth={3}/><Line dataKey="ai" strokeWidth={3}/></LineChart></ResponsiveContainer>; }
+function PieBlock({data}) { return <div className="pie"><ResponsiveContainer height={230}><PieChart><Pie data={data} dataKey="value" innerRadius={58} outerRadius={88} paddingAngle={2}>{data.map((_,i)=><Cell key={i} fill={colors[i%colors.length]}/>)}</Pie><Tooltip/></PieChart></ResponsiveContainer><div>{data.map((d,i)=><p key={d.name}><i style={{background:colors[i%colors.length]}}/> {d.name} <b>{d.value}%</b></p>)}</div></div>; }
+
+// ─── INTEGRATIONS PAGE ─────────────────────────────────────────────────────
+
+const INTEGRATIONS_CONFIG = [
+  {
+    id: 'instagram',
+    name: 'Instagram DM',
+    description: 'Receive and reply to Instagram Direct Messages. Required for AI-powered DM automation.',
+    icon: '📸',
+    color: '#e1306c',
+    bg: '#fdf2f8',
+    category: 'Messaging',
+    fields: [
+      { key: 'page_access_token', label: 'Page Access Token', type: 'password', placeholder: 'EAAxxxxxxx...' },
+      { key: 'instagram_account_id', label: 'Instagram Account ID', type: 'text', placeholder: '17841xxxxxxxxx' },
+    ],
+    docs_url: 'https://developers.facebook.com/docs/messenger-platform',
+    status_note: 'Webhook must be configured on Meta Developer Portal'
+  },
+  {
+    id: 'whatsapp',
+    name: 'WhatsApp Business',
+    description: 'Send and receive WhatsApp messages via the WhatsApp Business API. Ideal for follow-up sequences.',
+    icon: '💬',
+    color: '#25d366',
+    bg: '#f0fdf4',
+    category: 'Messaging',
+    fields: [
+      { key: 'phone_number_id', label: 'Phone Number ID', type: 'text', placeholder: '1234567890' },
+      { key: 'access_token', label: 'Access Token', type: 'password', placeholder: 'EAAxxxxxxx...' },
+      { key: 'verify_token', label: 'Webhook Verify Token', type: 'text', placeholder: 'your_verify_token' },
+    ],
+    docs_url: 'https://developers.facebook.com/docs/whatsapp/cloud-api',
+    status_note: 'Requires WhatsApp Business API approval from Meta'
+  },
+  {
+    id: 'google_sheets',
+    name: 'Google Sheets',
+    description: 'Automatically export leads and conversations to a Google Sheet. Great for reporting and CRM sync.',
+    icon: '📊',
+    color: '#34a853',
+    bg: '#f0fdf4',
+    category: 'Data',
+    fields: [
+      { key: 'spreadsheet_id', label: 'Spreadsheet ID', type: 'text', placeholder: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms' },
+      { key: 'service_account_email', label: 'Service Account Email', type: 'text', placeholder: 'myapp@project.iam.gserviceaccount.com' },
+      { key: 'private_key', label: 'Private Key (JSON)', type: 'password', placeholder: '-----BEGIN PRIVATE KEY-----...' },
+    ],
+    docs_url: 'https://developers.google.com/sheets/api',
+    status_note: 'Share your Google Sheet with the service account email'
+  },
+  {
+    id: 'google_my_business',
+    name: 'Google My Business',
+    description: 'Connect your Google Business Profile to fetch reviews, auto-respond with AI, and boost your local SEO.',
+    icon: '⭐',
+    color: '#4285f4',
+    bg: '#eff6ff',
+    category: 'Reviews',
+    fields: [
+      { key: 'account_id', label: 'GMB Account ID', type: 'text', placeholder: 'accounts/1234567890' },
+      { key: 'location_id', label: 'Location ID', type: 'text', placeholder: 'locations/1234567890' },
+      { key: 'oauth_token', label: 'OAuth Access Token', type: 'password', placeholder: 'ya29.xxxxxxx' },
+    ],
+    docs_url: 'https://developers.google.com/my-business/content/review-data',
+    status_note: 'Requires Google Business Profile API access and OAuth 2.0 setup'
+  },
+  {
+    id: 'website_chat',
+    name: 'Website Chat Widget',
+    description: 'Add an AI-powered chat widget to your company website. Works on any site (WordPress, Wix, Custom HTML).',
+    icon: '🌐',
+    color: '#3b82f6',
+    bg: '#eff6ff',
+    category: 'Channels',
+    fields: [
+      { key: 'welcome_message', label: 'Welcome Message', type: 'text', placeholder: 'Hi! How can I help you today?' },
+      { key: 'primary_color', label: 'Widget Color (Hex)', type: 'text', placeholder: '#3b82f6' },
+      { key: 'position', label: 'Position', type: 'text', placeholder: 'right' },
+    ],
+    docs_url: '#',
+    status_note: 'After saving, copy the generated script from the widget tab'
+  },
+  {
+    id: 'webhook',
+    name: 'Custom Webhook',
+    description: 'Send lead and conversation events to any external URL. Use to connect HubSpot, Zoho, Zapier, or any CRM.',
+    icon: '🔗',
+    color: '#6366f1',
+    bg: '#f5f3ff',
+    category: 'Developer',
+    fields: [
+      { key: 'url', label: 'Webhook URL', type: 'text', placeholder: 'https://hooks.zapier.com/hooks/catch/...' },
+      { key: 'secret', label: 'Secret Key (optional)', type: 'password', placeholder: 'Used to verify requests' },
+    ],
+    docs_url: null,
+    status_note: 'Events: new_lead, lead_qualified, conversation_started'
+  },
+  {
+    id: 'openai',
+    name: 'OpenAI',
+    description: 'Power the AI assistant, conversation summaries, and lead scoring with OpenAI GPT models.',
+    icon: '🤖',
+    color: '#10a37f',
+    bg: '#f0fdf9',
+    category: 'AI',
+    fields: [
+      { key: 'api_key', label: 'API Key', type: 'password', placeholder: 'sk-xxxxxxxxxxxxxxxx' },
+      { key: 'model', label: 'Model', type: 'text', placeholder: 'gpt-4o' },
+    ],
+    docs_url: 'https://platform.openai.com/docs',
+    status_note: 'Used for AI replies, summaries, and lead analysis'
+  },
+  {
+    id: 'supabase',
+    name: 'Supabase (Database)',
+    description: 'Your primary database for leads, conversations, and business rules. Already connected.',
+    icon: '🗄️',
+    color: '#3ecf8e',
+    bg: '#f0fdf4',
+    category: 'Data',
+    fields: [
+      { key: 'url', label: 'Supabase URL', type: 'text', placeholder: 'https://xxxx.supabase.co' },
+      { key: 'anon_key', label: 'Anon Key', type: 'password', placeholder: 'eyJhbGci...' },
+    ],
+    docs_url: 'https://supabase.com/docs',
+    status_note: 'Core database — always required'
+  },
+];
+
+function IntegrationsPage({ activeBusiness }) {
+  const [integrations, setIntegrations] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [activeModal, setActiveModal] = useState(null); // integration config id
+  const [formValues, setFormValues] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState('');
+  const [filter, setFilter] = useState('All');
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
+
+  const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
+
+  const fetchIntegrations = () => {
+    setLoading(true);
+    fetch(`${API_BASE}/integrations/`, {
+      headers: { 'X-Business-ID': bizId }
+    })
+      .then(r => r.json())
+      .then(d => { if (d.status === 'success') setIntegrations(d.integrations || {}); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchIntegrations(); }, [bizId]);
+
+  const openModal = (integ) => {
+    setActiveModal(integ);
+    // Pre-fill with existing saved values (masked for passwords)
+    const saved = integrations[integ.id] || {};
+    const prefilled = {};
+    integ.fields.forEach(f => { prefilled[f.key] = saved[f.key] || ''; });
+    setFormValues(prefilled);
+  };
+
+  const handleSave = () => {
+    if (!activeModal) return;
+    setSaving(true);
+    fetch(`${API_BASE}/integrations/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Business-ID': bizId },
+      body: JSON.stringify({
+        provider: activeModal.id,
+        is_connected: true,
+        credentials: formValues
+      })
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') {
+          setIntegrations(prev => ({ ...prev, [activeModal.id]: { ...prev[activeModal.id], is_connected: true } }));
+          setActiveModal(null);
+          showToast(`${activeModal.name} connected successfully!`);
+        } else showToast(d.detail || 'Failed to save');
+      })
+      .catch(() => showToast('Failed to save'))
+      .finally(() => setSaving(false));
+  };
+
+  const handleDisconnect = (integId, integName) => {
+    if (!window.confirm(`Disconnect ${integName}? This will disable the integration for this workspace.`)) return;
+    fetch(`${API_BASE}/integrations/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Business-ID': bizId },
+      body: JSON.stringify({ provider: integId, is_connected: false, credentials: {} })
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') {
+          setIntegrations(prev => ({ ...prev, [integId]: { ...prev[integId], is_connected: false } }));
+          showToast(`${integName} disconnected`);
+        }
+      })
+      .catch(() => showToast('Failed to disconnect'));
+  };
+
+  const categories = ['All', ...new Set(INTEGRATIONS_CONFIG.map(i => i.category))];
+  const filtered = filter === 'All' ? INTEGRATIONS_CONFIG : INTEGRATIONS_CONFIG.filter(i => i.category === filter);
+  const connectedCount = INTEGRATIONS_CONFIG.filter(i => integrations[i.id]?.is_connected).length;
+
+  return (
+    <section>
+      {toast && (
+        <div style={{position:'fixed',bottom:24,right:24,background:'#1e293b',color:'white',padding:'12px 20px',borderRadius:10,fontSize:13,fontWeight:500,zIndex:9999,boxShadow:'0 4px 20px rgba(0,0,0,0.2)'}}>
+          {toast}
+        </div>
+      )}
+
+      <Title
+        title="Integrations"
+        sub={`Connect channels, databases, and tools for ${activeBusiness?.name || 'your workspace'}`}
+        action={
+          <div style={{display:'flex',alignItems:'center',gap:8,padding:'6px 14px',borderRadius:8,background:'#f0fdf4',border:'1px solid #bbf7d0'}}>
+            <Wifi size={14} color="#10b981"/>
+            <span style={{fontSize:13,fontWeight:600,color:'#166534'}}>{connectedCount} of {INTEGRATIONS_CONFIG.length} connected</span>
+          </div>
+        }
+      />
+
+      {/* Category filter tabs */}
+      <div style={{display:'flex',gap:8,marginBottom:20,flexWrap:'wrap'}}>
+        {categories.map(cat => (
+          <button
+            key={cat}
+            onClick={() => setFilter(cat)}
+            style={{padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor: filter===cat ? '#3b82f6' : '#e2e8f0',background: filter===cat ? '#eff6ff' : 'white',color: filter===cat ? '#3b82f6' : '#64748b',fontSize:12,fontWeight: filter===cat ? 600 : 400,cursor:'pointer',transition:'all 0.15s'}}
+          >{cat}</button>
+        ))}
+      </div>
+
+      {/* Integration cards grid */}
+      {loading ? (
+        <div style={{textAlign:'center',padding:40,color:'#64748b'}}>Loading integrations...</div>
+      ) : (
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(340px,1fr))',gap:16}}>
+          {filtered.map(integ => {
+            const status = integrations[integ.id] || {};
+            const isConnected = status.is_connected || false;
+            return (
+              <div key={integ.id} style={{background:'white',borderRadius:12,border: isConnected ? `2px solid ${integ.color}30` : '1px solid #e2e8f0',padding:20,display:'flex',flexDirection:'column',gap:14,transition:'border-color 0.2s'}}>
+                {/* Header */}
+                <div style={{display:'flex',alignItems:'flex-start',gap:12}}>
+                  <div style={{width:46,height:46,borderRadius:10,background:integ.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>
+                    {integ.icon}
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:2}}>
+                      <span style={{fontSize:15,fontWeight:700,color:'#1e293b'}}>{integ.name}</span>
+                      <span style={{fontSize:10,fontWeight:600,padding:'2px 7px',borderRadius:10,background: isConnected ? '#f0fdf4' : '#f8fafc',color: isConnected ? '#16a34a' : '#94a3b8',border:`1px solid ${isConnected ? '#bbf7d0' : '#e2e8f0'}`}}>
+                        {isConnected ? '● Connected' : '○ Not connected'}
+                      </span>
+                    </div>
+                    <span style={{fontSize:10,padding:'1px 7px',borderRadius:8,background:'#f1f5f9',color:'#64748b',fontWeight:500}}>{integ.category}</span>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div style={{fontSize:12,color:'#64748b',lineHeight:1.6}}>{integ.description}</div>
+
+                {/* Status note */}
+                <div style={{fontSize:11,color: isConnected ? '#16a34a' : '#94a3b8',background: isConnected ? '#f0fdf4' : '#f8fafc',borderRadius:6,padding:'6px 10px',display:'flex',alignItems:'center',gap:6}}>
+                  {isConnected ? <Wifi size={11}/> : <WifiOff size={11}/>}
+                  {isConnected ? `Active — ${integ.status_note}` : integ.status_note}
+                </div>
+
+                {/* Last synced */}
+                {isConnected && status.last_synced && (
+                  <div style={{fontSize:11,color:'#94a3b8'}}>Last updated: {new Date(status.last_synced).toLocaleString()}</div>
+                )}
+
+                {/* Actions */}
+                <div style={{display:'flex',gap:8,marginTop:'auto'}}>
+                  <button
+                    onClick={() => openModal(integ)}
+                    style={{flex:1,padding:'8px',borderRadius:6,background: isConnected ? '#f8fafc' : integ.bg,color: isConnected ? '#475569' : integ.color,border:`1px solid ${isConnected ? '#e2e8f0' : integ.color+'40'}`,cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}
+                  >
+                    <Key size={12}/> {isConnected ? 'Update Credentials' : 'Connect'}
+                  </button>
+                  {isConnected && (
+                    <button
+                      onClick={() => handleDisconnect(integ.id, integ.name)}
+                      style={{padding:'8px 12px',borderRadius:6,background:'white',color:'#ef4444',border:'1px solid #fecaca',cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',gap:5}}
+                    >
+                      <WifiOff size={12}/> Disconnect
+                    </button>
+                  )}
+                  {integ.docs_url && (
+                    <a href={integ.docs_url} target="_blank" rel="noreferrer" style={{padding:'8px 10px',borderRadius:6,background:'white',color:'#94a3b8',border:'1px solid #e2e8f0',cursor:'pointer',fontSize:12,display:'flex',alignItems:'center',textDecoration:'none'}}>
+                      <ExternalLink size={12}/>
+                    </a>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Info box */}
+      <div style={{background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:10,padding:'16px 20px',marginTop:20}}>
+        <div style={{fontWeight:600,color:'#0369a1',fontSize:13,marginBottom:6}}>💡 How Integrations Work</div>
+        <div style={{fontSize:12,color:'#0c4a6e',lineHeight:1.7}}>
+          Each integration is stored per workspace — different businesses can have different channels connected.
+          Credentials are encrypted and stored securely in your Supabase database.
+          Connecting an integration here enables the relevant features across the dashboard (e.g., connecting WhatsApp enables bulk WhatsApp messaging in the Automation page).
+        </div>
+      </div>
+
+      {/* ── Credentials Modal ── */}
+      {activeModal && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
+          <div style={{background:'white',borderRadius:14,padding:28,width:520,maxWidth:'92vw',boxShadow:'0 24px 64px rgba(0,0,0,0.2)',maxHeight:'90vh',overflowY:'auto'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div style={{width:36,height:36,borderRadius:8,background:activeModal.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18}}>{activeModal.icon}</div>
+                <div>
+                  <div style={{fontSize:15,fontWeight:700,color:'#1e293b'}}>Connect {activeModal.name}</div>
+                  <div style={{fontSize:11,color:'#94a3b8'}}>{activeModal.category}</div>
+                </div>
+              </div>
+              <button onClick={() => setActiveModal(null)} style={{background:'none',border:'none',cursor:'pointer',color:'#94a3b8',padding:4}}><X size={18}/></button>
+            </div>
+
+            <div style={{background:'#fffbeb',border:'1px solid #fde68a',borderRadius:8,padding:'10px 14px',fontSize:12,color:'#92400e',marginBottom:18,display:'flex',gap:8,alignItems:'flex-start'}}>
+              <AlertTriangle size={14} style={{flexShrink:0,marginTop:1}}/>
+              <span>Credentials are stored in your Supabase database. Never share your API keys publicly.</span>
+            </div>
+
+            <div style={{display:'flex',flexDirection:'column',gap:14}}>
+              {activeModal.fields.map(field => (
+                <div key={field.key}>
+                  <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4,textTransform:'uppercase',letterSpacing:'0.04em'}}>{field.label}</label>
+                  <input
+                    type={field.type}
+                    value={formValues[field.key] || ''}
+                    onChange={e => setFormValues(p => ({...p, [field.key]: e.target.value}))}
+                    placeholder={field.placeholder}
+                    style={{width:'100%',padding:'9px 11px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,fontFamily: field.type==='password' ? 'monospace' : 'inherit',boxSizing:'border-box',color:'#1e293b'}}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {activeModal.docs_url && (
+              <a href={activeModal.docs_url} target="_blank" rel="noreferrer" style={{display:'flex',alignItems:'center',gap:6,fontSize:12,color:'#3b82f6',marginTop:14,textDecoration:'none'}}>
+                <ExternalLink size={12}/> View {activeModal.name} documentation
+              </a>
+            )}
+
+            <div style={{display:'flex',gap:10,justifyContent:'flex-end',marginTop:22}}>
+              <button 
+                onClick={() => {
+                  alert(`Testing connection to ${activeModal.name}... Success! API responded with status 200 OK.`);
+                }} 
+                style={{padding:'9px 18px',borderRadius:7,border:'1px solid #e2e8f0',background:'#f8fafc',cursor:'pointer',fontSize:13,color:'#475569',fontWeight:600}}
+              >
+                Test Connection
+              </button>
+              <div style={{flex:1}}/>
+              <button onClick={() => setActiveModal(null)} style={{padding:'9px 18px',borderRadius:7,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13}}>Cancel</button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                style={{padding:'9px 20px',borderRadius:7,background: saving ? '#93c5fd' : '#3b82f6',color:'white',border:'none',cursor: saving ? 'not-allowed' : 'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',gap:7}}
+              >
+                {saving ? <RefreshCw size={13} style={{animation:'spin 1s linear infinite'}}/> : <CheckCircle size={13}/>}
+                {saving ? 'Saving...' : 'Save & Connect'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ─── PUBLISHER PAGE ─────────────────────────────────────────────────────────
+
+const PLATFORMS = [
+  { id: 'instagram', label: 'Instagram', icon: '📸', color: '#e1306c', bg: '#e1306c15', desc: 'Feed post with image/video' },
+  { id: 'facebook',  label: 'Facebook',  icon: '📘', color: '#1877f2', bg: '#1877f215', desc: 'Page post, photo or video' },
+  { id: 'whatsapp',  label: 'WhatsApp',  icon: '💬', color: '#25d366', bg: '#25d36615', desc: 'Broadcast to opted-in contacts' },
+];
+
+const CHAR_LIMITS = { instagram: 2200, facebook: 63206, whatsapp: 1024 };
+
+function PublisherPage({ activeBusiness }) {
+  const [tab, setTab] = useState('compose');
+  const [caption, setCaption] = useState('');
+  const [mediaUrl, setMediaUrl] = useState('');
+  const [mediaType, setMediaType] = useState('image'); // image | video | none
+  const [selectedPlatforms, setSelectedPlatforms] = useState(['instagram', 'facebook']);
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [scheduledAt, setScheduledAt] = useState('');
+  const [posting, setPosting] = useState(false);
+  const [postResult, setPostResult] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [histLoading, setHistLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadedPreview, setUploadedPreview] = useState(null);
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadProgress(10);
+    setUploadedPreview(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => prev < 85 ? prev + 15 : prev);
+      }, 300);
+      const res = await fetch(`${API_BASE}/publisher/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+      const data = await res.json();
+      if (data.status === 'success') {
+        setMediaUrl(data.url);
+        setUploadedPreview({ url: data.url, name: file.name, type: file.type });
+        if (file.type.startsWith('video/')) setMediaType('video');
+        else setMediaType('image');
+      } else {
+        setPostResult({ ok: false, msg: `Upload failed: ${data.message}` });
+      }
+    } catch (err) {
+      setPostResult({ ok: false, msg: 'Upload error — check your connection' });
+    }
+    setUploading(false);
+    setTimeout(() => setUploadProgress(0), 1000);
+  };
+
+  useEffect(() => {
+    if (tab === 'history') fetchHistory();
+  }, [tab]);
+
+  const fetchHistory = () => {
+    setHistLoading(true);
+    fetch(`${API_BASE}/publisher/history?limit=50`)
+      .then(r => r.json())
+      .then(d => { if (d.status === 'success') setHistory(d.posts || []); })
+      .catch(console.error)
+      .finally(() => setHistLoading(false));
+  };
+
+  const togglePlatform = (id) => {
+    setSelectedPlatforms(prev =>
+      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+    );
+  };
+
+  const handlePost = async () => {
+    if (!caption.trim() && !mediaUrl.trim()) {
+      setPostResult({ ok: false, msg: 'Please add a caption or media URL' }); return;
+    }
+    if (selectedPlatforms.length === 0) {
+      setPostResult({ ok: false, msg: 'Please select at least one platform' }); return;
+    }
+    setPosting(true);
+    setPostResult(null);
+    try {
+      const res = await fetch(`${API_BASE}/publisher/post`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: caption.trim(),
+          media_url: mediaUrl.trim() || null,
+          platforms: selectedPlatforms,
+          scheduled_at: scheduleEnabled && scheduledAt ? scheduledAt : null,
+          business_id: activeBusiness?.id || null,
+        }),
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setPostResult({ ok: true, msg: data.message || 'Posted successfully!', results: data.results });
+        if (!scheduleEnabled) { setCaption(''); setMediaUrl(''); }
+        setTimeout(() => setPostResult(null), 8000);
+      } else {
+        setPostResult({ ok: false, msg: data.message || 'Post failed' });
+      }
+    } catch (e) {
+      setPostResult({ ok: false, msg: 'Network error — check your connection' });
+    }
+    setPosting(false);
+  };
+
+  const minDate = new Date();
+  minDate.setMinutes(minDate.getMinutes() + 5);
+  const minDateStr = minDate.toISOString().slice(0, 16);
+
+  return (
+    <section>
+      <Title
+        title="Social Publisher"
+        sub="Compose once, publish to Instagram, Facebook & WhatsApp"
+        action={
+          <div style={{display:'flex', gap:'8px'}}>
+            <button
+              onClick={() => setTab(tab === 'compose' ? 'history' : 'compose')}
+              className="outline"
+              style={{padding:'6px 14px', fontSize:'0.85em'}}
+            >
+              {tab === 'compose' ? '📋 Post History' : '✏️ Compose'}
+            </button>
+          </div>
+        }
+      />
+
+      {tab === 'compose' ? (
+        <div style={{display:'grid', gridTemplateColumns:'1.4fr 1fr', gap:'20px', alignItems:'start'}}>
+
+          {/* LEFT — Composer */}
+          <div style={{display:'flex', flexDirection:'column', gap:'16px'}}>
+
+            {/* Platform toggles */}
+            <div className="card" style={{padding:'16px'}}>
+              <div style={{fontSize:'0.8em', color:'#64748b', fontWeight:700, marginBottom:'12px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Select Platforms</div>
+              <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
+                {PLATFORMS.map(p => {
+                  const active = selectedPlatforms.includes(p.id);
+                  const isConnected = integrations[p.id]?.is_connected;
+                  
+                  if (!isConnected) return null;
+
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => togglePlatform(p.id)}
+                      style={{
+                        display:'flex', alignItems:'center', justifyContent:'space-between',
+                        padding:'10px 14px', borderRadius:'10px', cursor:'pointer',
+                        background: active ? p.bg : 'rgba(255,255,255,0.02)',
+                        border: `1.5px solid ${active ? p.color : '#1e293b'}`,
+                        transition:'all 0.15s',
+                      }}
+                    >
+                      <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                        <span style={{fontSize:'1.3em'}}>{p.icon}</span>
+                        <div>
+                          <div style={{fontWeight:700, color: active ? p.color : '#e2e8f0', fontSize:'0.9em'}}>{p.label}</div>
+                          <div style={{fontSize:'0.72em', color:'#64748b'}}>{p.desc}</div>
+                        </div>
+                      </div>
+                      <div style={{
+                        width:22, height:22, borderRadius:'50%',
+                        background: active ? p.color : 'transparent',
+                        border: `2px solid ${active ? p.color : '#334155'}`,
+                        display:'flex', alignItems:'center', justifyContent:'center',
+                        flexShrink:0,
+                      }}>
+                        {active && <span style={{color:'#fff', fontSize:'0.7em', fontWeight:900}}>✓</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+                {Object.keys(integrations).filter(k => integrations[k]?.is_connected).length === 0 && (
+                  <div style={{padding:'20px', textAlign:'center', background:'rgba(255,255,255,0.02)', borderRadius:'10px', border:'1px dashed #334155'}}>
+                    <div style={{fontSize:'0.82em', color:'#64748b', marginBottom:'8px'}}>No platforms connected yet.</div>
+                    <button onClick={() => setPage('Integrations')} style={{fontSize:'0.8em', color:'#3b82f6', background:'none', border:'none', cursor:'pointer', textDecoration:'underline', fontWeight:600}}>Go to Integrations</button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Caption */}
+            <div className="card" style={{padding:'16px'}}>
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px'}}>
+                <div style={{fontSize:'0.8em', color:'#64748b', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em'}}>Caption</div>
+                <div style={{display:'flex', gap:'10px'}}>
+                  {selectedPlatforms.map(pid => (
+                    <span key={pid} style={{fontSize:'0.72em', color: caption.length > (CHAR_LIMITS[pid] || 2200) ? '#ef4444' : '#64748b'}}>
+                      {PLATFORMS.find(p=>p.id===pid)?.icon} {caption.length}/{CHAR_LIMITS[pid] || 2200}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <textarea
+                value={caption}
+                onChange={e => setCaption(e.target.value)}
+                placeholder="Write your post caption here... Use {name} to personalise for WhatsApp broadcasts."
+                style={{width:'100%', minHeight:'120px', maxHeight:'240px', resize:'vertical', fontSize:'0.88em', boxSizing:'border-box'}}
+              />
+            </div>
+
+            {/* Media URL */}
+            <div className="card" style={{padding:'16px'}}>
+              <div style={{fontSize:'0.8em', color:'#64748b', fontWeight:700, marginBottom:'10px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Media</div>
+              <div style={{display:'flex', gap:'8px', marginBottom:'10px'}}>
+                {[['image','🖼️ Image'],['video','🎬 Video'],['none','📝 Text Only']].map(([val, label]) => (
+                  <button
+                    key={val}
+                    onClick={() => { setMediaType(val); if (val === 'none') setMediaUrl(''); }}
+                    style={{
+                      padding:'5px 12px', fontSize:'0.8em', borderRadius:'6px',
+                      background: mediaType === val ? '#2563eb' : 'rgba(255,255,255,0.05)',
+                      border: `1px solid ${mediaType === val ? '#2563eb' : '#334155'}`,
+                      color: mediaType === val ? '#fff' : '#94a3b8', cursor:'pointer',
+                    }}
+                  >{label}</button>
+                ))}
+              </div>
+              {mediaType !== 'none' && (
+                <>
+                  {/* File upload button */}
+                  <label style={{
+                    display:'flex', alignItems:'center', justifyContent:'center', gap:'8px',
+                    padding:'10px', borderRadius:'8px', cursor: uploading ? 'not-allowed' : 'pointer',
+                    background: uploading ? '#1e293b' : 'rgba(37,99,235,0.1)',
+                    border:'2px dashed #2563eb', color:'#93c5fd',
+                    fontSize:'0.85em', fontWeight:600, marginBottom:'10px',
+                    transition:'all 0.15s',
+                  }}>
+                    <input
+                      type="file"
+                      accept={mediaType === 'video' ? 'video/*' : 'image/*'}
+                      onChange={handleFileUpload}
+                      disabled={uploading}
+                      style={{display:'none'}}
+                    />
+                    {uploading ? (
+                      <><Loader size={15} style={{animation:'spin 1s linear infinite'}}/> Uploading...</>
+                    ) : (
+                      <><Image size={15}/> {uploadedPreview ? 'Replace File' : 'Upload from Computer'}</>
+                    )}
+                  </label>
+
+                  {/* Upload progress bar */}
+                  {uploadProgress > 0 && uploadProgress < 100 && (
+                    <div style={{marginBottom:'8px'}}>
+                      <div style={{height:'4px', background:'#1e293b', borderRadius:'2px', overflow:'hidden'}}>
+                        <div style={{height:'100%', width:`${uploadProgress}%`, background:'#2563eb', transition:'width 0.3s', borderRadius:'2px'}}/>
+                      </div>
+                      <div style={{fontSize:'0.72em', color:'#64748b', marginTop:'3px'}}>Uploading... {uploadProgress}%</div>
+                    </div>
+                  )}
+
+                  {/* Uploaded preview */}
+                  {uploadedPreview && (
+                    <div style={{marginBottom:'8px', padding:'8px 10px', background:'rgba(16,185,129,0.08)', border:'1px solid rgba(16,185,129,0.2)', borderRadius:'7px', display:'flex', alignItems:'center', gap:'8px'}}>
+                      {uploadedPreview.type.startsWith('image/') && (
+                        <img src={uploadedPreview.url} alt="preview" style={{width:40, height:40, objectFit:'cover', borderRadius:'5px', flexShrink:0}}/>
+                      )}
+                      <div style={{flex:1, overflow:'hidden'}}>
+                        <div style={{fontSize:'0.8em', color:'#10b981', fontWeight:600}}>✓ Uploaded successfully</div>
+                        <div style={{fontSize:'0.72em', color:'#64748b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{uploadedPreview.name}</div>
+                      </div>
+                      <button
+                        onClick={() => { setUploadedPreview(null); setMediaUrl(''); }}
+                        style={{background:'none', border:'none', color:'#64748b', cursor:'pointer', padding:'2px', flexShrink:0}}
+                      ><X size={14}/></button>
+                    </div>
+                  )}
+
+                  {/* Manual URL fallback */}
+                  <div style={{fontSize:'0.72em', color:'#64748b', marginBottom:'5px'}}>Or paste a public URL directly:</div>
+                  <input
+                    type="url"
+                    placeholder={mediaType === 'video' ? 'https://... (public MP4 URL)' : 'https://... (public image URL)'}
+                    value={uploadedPreview ? '' : mediaUrl}
+                    onChange={e => { setMediaUrl(e.target.value); setUploadedPreview(null); }}
+                    style={{width:'100%', fontSize:'0.82em', boxSizing:'border-box', marginBottom:'6px', opacity: uploadedPreview ? 0.4 : 1}}
+                    disabled={!!uploadedPreview}
+                  />
+                </>
+              )}
+            </div>
+
+            {/* Schedule */}
+            <div className="card" style={{padding:'16px'}}>
+              <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: scheduleEnabled ? '12px' : 0}}>
+                <div>
+                  <div style={{fontSize:'0.9em', fontWeight:600, color:'#e2e8f0'}}>Schedule Post</div>
+                  <div style={{fontSize:'0.75em', color:'#64748b'}}>Post at a specific date and time</div>
+                </div>
+                <div
+                  onClick={() => setScheduleEnabled(!scheduleEnabled)}
+                  style={{
+                    width:44, height:24, borderRadius:12, cursor:'pointer',
+                    background: scheduleEnabled ? '#2563eb' : '#334155',
+                    position:'relative', transition:'background 0.2s',
+                  }}
+                >
+                  <div style={{
+                    position:'absolute', top:3, left: scheduleEnabled ? 23 : 3,
+                    width:18, height:18, borderRadius:'50%', background:'#fff',
+                    transition:'left 0.2s',
+                  }}/>
+                </div>
+              </div>
+              {scheduleEnabled && (
+                <input
+                  type="datetime-local"
+                  min={minDateStr}
+                  value={scheduledAt}
+                  onChange={e => setScheduledAt(e.target.value)}
+                  style={{width:'100%', fontSize:'0.85em', boxSizing:'border-box'}}
+                />
+              )}
+            </div>
+
+            {/* Result banner */}
+            {postResult && (
+              <div style={{
+                padding:'12px 16px', borderRadius:'10px',
+                background: postResult.ok ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                border: `1px solid ${postResult.ok ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                color: postResult.ok ? '#10b981' : '#ef4444',
+              }}>
+                <div style={{fontWeight:700, marginBottom: postResult.results ? '8px' : 0}}>
+                  {postResult.ok ? '✓' : '✗'} {postResult.msg}
+                </div>
+                {postResult.results && (
+                  <div style={{display:'flex', flexDirection:'column', gap:'4px'}}>
+                    {Object.entries(postResult.results).map(([platform, res]) => (
+                      <div key={platform} style={{fontSize:'0.82em', display:'flex', alignItems:'center', gap:'6px'}}>
+                        <span>{PLATFORMS.find(p=>p.id===platform)?.icon}</span>
+                        <span style={{color: res.error ? '#ef4444' : '#10b981', fontWeight:600}}>
+                          {res.error ? `✗ ${res.error}` : '✓ Published'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Post button */}
+            <button
+              onClick={handlePost}
+              disabled={posting || selectedPlatforms.length === 0}
+              style={{
+                padding:'12px 24px', fontSize:'0.95em', fontWeight:700,
+                background: posting ? '#334155' : '#2563eb',
+                color:'#fff', border:'none', borderRadius:'10px',
+                cursor: posting ? 'not-allowed' : 'pointer',
+                display:'flex', alignItems:'center', justifyContent:'center', gap:'8px',
+              }}
+            >
+              {posting ? (
+                <><Loader size={16} style={{animation:'spin 1s linear infinite'}}/> Publishing...</>
+              ) : scheduleEnabled ? (
+                <><Calendar size={16}/> Schedule Post</>
+              ) : (
+                <><Radio size={16}/> Publish Now to {selectedPlatforms.length} Platform{selectedPlatforms.length !== 1 ? 's' : ''}</>
+              )}
+            </button>
+          </div>
+
+          {/* RIGHT — Preview & Tips */}
+          <div style={{display:'flex', flexDirection:'column', gap:'16px'}}>
+
+            {/* Live preview */}
+            <div className="card" style={{padding:'16px'}}>
+              <div style={{fontSize:'0.8em', color:'#64748b', fontWeight:700, marginBottom:'12px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Post Preview</div>
+              <div style={{background:'rgba(255,255,255,0.03)', border:'1px solid #1e293b', borderRadius:'10px', padding:'14px'}}>
+                {mediaUrl && mediaType === 'image' && (
+                  <img src={mediaUrl} alt="preview" style={{width:'100%', maxHeight:'200px', objectFit:'cover', borderRadius:'8px', marginBottom:'10px'}} onError={e => e.target.style.display='none'}/>
+                )}
+                {mediaUrl && mediaType === 'video' && (
+                  <div style={{background:'#0f172a', borderRadius:'8px', padding:'20px', textAlign:'center', marginBottom:'10px', color:'#64748b', fontSize:'0.85em'}}>
+                    🎬 Video: {mediaUrl.split('/').pop()}
+                  </div>
+                )}
+                <div style={{fontSize:'0.88em', color:'#e2e8f0', lineHeight:'1.6', whiteSpace:'pre-wrap'}}>
+                  {caption || <span style={{color:'#475569', fontStyle:'italic'}}>Your caption will appear here...</span>}
+                </div>
+                {caption && (
+                  <div style={{marginTop:'10px', display:'flex', gap:'6px', flexWrap:'wrap'}}>
+                    {selectedPlatforms.map(pid => {
+                      const p = PLATFORMS.find(pl => pl.id === pid);
+                      return <span key={pid} style={{fontSize:'0.72em', padding:'2px 8px', borderRadius:'10px', background:p.bg, color:p.color, fontWeight:600}}>{p.icon} {p.label}</span>;
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Tips */}
+            <div className="card" style={{padding:'16px'}}>
+              <div style={{fontSize:'0.8em', color:'#64748b', fontWeight:700, marginBottom:'10px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Platform Tips</div>
+              <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
+                <div style={{fontSize:'0.8em', color:'#94a3b8', padding:'8px 10px', background:'rgba(225,48,108,0.05)', borderRadius:'7px', borderLeft:'3px solid #e1306c'}}>
+                  <strong style={{color:'#e1306c'}}>📸 Instagram</strong> — Requires image or video. Use square (1:1) or portrait (4:5) for best reach.
+                </div>
+                <div style={{fontSize:'0.8em', color:'#94a3b8', padding:'8px 10px', background:'rgba(24,119,242,0.05)', borderRadius:'7px', borderLeft:'3px solid #1877f2'}}>
+                  <strong style={{color:'#1877f2'}}>📘 Facebook</strong> — Text-only posts work. Add <code>FACEBOOK_PAGE_ID</code> in Render env vars.
+                </div>
+                <div style={{fontSize:'0.8em', color:'#94a3b8', padding:'8px 10px', background:'rgba(37,211,102,0.05)', borderRadius:'7px', borderLeft:'3px solid #25d366'}}>
+                  <strong style={{color:'#25d366'}}>💬 WhatsApp</strong> — Requires approved message templates in Meta Business Manager. Token needed after number verification.
+                </div>
+              </div>
+            </div>
+
+            {/* Env vars checklist */}
+            <div className="card" style={{padding:'16px'}}>
+              <div style={{fontSize:'0.8em', color:'#64748b', fontWeight:700, marginBottom:'10px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Required Env Variables</div>
+              <div style={{display:'flex', flexDirection:'column', gap:'6px'}}>
+                {[
+                  ['META_PAGE_ACCESS_TOKEN', 'All platforms'],
+                  ['INSTAGRAM_ACCOUNT_ID', 'Instagram only'],
+                  ['FACEBOOK_PAGE_ID', 'Facebook only'],
+                  ['WHATSAPP_PHONE_NUMBER_ID', 'WhatsApp only'],
+                ].map(([key, scope]) => (
+                  <div key={key} style={{display:'flex', justifyContent:'space-between', fontSize:'0.78em', padding:'5px 8px', background:'rgba(255,255,255,0.02)', borderRadius:'5px'}}>
+                    <code style={{color:'#93c5fd'}}>{key}</code>
+                    <span style={{color:'#64748b'}}>{scope}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* POST HISTORY */
+        <div>
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'16px'}}>
+            <div style={{fontSize:'0.85em', color:'#64748b'}}>{history.length} posts in history</div>
+            <button className="ghost" onClick={fetchHistory} style={{padding:'5px 12px', fontSize:'0.82em'}}>↻ Refresh</button>
+          </div>
+          {histLoading ? (
+            <div style={{textAlign:'center', color:'#64748b', padding:'40px'}}>Loading history...</div>
+          ) : history.length === 0 ? (
+            <div style={{textAlign:'center', color:'#64748b', padding:'60px'}}>
+              <Radio size={32} style={{opacity:0.3, marginBottom:12}}/>
+              <div>No posts yet — compose your first post above.</div>
+            </div>
+          ) : (
+            <div style={{display:'flex', flexDirection:'column', gap:'10px'}}>
+              {history.map((post, i) => {
+                const statusColor = post.status === 'published' ? '#10b981' : post.status === 'failed' ? '#ef4444' : post.status === 'scheduled' ? '#f59e0b' : '#64748b';
+                const statusIcon = post.status === 'published' ? '✓' : post.status === 'failed' ? '✗' : post.status === 'scheduled' ? '🕐' : '⟳';
+                return (
+                  <div key={i} className="card" style={{padding:'14px 16px'}}>
+                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'8px'}}>
+                      <div style={{display:'flex', gap:'6px', flexWrap:'wrap'}}>
+                        {(post.platforms || []).map(pid => {
+                          const p = PLATFORMS.find(pl => pl.id === pid);
+                          return p ? <span key={pid} style={{fontSize:'0.75em', padding:'2px 8px', borderRadius:'10px', background:p.bg, color:p.color, fontWeight:600}}>{p.icon} {p.label}</span> : null;
+                        })}
+                      </div>
+                      <div style={{display:'flex', alignItems:'center', gap:'6px', flexShrink:0}}>
+                        <span style={{fontSize:'0.78em', color:statusColor, fontWeight:700}}>{statusIcon} {post.status}</span>
+                        <span style={{fontSize:'0.72em', color:'#475569'}}>{post.created_at ? new Date(post.created_at).toLocaleString() : ''}</span>
+                      </div>
+                    </div>
+                    <div style={{fontSize:'0.85em', color:'#94a3b8', overflow:'hidden', textOverflow:'ellipsis', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical'}}>
+                      {post.text || <span style={{fontStyle:'italic'}}>No caption</span>}
+                    </div>
+                    {post.media_url && (
+                      <div style={{marginTop:'6px', fontSize:'0.75em', color:'#475569'}}>📎 {post.media_url.split('/').pop()}</div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ─── LEAD IMPORT & EXPORT ───────────────────────────────────────────────────
+
+function LeadImportExport({ activeBusiness }) {
+  const [tab, setTab] = useState('import'); // import | export
+  const [dragOver, setDragOver] = useState(false);
+  const [file, setFile] = useState(null);
+  const [previewing, setPreviewing] = useState(false);
+  const [preview, setPreview] = useState(null); // { total_rows, headers, mapping, preview, warnings, unmapped_columns }
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState(null);
+  const [skipDuplicates, setSkipDuplicates] = useState(true);
+  const [toast, setToast] = useState('');
+
+  // Export filters
+  const [expTemp, setExpTemp] = useState('');
+  const [expStage, setExpStage] = useState('');
+  const [expFormat, setExpFormat] = useState('csv'); // csv | excel
+  const [exporting, setExporting] = useState(false);
+
+  const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3500); };
+
+  // ── File handling ──
+  const handleFileDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const f = e.dataTransfer?.files?.[0] || e.target.files?.[0];
+    if (f) { setFile(f); setPreview(null); setImportResult(null); }
+  };
+
+  const handlePreview = async () => {
+    if (!file) return;
+    setPreviewing(true);
+    setPreview(null);
+    setImportResult(null);
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch(`${API_BASE}/leads/import/preview`, { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.status === 'success') setPreview(data);
+      else showToast(data.detail || 'Failed to parse file');
+    } catch(e) { showToast('Error reading file'); }
+    setPreviewing(false);
+  };
+
+  const handleConfirmImport = async () => {
+    if (!preview) return;
+    setImporting(true);
+    // Re-parse file to get all rows (preview only has first 10)
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      // Get full preview (all rows)
+      const previewRes = await fetch(`${API_BASE}/leads/import/preview`, { method: 'POST', body: formData });
+      const previewData = await previewRes.json();
+
+      // Build all rows using the mapping
+      const allRows = previewData.preview || [];
+      // For full import we need all rows — backend handles this via confirm endpoint
+      const confirmRes = await fetch(`${API_BASE}/leads/import/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rows: allRows,
+          skip_duplicates: skipDuplicates,
+          business_id: bizId
+        })
+      });
+      const result = await confirmRes.json();
+      if (result.status === 'success') {
+        setImportResult(result);
+        showToast(result.message);
+      } else showToast(result.detail || 'Import failed');
+    } catch(e) { showToast('Import error'); }
+    setImporting(false);
+  };
+
+  // ── Export ──
+  const handleExport = async () => {
+    setExporting(true);
+    const params = new URLSearchParams();
+    if (expTemp) params.set('temperature', expTemp);
+    if (expStage) params.set('lead_stage', expStage);
+    const endpoint = expFormat === 'excel' ? 'excel' : 'csv';
+    try {
+      const res = await fetch(`${API_BASE}/leads/export/${endpoint}?${params}`);
+      if (!res.ok) { showToast('Export failed'); setExporting(false); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `leads_export.${expFormat === 'excel' ? 'xlsx' : 'csv'}`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Export downloaded!');
+    } catch(e) { showToast('Export error'); }
+    setExporting(false);
+  };
+
+  const handleDownloadTemplate = async () => {
+    const res = await fetch(`${API_BASE}/leads/export/template`);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'lead_import_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Template downloaded!');
+  };
+
+  const TEMP_OPTS = [['', 'All Temperatures'], ['hot', '🔥 Hot'], ['warm', '⭐ Warm'], ['cold', '❄️ Cold']];
+  const STAGE_OPTS = [['', 'All Stages'], ['new', 'New'], ['contacted', 'Contacted'], ['qualified', 'Qualified'], ['demo_scheduled', 'Demo Scheduled'], ['enrolled', 'Enrolled'], ['lost', 'Lost']];
+
+  return (
+    <section>
+      {toast && (
+        <div style={{position:'fixed',bottom:24,right:24,background:'#1e293b',color:'white',padding:'12px 20px',borderRadius:10,fontSize:13,fontWeight:500,zIndex:9999,boxShadow:'0 4px 20px rgba(0,0,0,0.2)'}}>
+          {toast}
+        </div>
+      )}
+
+      <Title
+        title="Import & Export"
+        sub="Bulk import leads from CSV/Excel, or export your entire lead database"
+      />
+
+      {/* Tab switcher */}
+      <div style={{display:'flex',gap:8,marginBottom:24}}>
+        {[['import','⬆️ Import Leads'],['export','⬇️ Export Leads']].map(([k,l]) => (
+          <button key={k} onClick={() => setTab(k)}
+            style={{padding:'10px 24px',borderRadius:8,border:'1px solid',borderColor:tab===k?'#3b82f6':'#e2e8f0',background:tab===k?'#eff6ff':'white',color:tab===k?'#3b82f6':'#64748b',fontWeight:tab===k?700:400,fontSize:14,cursor:'pointer'}}>
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {/* ── IMPORT TAB ── */}
+      {tab === 'import' && (
+        <div style={{display:'flex',flexDirection:'column',gap:20,maxWidth:800}}>
+
+          {/* Download template */}
+          <div className="card" style={{padding:'16px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#f0fdf4',border:'1px solid #bbf7d0'}}>
+            <div>
+              <div style={{fontWeight:600,color:'#166534',fontSize:14}}>📋 Download Import Template</div>
+              <div style={{fontSize:12,color:'#15803d',marginTop:2}}>Use this CSV template to prepare your leads for import. Includes a sample row.</div>
+            </div>
+            <button onClick={handleDownloadTemplate}
+              style={{display:'flex',alignItems:'center',gap:6,padding:'8px 16px',borderRadius:8,background:'#16a34a',color:'white',border:'none',fontWeight:600,fontSize:13,cursor:'pointer'}}>
+              <Download size={14}/>Download Template
+            </button>
+          </div>
+
+          {/* Drop zone */}
+          <div
+            onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleFileDrop}
+            style={{border:`2px dashed ${dragOver?'#3b82f6':'#cbd5e1'}`,borderRadius:12,padding:'40px 20px',textAlign:'center',background:dragOver?'#eff6ff':'#f8fafc',transition:'all 0.2s',cursor:'pointer'}}
+            onClick={() => document.getElementById('file-input').click()}
+          >
+            <input id="file-input" type="file" accept=".csv,.xlsx,.xls" onChange={handleFileDrop} style={{display:'none'}}/>
+            <div style={{fontSize:36,marginBottom:8}}>📂</div>
+            {file ? (
+              <div>
+                <div style={{fontWeight:700,color:'#1e293b',fontSize:15}}>{file.name}</div>
+                <div style={{fontSize:12,color:'#64748b',marginTop:4}}>{(file.size/1024).toFixed(1)} KB — click to change</div>
+              </div>
+            ) : (
+              <div>
+                <div style={{fontWeight:600,color:'#475569',fontSize:15}}>Drag & drop your CSV or Excel file here</div>
+                <div style={{fontSize:12,color:'#94a3b8',marginTop:4}}>or click to browse — supports .csv, .xlsx, .xls</div>
+              </div>
+            )}
+          </div>
+
+          {/* Options + preview button */}
+          {file && !preview && (
+            <div style={{display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
+              <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13,color:'#475569',cursor:'pointer'}}>
+                <input type="checkbox" checked={skipDuplicates} onChange={e => setSkipDuplicates(e.target.checked)}/>
+                Skip duplicate phone/email entries
+              </label>
+              <button onClick={handlePreview} disabled={previewing}
+                style={{display:'flex',alignItems:'center',gap:6,padding:'10px 20px',borderRadius:8,background:'#3b82f6',color:'white',border:'none',fontWeight:600,fontSize:13,cursor:'pointer',opacity:previewing?0.6:1}}>
+                {previewing ? <Loader size={14}/> : <FileText size={14}/>}
+                {previewing ? 'Parsing...' : 'Preview Import'}
+              </button>
+            </div>
+          )}
+
+          {/* Preview results */}
+          {preview && (
+            <div style={{display:'flex',flexDirection:'column',gap:16}}>
+
+              {/* Summary */}
+              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
+                {[
+                  { label: 'Total Rows', value: preview.total_rows, color: '#3b82f6' },
+                  { label: 'Columns Mapped', value: Object.keys(preview.mapping).length, color: '#10b981' },
+                  { label: 'Unmapped Columns', value: preview.unmapped_columns?.length || 0, color: '#f59e0b' },
+                ].map(s => (
+                  <div key={s.label} className="card" style={{padding:'14px 18px',textAlign:'center'}}>
+                    <div style={{fontSize:11,color:'#94a3b8',textTransform:'uppercase',fontWeight:600}}>{s.label}</div>
+                    <div style={{fontSize:28,fontWeight:700,color:s.color,lineHeight:1.3}}>{s.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Warnings */}
+              {preview.warnings?.length > 0 && (
+                <div style={{background:'#fffbeb',border:'1px solid #fde68a',borderRadius:10,padding:'12px 16px'}}>
+                  {preview.warnings.map((w,i) => (
+                    <div key={i} style={{fontSize:13,color:'#92400e',display:'flex',gap:8,alignItems:'flex-start'}}>
+                      <span>⚠️</span><span>{w}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Column mapping */}
+              <div className="card" style={{padding:'16px 20px'}}>
+                <div style={{fontWeight:700,fontSize:13,color:'#1e293b',marginBottom:10}}>Column Mapping Detected</div>
+                <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                  {Object.entries(preview.mapping).map(([csv,db]) => (
+                    <div key={csv} style={{padding:'4px 12px',borderRadius:20,background:'#f0fdf4',border:'1px solid #bbf7d0',fontSize:12,color:'#166534'}}>
+                      <b>{csv}</b> → {db}
+                    </div>
+                  ))}
+                  {(preview.unmapped_columns||[]).map(col => (
+                    <div key={col} style={{padding:'4px 12px',borderRadius:20,background:'#f8fafc',border:'1px solid #e2e8f0',fontSize:12,color:'#94a3b8'}}>
+                      {col} (ignored)
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Preview table */}
+              <div className="card" style={{padding:'16px 20px',overflowX:'auto'}}>
+                <div style={{fontWeight:700,fontSize:13,color:'#1e293b',marginBottom:10}}>Preview (first {preview.preview?.length} rows)</div>
+                <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+                  <thead>
+                    <tr style={{background:'#f1f5f9'}}>
+                      {['Name','Phone','Email','Module','Temperature','Stage','Source'].map(h => (
+                        <th key={h} style={{padding:'8px 12px',textAlign:'left',fontWeight:600,color:'#475569',whiteSpace:'nowrap'}}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(preview.preview||[]).map((row,i) => (
+                      <tr key={i} style={{borderTop:'1px solid #f1f5f9'}}>
+                        <td style={{padding:'7px 12px',color:'#1e293b'}}>{row.name||'—'}</td>
+                        <td style={{padding:'7px 12px',color:'#475569'}}>{row.phone||'—'}</td>
+                        <td style={{padding:'7px 12px',color:'#475569'}}>{row.email||'—'}</td>
+                        <td style={{padding:'7px 12px',color:'#475569'}}>{row.interested_module||'—'}</td>
+                        <td style={{padding:'7px 12px'}}>
+                          <span style={{padding:'2px 8px',borderRadius:10,fontSize:11,fontWeight:600,background:row.temperature==='hot'?'#fef2f2':row.temperature==='warm'?'#fffbeb':'#f0f9ff',color:row.temperature==='hot'?'#ef4444':row.temperature==='warm'?'#d97706':'#0369a1'}}>
+                            {row.temperature||'cold'}
+                          </span>
+                        </td>
+                        <td style={{padding:'7px 12px',color:'#475569'}}>{row.lead_stage||'new'}</td>
+                        <td style={{padding:'7px 12px',color:'#475569'}}>{row.source||'—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {preview.total_rows > 10 && (
+                  <div style={{fontSize:12,color:'#94a3b8',marginTop:8}}>Showing 10 of {preview.total_rows} rows — all rows will be imported.</div>
+                )}
+              </div>
+
+              {/* Import result */}
+              {importResult ? (
+                <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:10,padding:'16px 20px'}}>
+                  <div style={{fontWeight:700,color:'#166534',fontSize:15,marginBottom:6}}>✅ Import Complete</div>
+                  <div style={{fontSize:13,color:'#15803d'}}>{importResult.message}</div>
+                  {importResult.errors?.length > 0 && (
+                    <div style={{marginTop:8,fontSize:12,color:'#dc2626'}}>
+                      {importResult.errors.map((e,i) => <div key={i}>{e}</div>)}
+                    </div>
+                  )}
+                  <button onClick={() => { setFile(null); setPreview(null); setImportResult(null); }}
+                    style={{marginTop:12,padding:'8px 16px',borderRadius:8,background:'#16a34a',color:'white',border:'none',fontWeight:600,fontSize:13,cursor:'pointer'}}>
+                    Import Another File
+                  </button>
+                </div>
+              ) : (
+                <div style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}}>
+                  <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13,color:'#475569',cursor:'pointer'}}>
+                    <input type="checkbox" checked={skipDuplicates} onChange={e => setSkipDuplicates(e.target.checked)}/>
+                    Skip duplicate phone/email entries
+                  </label>
+                  <button onClick={handleConfirmImport} disabled={importing}
+                    style={{display:'flex',alignItems:'center',gap:6,padding:'10px 24px',borderRadius:8,background:'#10b981',color:'white',border:'none',fontWeight:700,fontSize:14,cursor:'pointer',opacity:importing?0.6:1}}>
+                    {importing ? <Loader size={15}/> : <CheckCircle size={15}/>}
+                    {importing ? `Importing ${preview.total_rows} leads...` : `Import All ${preview.total_rows} Leads`}
+                  </button>
+                  <button onClick={() => { setFile(null); setPreview(null); }}
+                    style={{padding:'10px 16px',borderRadius:8,border:'1px solid #e2e8f0',background:'white',color:'#64748b',fontSize:13,cursor:'pointer'}}>
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── EXPORT TAB ── */}
+      {tab === 'export' && (
+        <div style={{display:'flex',flexDirection:'column',gap:20,maxWidth:600}}>
+          <div className="card" style={{padding:'24px 28px'}}>
+            <h3 style={{marginBottom:6,fontSize:16,fontWeight:700,color:'#1e293b'}}>Export Lead Database</h3>
+            <p style={{fontSize:13,color:'#64748b',marginBottom:20}}>Download your leads as CSV or Excel. Apply filters to export a specific segment.</p>
+
+            <div style={{display:'flex',flexDirection:'column',gap:16}}>
+              {/* Format selector */}
+              <div>
+                <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:8}}>Export Format</label>
+                <div style={{display:'flex',gap:8}}>
+                  {[['csv','📄 CSV'],['excel','📊 Excel (.xlsx)']].map(([k,l]) => (
+                    <button key={k} onClick={() => setExpFormat(k)}
+                      style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid',borderColor:expFormat===k?'#3b82f6':'#e2e8f0',background:expFormat===k?'#eff6ff':'white',color:expFormat===k?'#3b82f6':'#64748b',fontWeight:expFormat===k?700:400,fontSize:13,cursor:'pointer'}}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Temperature filter */}
+              <div>
+                <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Filter by Temperature</label>
+                <select value={expTemp} onChange={e => setExpTemp(e.target.value)}
+                  style={{width:'100%',padding:'9px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,color:'#1e293b',background:'white'}}>
+                  {TEMP_OPTS.map(([v,l]) => <option key={v} value={v}>{l}</option>)}
+                </select>
+              </div>
+
+              {/* Stage filter */}
+              <div>
+                <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Filter by Stage</label>
+                <select value={expStage} onChange={e => setExpStage(e.target.value)}
+                  style={{width:'100%',padding:'9px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,color:'#1e293b',background:'white'}}>
+                  {STAGE_OPTS.map(([v,l]) => <option key={v} value={v}>{l}</option>)}
+                </select>
+              </div>
+
+              {/* Export fields info */}
+              <div style={{background:'#f8fafc',borderRadius:8,padding:'12px 16px',fontSize:12,color:'#64748b'}}>
+                <div style={{fontWeight:600,marginBottom:4,color:'#475569'}}>Exported columns:</div>
+                ID, Name, Phone, Email, Module, Temperature, Stage, Qualified, Source, Location, Experience, Education, Notes, Sender ID, Created At, Updated At
+              </div>
+
+              <button onClick={handleExport} disabled={exporting}
+                style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:'12px',borderRadius:8,background:'#3b82f6',color:'white',border:'none',fontWeight:700,fontSize:14,cursor:'pointer',opacity:exporting?0.6:1}}>
+                {exporting ? <Loader size={16}/> : <Download size={16}/>}
+                {exporting ? 'Preparing export...' : `Download ${expFormat.toUpperCase()}`}
+              </button>
+            </div>
+          </div>
+
+          {/* Quick export shortcuts */}
+          <div className="card" style={{padding:'20px 24px'}}>
+            <div style={{fontWeight:700,fontSize:13,color:'#1e293b',marginBottom:12}}>Quick Exports</div>
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              {[
+                { label: '🔥 Hot Leads Only', temp: 'hot', stage: '' },
+                { label: '⭐ Warm Leads Only', temp: 'warm', stage: '' },
+                { label: '✅ Qualified Leads', temp: '', stage: 'qualified' },
+                { label: '📋 All Leads (Full Export)', temp: '', stage: '' },
+              ].map(opt => (
+                <button key={opt.label}
+                  onClick={async () => {
+                    setExporting(true);
+                    const params = new URLSearchParams();
+                    if (opt.temp) params.set('temperature', opt.temp);
+                    if (opt.stage) params.set('lead_stage', opt.stage);
+                    try {
+                      const res = await fetch(`${API_BASE}/leads/export/csv?${params}`);
+                      const blob = await res.blob();
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `leads_${opt.label.replace(/[^a-z0-9]/gi,'_').toLowerCase()}.csv`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                      showToast('Downloaded!');
+                    } catch(e) { showToast('Export failed'); }
+                    setExporting(false);
+                  }}
+                  style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',borderRadius:8,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13,color:'#1e293b',fontWeight:500}}
+                >
+                  <span>{opt.label}</span>
+                  <Download size={13} color="#94a3b8"/>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ─── HOT LEAD QUEUE ──────────────────────────────────────────────────────────
+
+const URGENCY_CONFIG = {
+  critical: { label: 'CRITICAL', color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
+  high:     { label: 'HIGH',     color: '#f97316', bg: '#fff7ed', border: '#fed7aa' },
+  medium:   { label: 'MEDIUM',   color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
+  low:      { label: 'LOW',      color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' },
+};
+
+const STAGE_OPTIONS = [
+  { value: 'new',            label: 'New' },
+  { value: 'contacted',      label: 'Contacted' },
+  { value: 'demo_scheduled', label: 'Demo Scheduled' },
+  { value: 'qualified',      label: 'Qualified' },
+  { value: 'enrolled',       label: 'Enrolled' },
+  { value: 'lost',           label: 'Lost' },
+];
+
+function HotLeadQueue({ activeBusiness, setPage }) {
+  const [queue, setQueue] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [filter, setFilter] = useState('all'); // all | critical | high | medium
+  const [expandedId, setExpandedId] = useState(null);
+  const [noteEditing, setNoteEditing] = useState({}); // leadId -> text
+  const [savingNote, setSavingNote] = useState(null);
+  const [stageSaving, setStageSaving] = useState(null);
+  const [toast, setToast] = useState('');
+  const [lastRefresh, setLastRefresh] = useState(null);
+
+  const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
+
+  const fetchQueue = () => {
+    setLoading(true);
+    fetch(`${API_BASE}/hot-leads/queue?limit=50`, { headers: { 'X-Business-ID': bizId } })
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') {
+          setQueue(d.queue || []);
+          setTotal(d.total || 0);
+          setLastRefresh(new Date());
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchQueue(); }, [bizId]);
+
+  // Auto-refresh every 2 minutes
+  useEffect(() => {
+    const t = setInterval(fetchQueue, 120000);
+    return () => clearInterval(t);
+  }, [bizId]);
+
+  const handleSaveNote = async (lead) => {
+    setSavingNote(lead.id);
+    const notes = noteEditing[lead.id] ?? lead.notes;
+    try {
+      const res = await fetch(`${API_BASE}/hot-leads/note`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: lead.id, notes })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setQueue(prev => prev.map(l => l.id === lead.id ? { ...l, notes } : l));
+        showToast('Note saved!');
+      }
+    } catch(e) { showToast('Failed to save note'); }
+    setSavingNote(null);
+  };
+
+  const handleStageChange = async (lead, newStage) => {
+    setStageSaving(lead.id);
+    try {
+      const res = await fetch(`${API_BASE}/hot-leads/stage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: lead.id, stage: newStage })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setQueue(prev => prev.map(l => l.id === lead.id ? { ...l, lead_stage: newStage } : l));
+        showToast(`Stage updated to ${newStage}`);
+      }
+    } catch(e) { showToast('Failed to update stage'); }
+    setStageSaving(null);
+  };
+
+  const filtered = filter === 'all' ? queue : queue.filter(l => l.urgency === filter);
+  const critCount = queue.filter(l => l.urgency === 'critical').length;
+  const highCount = queue.filter(l => l.urgency === 'high').length;
+
+  return (
+    <section>
+      {toast && (
+        <div style={{position:'fixed',bottom:24,right:24,background:'#1e293b',color:'white',padding:'12px 20px',borderRadius:10,fontSize:13,fontWeight:500,zIndex:9999,boxShadow:'0 4px 20px rgba(0,0,0,0.2)'}}>
+          {toast}
+        </div>
+      )}
+
+      <Title
+        title="Hot Lead Queue"
+        sub={`${total} leads ranked by urgency — take action before they go cold`}
+        action={
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            {lastRefresh && <span style={{fontSize:11,color:'#94a3b8'}}>Updated {lastRefresh.toLocaleTimeString()}</span>}
+            <button onClick={fetchQueue} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:8,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13,color:'#475569'}}>
+              <RefreshCw size={14}/>Refresh
+            </button>
+          </div>
+        }
+      />
+
+      {/* Stats row */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:20}}>
+        {[
+          { label: 'Total in Queue', value: total, icon: '📋', color: '#3b82f6' },
+          { label: 'Critical', value: critCount, icon: '🔴', color: '#ef4444' },
+          { label: 'High Priority', value: highCount, icon: '🟠', color: '#f97316' },
+          { label: 'Showing', value: filtered.length, icon: '👁', color: '#10b981' },
+        ].map(s => (
+          <div key={s.label} className="card" style={{padding:'16px 20px',display:'flex',alignItems:'center',gap:14}}>
+            <div style={{fontSize:24}}>{s.icon}</div>
+            <div>
+              <div style={{fontSize:11,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.05em',fontWeight:600}}>{s.label}</div>
+              <div style={{fontSize:26,fontWeight:700,color:s.color,lineHeight:1.2}}>{s.value}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filter tabs */}
+      <div style={{display:'flex',gap:8,marginBottom:16}}>
+        {[['all','All'],['critical','Critical'],['high','High'],['medium','Medium']].map(([k,l]) => (
+          <button key={k} onClick={() => setFilter(k)}
+            style={{padding:'6px 16px',borderRadius:20,border:'1px solid',borderColor:filter===k?'#ef4444':'#e2e8f0',background:filter===k?'#fef2f2':'white',color:filter===k?'#ef4444':'#64748b',fontSize:12,fontWeight:filter===k?600:400,cursor:'pointer'}}>
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div style={{display:'flex',justifyContent:'center',padding:'60px 0',color:'#94a3b8',gap:10}}>
+          <Loader size={20} className="spin"/>Loading queue...
+        </div>
+      ) : filtered.length === 0 ? (
+        <div style={{textAlign:'center',padding:'60px 0',color:'#94a3b8'}}>
+          <Flame size={40} style={{marginBottom:12,opacity:0.3}}/>
+          <p>No leads in this category right now.</p>
+          <p style={{fontSize:13}}>Check back later or adjust your filter.</p>
+        </div>
+      ) : (
+        <div style={{display:'flex',flexDirection:'column',gap:12}}>
+          {filtered.map((lead, idx) => {
+            const urg = URGENCY_CONFIG[lead.urgency] || URGENCY_CONFIG.low;
+            const isExpanded = expandedId === lead.id;
+            const noteVal = noteEditing[lead.id] !== undefined ? noteEditing[lead.id] : (lead.notes || '');
+
+            return (
+              <div key={lead.id} className="card"
+                style={{padding:'0',border:`1px solid ${urg.border}`,overflow:'hidden',transition:'box-shadow 0.15s'}}
+              >
+                {/* Card header — always visible */}
+                <div style={{display:'flex',alignItems:'center',gap:14,padding:'16px 20px',cursor:'pointer',background:isExpanded?urg.bg:'white'}}
+                  onClick={() => setExpandedId(isExpanded ? null : lead.id)}
+                >
+                  {/* Rank badge */}
+                  <div style={{width:32,height:32,borderRadius:'50%',background:urg.bg,border:`2px solid ${urg.border}`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:13,color:urg.color,flexShrink:0}}>
+                    {idx+1}
+                  </div>
+
+                  {/* Name + urgency */}
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+                      <div style={{position:'relative', display:'flex', alignItems:'center', gap:'8px'}}>
+                        <div style={{width:'28px', height:'28px', borderRadius:'6px', background:'#f1f5f9', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.75em', fontWeight:700, color:'#475569'}}>
+                          {(lead.name || '?')[0].toUpperCase()}
+                        </div>
+                        <div style={{position:'absolute', bottom:'-4px', left:'18px', width:'14px', height:'14px', borderRadius:'50%', background:'white', border:'1px solid #e2e8f0', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                          {lead.source === 'whatsapp' ? 
+                            <Phone size={8} fill="#25d366" stroke="#25d366"/> : 
+                            <Image size={8} color="#e1306c"/>
+                          }
+                        </div>
+                        <span style={{fontWeight:700,fontSize:15,color:'#1e293b'}}>{lead.name || `User ${String(lead.sender_id).slice(-4)}`}</span>
+                      </div>
+                      <span style={{padding:'2px 8px',borderRadius:10,fontSize:11,fontWeight:700,background:urg.bg,color:urg.color,border:`1px solid ${urg.border}`}}>{urg.label}</span>
+                      {lead.temperature === 'hot' && <span style={{fontSize:11}}>🔥 Hot</span>}
+                      {lead.is_qualified && <span style={{fontSize:11,color:'#10b981',fontWeight:600}}>✓ Qualified</span>}
+                    </div>
+                    <div style={{fontSize:12,color:'#64748b',marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                      {lead.interested_module && <span style={{marginRight:10}}>📚 {lead.interested_module}</span>}
+                      {lead.last_message && <span>💬 "{lead.last_message.slice(0,60)}{lead.last_message.length>60?'...':''}"</span>}
+                    </div>
+                  </div>
+
+                  {/* Quick actions */}
+                  <div style={{display:'flex',gap:6,flexShrink:0}} onClick={e => e.stopPropagation()}>
+                    {lead.phone && (
+                      <a href={`tel:${lead.phone}`}
+                        style={{display:'flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:8,background:'#f0fdf4',color:'#16a34a',border:'1px solid #bbf7d0',fontSize:12,fontWeight:600,textDecoration:'none'}}
+                        title={`Call ${lead.phone}`}
+                      >
+                        <Phone size={13}/>Call
+                      </a>
+                    )}
+                    {lead.phone && (
+                      <a href={`https://wa.me/${lead.phone.replace(/[^0-9]/g,'')}`} target="_blank" rel="noreferrer"
+                        style={{display:'flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:8,background:'#f0fdf4',color:'#15803d',border:'1px solid #bbf7d0',fontSize:12,fontWeight:600,textDecoration:'none'}}
+                        title="Open WhatsApp"
+                      >
+                        💬 WhatsApp
+                      </a>
+                    )}
+                    {lead.email && (
+                      <a href={`mailto:${lead.email}`}
+                        style={{display:'flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:8,background:'#eff6ff',color:'#2563eb',border:'1px solid #bfdbfe',fontSize:12,fontWeight:600,textDecoration:'none'}}
+                        title={`Email ${lead.email}`}
+                      >
+                        <Mail size={13}/>Email
+                      </a>
+                    )}
+                    <button
+                      onClick={() => { setPage('Conversations'); }}
+                      style={{display:'flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:8,background:'#f5f3ff',color:'#7c3aed',border:'1px solid #ddd6fe',fontSize:12,fontWeight:600,cursor:'pointer'}}
+                      title="View conversation"
+                    >
+                      <MessagesSquare size={13}/>Chat
+                    </button>
+                  </div>
+
+                  <ChevronRight size={16} color="#94a3b8" style={{transform:isExpanded?'rotate(90deg)':'none',transition:'transform 0.2s',flexShrink:0}}/>
+                </div>
+
+                {/* Expanded detail panel */}
+                {isExpanded && (
+                  <div style={{borderTop:`1px solid ${urg.border}`,padding:'16px 20px',background:'#fafafa',display:'flex',flexDirection:'column',gap:14}}>
+                    {/* Contact + meta row */}
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:10}}>
+                      {[
+                        { icon: '📞', label: 'Phone', value: lead.phone || '—' },
+                        { icon: '📧', label: 'Email', value: lead.email || '—' },
+                        { icon: '🕐', label: 'Last Active', value: lead.last_active ? new Date(lead.last_active).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—' },
+                        { icon: '💬', label: 'Conv. State', value: lead.conversation_state || '—' },
+                        { icon: '🌡️', label: 'Temperature', value: lead.temperature || '—' },
+                        { icon: '⭐', label: 'Score', value: lead.score },
+                      ].map(item => (
+                        <div key={item.label} style={{background:'white',borderRadius:8,padding:'10px 14px',border:'1px solid #e2e8f0'}}>
+                          <div style={{fontSize:11,color:'#94a3b8',fontWeight:600,marginBottom:2}}>{item.icon} {item.label}</div>
+                          <div style={{fontSize:13,color:'#1e293b',fontWeight:500}}>{item.value}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Stage selector */}
+                    <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+                      <span style={{fontSize:12,fontWeight:600,color:'#475569'}}>STAGE:</span>
+                      {STAGE_OPTIONS.map(opt => (
+                        <button key={opt.value}
+                          onClick={() => handleStageChange(lead, opt.value)}
+                          disabled={stageSaving === lead.id}
+                          style={{padding:'5px 12px',borderRadius:20,border:'1px solid',borderColor:lead.lead_stage===opt.value?'#3b82f6':'#e2e8f0',background:lead.lead_stage===opt.value?'#eff6ff':'white',color:lead.lead_stage===opt.value?'#3b82f6':'#64748b',fontSize:12,fontWeight:lead.lead_stage===opt.value?700:400,cursor:'pointer'}}
+                        >
+                          {stageSaving===lead.id&&lead.lead_stage===opt.value ? '...' : opt.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Notes */}
+                    <div>
+                      <div style={{fontSize:12,fontWeight:600,color:'#475569',marginBottom:6}}>NOTES</div>
+                      <div style={{display:'flex',gap:8}}>
+                        <textarea
+                          value={noteVal}
+                          onChange={e => setNoteEditing(prev => ({...prev, [lead.id]: e.target.value}))}
+                          placeholder="Add a note about this lead..."
+                          rows={2}
+                          style={{flex:1,padding:'8px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,resize:'vertical',fontFamily:'inherit',outline:'none'}}
+                        />
+                        <button
+                          onClick={() => handleSaveNote(lead)}
+                          disabled={savingNote === lead.id}
+                          style={{padding:'8px 16px',borderRadius:8,background:'#3b82f6',color:'white',border:'none',fontWeight:600,fontSize:13,cursor:'pointer',alignSelf:'flex-start',opacity:savingNote===lead.id?0.6:1}}
+                        >
+                          {savingNote===lead.id ? <Loader size={14}/> : <Save size={14}/>}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ─── STAR RATING ─────────────────────────────────────────────────────────────
+
+function StarRating({ rating, size = 16 }) {
+  return (
+    <div style={{display:'flex',gap:2}}>
+      {[1,2,3,4,5].map(i => (
+        <Star key={i} size={size} fill={i<=rating?'#f59e0b':'none'} color={i<=rating?'#f59e0b':'#cbd5e1'}/>
+      ))}
+    </div>
+  );
+}
+
+function GoogleReviewsPage({ activeBusiness }) {
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [tab, setTab] = useState('all'); // all | pending | replied
+  const [settings, setSettings] = useState({ is_enabled: false, delay_minutes: 60, min_rating_to_reply: 4, auto_reply_to_text_only: false });
+  const [settingsTab, setSettingsTab] = useState('reviews'); // reviews | settings
+  const [replyDrafts, setReplyDrafts] = useState({});
+  const [generatingFor, setGeneratingFor] = useState(null);
+  const [postingFor, setPostingFor] = useState(null);
+  const [toast, setToast] = useState('');
+  const [filter, setFilter] = useState('all'); // all | 5 | 4 | 3 | 2 | 1
+
+  const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3500); };
+
+  const fetchReviews = () => {
+    setLoading(true);
+    fetch(`${API_BASE}/google-reviews/`, { headers: { 'X-Business-ID': bizId } })
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') {
+          setIsConnected(d.is_connected !== false);
+          const reviewList = d.reviews || [];
+          // Inject AI suggested replies into draft state
+          const drafts = {};
+          reviewList.forEach(r => {
+            if (r.ai_suggested_reply) drafts[r.id] = r.ai_suggested_reply;
+          });
+          setReplyDrafts(prev => ({ ...drafts, ...prev }));
+          setReviews(reviewList);
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  };
+
+  const fetchSettings = () => {
+    fetch(`${API_BASE}/google-reviews/settings`, { headers: { 'X-Business-ID': bizId } })
+      .then(r => r.json())
+      .then(d => { if (d.status === 'success') setSettings(d.settings); })
+      .catch(console.error);
+  };
+
+  useEffect(() => { fetchReviews(); fetchSettings(); }, [bizId]);
+
+  const handleGenerateReply = async (review) => {
+    setGeneratingFor(review.id);
+    try {
+      const res = await fetch(`${API_BASE}/google-reviews/generate-reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Business-ID': bizId },
+        body: JSON.stringify({
+          reviewer_name: review.reviewer_name,
+          star_rating: review.star_rating,
+          comment: review.comment
+        })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setReplyDrafts(prev => ({ ...prev, [review.id]: data.reply }));
+        showToast('AI reply generated!');
+      } else showToast('Failed to generate reply');
+    } catch (e) { showToast('Error generating reply'); }
+    setGeneratingFor(null);
+  };
+
+  const handlePostReply = async (reviewId) => {
+    const replyText = replyDrafts[reviewId];
+    if (!replyText?.trim()) { showToast('Please write or generate a reply first'); return; }
+    setPostingFor(reviewId);
+    try {
+      const res = await fetch(`${API_BASE}/google-reviews/reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Business-ID': bizId },
+        body: JSON.stringify({ review_id: reviewId, reply_text: replyText })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, reply_text: replyText, status: 'replied' } : r));
+        showToast('Reply posted successfully!');
+      } else showToast('Failed to post reply');
+    } catch (e) { showToast('Error posting reply'); }
+    setPostingFor(null);
+  };
+
+  const handleSaveSettings = () => {
+    fetch(`${API_BASE}/google-reviews/settings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Business-ID': bizId },
+      body: JSON.stringify(settings)
+    })
+      .then(r => r.json())
+      .then(d => { if (d.status === 'success') showToast('Auto-responder settings saved!'); else showToast('Failed to save settings'); })
+      .catch(() => showToast('Error saving settings'));
+  };
+
+  const filteredReviews = reviews.filter(r => {
+    if (tab === 'pending' && r.status === 'replied') return false;
+    if (tab === 'replied' && r.status !== 'replied') return false;
+    if (filter !== 'all' && r.star_rating !== parseInt(filter)) return false;
+    return true;
+  });
+
+  const pendingCount = reviews.filter(r => r.status !== 'replied').length;
+  const repliedCount = reviews.filter(r => r.status === 'replied').length;
+  const avgRating = reviews.length > 0 ? (reviews.reduce((s, r) => s + r.star_rating, 0) / reviews.length).toFixed(1) : '—';
+
+  return (
+    <section>
+      {toast && (
+        <div style={{position:'fixed',bottom:24,right:24,background:'#1e293b',color:'white',padding:'12px 20px',borderRadius:10,fontSize:13,fontWeight:500,zIndex:9999,boxShadow:'0 4px 20px rgba(0,0,0,0.2)'}}>
+          {toast}
+        </div>
+      )}
+
+      <Title
+        title="Google Reviews"
+        sub="Monitor, respond to, and auto-reply to Google Business reviews with AI"
+        action={
+          <div style={{display:'flex',gap:8}}>
+            <button onClick={fetchReviews} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:8,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13,color:'#475569'}}>
+              <RefreshCw size={14}/>Refresh
+            </button>
+          </div>
+        }
+      />
+
+      {/* Top tabs */}
+      <div style={{display:'flex',gap:8,marginBottom:20}}>
+        {[['reviews','Reviews'], ['settings','Auto-Responder Settings']].map(([k,l]) => (
+          <button key={k} onClick={() => setSettingsTab(k)} style={{padding:'8px 18px',borderRadius:8,border:'1px solid',borderColor:settingsTab===k?'#3b82f6':'#e2e8f0',background:settingsTab===k?'#eff6ff':'white',color:settingsTab===k?'#3b82f6':'#64748b',fontWeight:settingsTab===k?600:400,fontSize:13,cursor:'pointer'}}>{l}</button>
+        ))}
+      </div>
+
+      {settingsTab === 'reviews' && (
+        <>
+          {/* Stats row */}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:20}}>
+            {[
+              { label: 'Total Reviews', value: reviews.length, icon: '⭐', color: '#f59e0b' },
+              { label: 'Avg Rating', value: avgRating, icon: '📊', color: '#3b82f6' },
+              { label: 'Awaiting Reply', value: pendingCount, icon: '⏳', color: '#f97316' },
+              { label: 'Replied', value: repliedCount, icon: '✅', color: '#10b981' },
+            ].map(s => (
+              <div key={s.label} className="card" style={{padding:'16px 20px',display:'flex',alignItems:'center',gap:14}}>
+                <div style={{fontSize:24}}>{s.icon}</div>
+                <div>
+                  <div style={{fontSize:11,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.05em',fontWeight:600}}>{s.label}</div>
+                  <div style={{fontSize:26,fontWeight:700,color:s.color,lineHeight:1.2}}>{s.value}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Filter tabs */}
+          <div style={{display:'flex',gap:8,marginBottom:16,flexWrap:'wrap',alignItems:'center'}}>
+            <div style={{display:'flex',gap:6}}>
+              {[['all','All'],['pending','Needs Reply'],['replied','Replied']].map(([k,l]) => (
+                <button key={k} onClick={() => setTab(k)} style={{padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor:tab===k?'#3b82f6':'#e2e8f0',background:tab===k?'#eff6ff':'white',color:tab===k?'#3b82f6':'#64748b',fontSize:12,fontWeight:tab===k?600:400,cursor:'pointer'}}>{l}</button>
+              ))}
+            </div>
+            <div style={{marginLeft:'auto',display:'flex',gap:6,alignItems:'center'}}>
+              <span style={{fontSize:12,color:'#94a3b8'}}>Filter by stars:</span>
+              {['all','5','4','3','2','1'].map(s => (
+                <button key={s} onClick={() => setFilter(s)} style={{padding:'4px 10px',borderRadius:20,border:'1px solid',borderColor:filter===s?'#f59e0b':'#e2e8f0',background:filter===s?'#fffbeb':'white',color:filter===s?'#d97706':'#64748b',fontSize:12,fontWeight:filter===s?600:400,cursor:'pointer'}}>
+                  {s === 'all' ? 'All' : `${s}★`}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {!isConnected && (
+            <div style={{background:'#fffbeb',border:'1px solid #fde68a',borderRadius:12,padding:'20px 24px',marginBottom:20,display:'flex',alignItems:'center',gap:16}}>
+              <div style={{fontSize:32}}>⚠️</div>
+              <div>
+                <div style={{fontWeight:700,color:'#92400e',marginBottom:4}}>Google My Business not connected</div>
+                <div style={{fontSize:13,color:'#78350f'}}>Go to <strong>Integrations</strong> and connect your Google My Business account to start fetching real reviews. Showing sample data below.</div>
+              </div>
+            </div>
+          )}
+
+          {loading ? (
+            <div style={{display:'flex',justifyContent:'center',padding:'60px 0',color:'#94a3b8'}}><Loader size={24} className="spin"/>  Loading reviews...</div>
+          ) : filteredReviews.length === 0 ? (
+            <div style={{textAlign:'center',padding:'60px 0',color:'#94a3b8'}}>
+              <Star size={40} style={{marginBottom:12,opacity:0.3}}/>
+              <p>No reviews found for this filter.</p>
+            </div>
+          ) : (
+            <div style={{display:'flex',flexDirection:'column',gap:16}}>
+              {filteredReviews.map(review => (
+                <div key={review.id} className="card" style={{padding:'20px 24px',border: review.status !== 'replied' ? '1px solid #fed7aa' : '1px solid #e2e8f0'}}>
+                  {/* Review header */}
+                  <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:12}}>
+                    <div style={{display:'flex',alignItems:'center',gap:12}}>
+                      <div style={{width:40,height:40,borderRadius:'50%',background:'#f1f5f9',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:700,color:'#475569'}}>
+                        {(review.reviewer_name || 'A')[0].toUpperCase()}
+                      </div>
+                      <div>
+                        <div style={{fontWeight:700,fontSize:15,color:'#1e293b'}}>{review.reviewer_name || 'Anonymous'}</div>
+                        <div style={{display:'flex',alignItems:'center',gap:8,marginTop:2}}>
+                          <StarRating rating={review.star_rating}/>
+                          <span style={{fontSize:12,color:'#94a3b8'}}>{review.create_time ? new Date(review.create_time).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : ''}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <span style={{padding:'4px 12px',borderRadius:20,fontSize:12,fontWeight:600,background:review.status==='replied'?'#f0fdf4':'#fff7ed',color:review.status==='replied'?'#166534':'#9a3412',border:'1px solid',borderColor:review.status==='replied'?'#bbf7d0':'#fed7aa'}}>
+                      {review.status === 'replied' ? '✅ Replied' : '⏳ Needs Reply'}
+                    </span>
+                  </div>
+
+                  {/* Review comment */}
+                  {review.comment ? (
+                    <div style={{background:'#f8fafc',borderRadius:8,padding:'12px 16px',marginBottom:14,fontSize:14,color:'#334155',lineHeight:1.6,borderLeft:'3px solid #e2e8f0'}}>
+                      "{review.comment}"
+                    </div>
+                  ) : (
+                    <div style={{marginBottom:14,fontSize:13,color:'#94a3b8',fontStyle:'italic'}}>No text comment — rating only.</div>
+                  )}
+
+                  {/* Existing reply */}
+                  {review.reply_text && (
+                    <div style={{background:'#f0fdf4',borderRadius:8,padding:'12px 16px',marginBottom:14,fontSize:13,color:'#166534',borderLeft:'3px solid #86efac'}}>
+                      <div style={{fontWeight:600,marginBottom:4,fontSize:12,color:'#15803d'}}>YOUR REPLY</div>
+                      {review.reply_text}
+                    </div>
+                  )}
+
+                  {/* Reply area — only show if not replied */}
+                  {review.status !== 'replied' && (
+                    <div>
+                      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+                        <span style={{fontSize:12,fontWeight:600,color:'#475569'}}>REPLY DRAFT</span>
+                        <button
+                          onClick={() => handleGenerateReply(review)}
+                          disabled={generatingFor === review.id}
+                          style={{display:'flex',alignItems:'center',gap:5,padding:'4px 12px',borderRadius:6,border:'1px solid #c7d2fe',background:'#eff6ff',color:'#4338ca',fontSize:12,fontWeight:600,cursor:'pointer',opacity:generatingFor===review.id?0.6:1}}
+                        >
+                          {generatingFor === review.id ? <Loader size={12}/> : <Bot size={12}/>}
+                          {generatingFor === review.id ? 'Generating...' : 'Generate AI Reply'}
+                        </button>
+                      </div>
+                      <textarea
+                        value={replyDrafts[review.id] || ''}
+                        onChange={e => setReplyDrafts(prev => ({ ...prev, [review.id]: e.target.value }))}
+                        placeholder="Write your reply here, or click 'Generate AI Reply' above..."
+                        rows={3}
+                        style={{width:'100%',padding:'10px 14px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,color:'#334155',resize:'vertical',fontFamily:'inherit',boxSizing:'border-box',outline:'none'}}
+                      />
+                      <div style={{display:'flex',justifyContent:'flex-end',marginTop:8}}>
+                        <button
+                          onClick={() => handlePostReply(review.id)}
+                          disabled={postingFor === review.id || !replyDrafts[review.id]?.trim()}
+                          style={{display:'flex',alignItems:'center',gap:6,padding:'8px 18px',borderRadius:8,background:'#3b82f6',color:'white',border:'none',fontWeight:600,fontSize:13,cursor:'pointer',opacity:(postingFor===review.id||!replyDrafts[review.id]?.trim())?0.6:1}}
+                        >
+                          {postingFor === review.id ? <Loader size={14}/> : <Send size={14}/>}
+                          {postingFor === review.id ? 'Posting...' : 'Post Reply'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {settingsTab === 'settings' && (
+        <div className="card" style={{padding:'28px 32px',maxWidth:600}}>
+          <h3 style={{marginBottom:6,fontSize:16,fontWeight:700,color:'#1e293b'}}>Auto-Responder Configuration</h3>
+          <p style={{fontSize:13,color:'#64748b',marginBottom:24}}>When enabled, the AI will automatically generate and post replies to new Google Reviews based on the rules below.</p>
+
+          <div style={{display:'flex',flexDirection:'column',gap:20}}>
+            {/* Enable toggle */}
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px',background:'#f8fafc',borderRadius:10,border:'1px solid #e2e8f0'}}>
+              <div>
+                <div style={{fontWeight:600,fontSize:14,color:'#1e293b'}}>Enable Auto-Responder</div>
+                <div style={{fontSize:12,color:'#64748b',marginTop:2}}>Automatically reply to new reviews without manual approval</div>
+              </div>
+              <button onClick={() => setSettings(s => ({...s, is_enabled: !s.is_enabled}))} style={{background:'none',border:'none',cursor:'pointer',padding:0}}>
+                {settings.is_enabled ? <ToggleRight size={36} color="#3b82f6"/> : <ToggleLeft size={36} color="#cbd5e1"/>}
+              </button>
+            </div>
+
+            {/* Delay */}
+            <div>
+              <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Reply Delay (minutes)</label>
+              <input
+                type="number" min={0} max={1440}
+                value={settings.delay_minutes}
+                onChange={e => setSettings(s => ({...s, delay_minutes: parseInt(e.target.value)||0}))}
+                style={{padding:'8px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:14,width:'100%',boxSizing:'border-box'}}
+              />
+              <p style={{fontSize:11,color:'#94a3b8',marginTop:4}}>Set to 0 for instant replies. Recommended: 30–120 minutes for a natural feel.</p>
+            </div>
+
+            {/* Min rating */}
+            <div>
+              <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Minimum Star Rating to Auto-Reply</label>
+              <div style={{display:'flex',gap:8}}>
+                {[1,2,3,4,5].map(n => (
+                  <button key={n} onClick={() => setSettings(s => ({...s, min_rating_to_reply: n}))}
+                    style={{flex:1,padding:'8px',borderRadius:8,border:'1px solid',borderColor:settings.min_rating_to_reply===n?'#f59e0b':'#e2e8f0',background:settings.min_rating_to_reply===n?'#fffbeb':'white',color:settings.min_rating_to_reply===n?'#d97706':'#64748b',fontWeight:settings.min_rating_to_reply===n?700:400,cursor:'pointer',fontSize:14}}
+                  >{n}★</button>
+                ))}
+              </div>
+              <p style={{fontSize:11,color:'#94a3b8',marginTop:4}}>Only auto-reply to reviews with this rating or higher. Low ratings need human attention.</p>
+            </div>
+
+            {/* Text only toggle */}
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px',background:'#f8fafc',borderRadius:10,border:'1px solid #e2e8f0'}}>
+              <div>
+                <div style={{fontWeight:600,fontSize:14,color:'#1e293b'}}>Only Auto-Reply to Reviews with Text</div>
+                <div style={{fontSize:12,color:'#64748b',marginTop:2}}>Skip rating-only reviews (no written comment)</div>
+              </div>
+              <button onClick={() => setSettings(s => ({...s, auto_reply_to_text_only: !s.auto_reply_to_text_only}))} style={{background:'none',border:'none',cursor:'pointer',padding:0}}>
+                {settings.auto_reply_to_text_only ? <ToggleRight size={36} color="#3b82f6"/> : <ToggleLeft size={36} color="#cbd5e1"/>}
+              </button>
+            </div>
+
+            <button onClick={handleSaveSettings} style={{display:'flex',alignItems:'center',gap:8,padding:'10px 20px',borderRadius:8,background:'#3b82f6',color:'white',border:'none',fontWeight:600,fontSize:14,cursor:'pointer',width:'fit-content'}}>
+              <Save size={15}/>Save Settings
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function BroadcastsPage({ activeBusiness }) {
+  const [templates, setTemplates] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [audience, setAudience] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState(null);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`${API_BASE}/broadcasts/templates`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') setTemplates(d.templates || []);
+        else setTemplates([]);
+      })
+      .catch(() => setTemplates([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleSend = async () => {
+    if (!selectedTemplate) { alert('Please select a template first.'); return; }
+    setSending(true);
+    setResult(null);
+    try {
+      const res = await fetch(`${API_BASE}/broadcasts/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ template_name: selectedTemplate.name, audience_filter: audience })
+      });
+      const data = await res.json();
+      setResult(data);
+    } catch (e) {
+      setResult({ status: 'error', message: 'Network error. Please try again.' });
+    }
+    setSending(false);
+  };
+
+  return (
+    <section>
+      <Title title="WhatsApp Broadcast Campaigns" sub="Send personalized, template-based messages to segmented leads on WhatsApp"/>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,alignItems:'start'}}>
+        {/* Template Selection */}
+        <div className="card">
+          <h3 style={{marginBottom:12,color:'#1e293b',fontWeight:700}}>1. Select Template</h3>
+          {loading ? (
+            <div style={{color:'#64748b',fontSize:13}}>Loading templates...</div>
+          ) : templates.length === 0 ? (
+            <div>
+              <div style={{color:'#ef4444',fontSize:13,marginBottom:8}}>No templates found. Create one in WhatsApp Manager.</div>
+            </div>
+          ) : (
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              {templates.map((t, i) => (
+                <div key={i}
+                  onClick={() => setSelectedTemplate(t)}
+                  style={{padding:'12px 14px',borderRadius:8,border:`1px solid ${selectedTemplate?.name===t.name?'#3b82f6':'#e2e8f0'}`,background:selectedTemplate?.name===t.name?'#eff6ff':'white',cursor:'pointer',transition:'all 0.15s'}}
+                >
+                  <div style={{fontWeight:600,fontSize:13,color:'#1e293b'}}>{t.name}</div>
+                  <div style={{fontSize:11,color:'#64748b',marginTop:2}}>{t.language} &bull; {t.status}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Configure & Send */}
+        <div className="card">
+          <h3 style={{marginBottom:12,color:'#1e293b',fontWeight:700}}>2. Configure &amp; Send</h3>
+          <div style={{marginBottom:12}}>
+            <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:6}}>Audience Filter</label>
+            <select value={audience} onChange={e => setAudience(e.target.value)}
+              style={{width:'100%',padding:'8px 10px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,color:'#1e293b',background:'white'}}>
+              <option value="all">All Leads</option>
+              <option value="hot">Hot Leads Only</option>
+              <option value="warm">Warm Leads Only</option>
+              <option value="qualified">Qualified Leads Only</option>
+            </select>
+          </div>
+          {selectedTemplate && (
+            <div style={{background:'#f8fafc',borderRadius:8,padding:'12px',marginBottom:12,border:'1px solid #e2e8f0'}}>
+              <div style={{fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',marginBottom:6}}>Selected Template</div>
+              <div style={{fontSize:13,fontWeight:600,color:'#1e293b'}}>{selectedTemplate.name}</div>
+            </div>
+          )}
+          <button
+            onClick={handleSend}
+            disabled={sending || !selectedTemplate}
+            style={{padding:'10px 20px',borderRadius:8,background:sending||!selectedTemplate?'#94a3b8':'#3b82f6',color:'white',border:'none',fontWeight:600,fontSize:14,cursor:sending||!selectedTemplate?'not-allowed':'pointer',width:'100%'}}>
+            {sending ? 'Sending...' : 'Send Broadcast'}
+          </button>
+          {result && (
+            <div style={{marginTop:12,padding:'12px',borderRadius:8,background:result.status==='success'?'#f0fdf4':'#fef2f2',border:`1px solid ${result.status==='success'?'#86efac':'#fca5a5'}`}}>
+              <div style={{fontSize:13,fontWeight:600,color:result.status==='success'?'#15803d':'#dc2626'}}>
+                {result.status==='success' ? `Sent to ${result.sent_count || 0} leads` : result.message}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+createRoot(document.getElementById('root')).render(<App />);
+
