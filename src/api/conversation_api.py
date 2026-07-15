@@ -11,6 +11,7 @@ closed_at, state_reason
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 
 from ..services.reply_service import send_reply
 from ..memory import (
@@ -83,6 +84,39 @@ def send_manual_reply_from_dashboard(req: ManualReplyRequest):
             "status": "error",
             "message": str(e),
         }
+
+
+class ConversationStatusUpdateRequest(BaseModel):
+    sender_id: str
+    status: str  # e.g., "closed", "needs_human", "pending_reply"
+    reason: Optional[str] = None
+
+
+@router.post("/conversations/{sender_id}/status")
+def update_conversation_status(sender_id: str, status: str):
+    try:
+        update_data = {"updated_at": datetime.utcnow().isoformat()}
+        if status == "closed":
+            update_data["closed_at"] = datetime.utcnow().isoformat()
+            update_data["conversation_state"] = "closed"
+            update_data["needs_human"] = False
+            update_data["pending_reply"] = False
+            update_data["human_reason"] = None
+        elif status == "needs_human":
+            update_data["needs_human"] = True
+            update_data["human_reason"] = "Marked by human"
+            update_data["conversation_state"] = "needs_human"
+            update_data["pending_reply"] = False
+        else:
+            return {"status": "error", "message": "Invalid status provided"}
+
+        supabase.table("conversations").update(update_data).eq("sender_id", sender_id).execute()
+
+        return {"status": "success", "message": f"Conversation {sender_id} status updated to {status}"}
+
+    except Exception as e:
+        print(f"UPDATE CONVERSATION STATUS ERROR: {e}", flush=True)
+        return {"status": "error", "message": str(e)}
 
 
 # ─── LIST ALL CONVERSATIONS ───────────────────────────────────────────────────
