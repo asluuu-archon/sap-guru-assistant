@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Bell, HelpCircle, Search, Settings, LayoutDashboard, MessagesSquare, Users, Bug, Bot, Brain, UserRound, BarChart3, Workflow, Plus, Download, Filter, Play, X, Phone, MapPin, BookOpen, Star, Clock, ChevronRight, ToggleLeft, ToggleRight, Pencil, Trash2, Tag, Zap, Save, AlertTriangle, Building2, Globe, CheckCircle, Plug, Wifi, WifiOff, RefreshCw, ExternalLink, Key, Link, Send, Radio, Image, Video, FileText, Calendar, CheckSquare, XCircle, Loader, MessageSquare, ThumbsUp, ThumbsDown, Flame, Mail, Megaphone, Sunrise } from 'lucide-react';
+import { Bell, HelpCircle, Search, Settings, LayoutDashboard, MessagesSquare, Users, Bug, Bot, Brain, UserRound, BarChart3, Workflow, Plus, Download, Filter, Play, X, Phone, MapPin, BookOpen, Star, Clock, ChevronRight, ToggleLeft, ToggleRight, Pencil, Trash2, Tag, Zap, Save, AlertTriangle, Building2, Globe, CheckCircle, Plug, Wifi, WifiOff, RefreshCw, ExternalLink, Key, Link, Send, Radio, Image, Video, FileText, Calendar, CheckSquare, XCircle, Loader, MessageSquare, ThumbsUp, ThumbsDown, Flame, Mail, Megaphone, Sunrise, Lock, LogOut, Eye, EyeOff, UserPlus } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
 import './styles.css';
 
@@ -32,9 +32,36 @@ function App() {
   const [activeBusiness, setActiveBusiness] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  // ── Auth state ──
+  const [authUser, setAuthUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('authUser') || 'null'); } catch { return null; }
+  });
+  const [authToken, setAuthToken] = useState(() => localStorage.getItem('authToken') || null);
+
+  const handleLoginSuccess = (user, token) => {
+    setAuthUser(user);
+    setAuthToken(token);
+    localStorage.setItem('authUser', JSON.stringify(user));
+    localStorage.setItem('authToken', token);
+  };
+
+  const handleLogout = () => {
+    setAuthUser(null);
+    setAuthToken(null);
+    localStorage.removeItem('authUser');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('activeBizId');
+  };
+
+  // ── If not authenticated, show login screen ──
+  if (!authToken || !authUser) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  const authHeaders = { 'Authorization': `Bearer ${authToken}` };
 
   const fetchNotifications = () => {
-    fetch(`${API_BASE}/notifications/`)
+    fetch(`${API_BASE}/notifications/`, { headers: authHeaders })
       .then(r => r.json())
       .then(d => {
         if (d.status === 'success') {
@@ -47,32 +74,30 @@ function App() {
 
   useEffect(() => {
     fetchNotifications();
-    // Poll every 60 seconds for new notifications
     const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [authToken]);
 
   useEffect(() => {
-    fetch(`${API_BASE}/dashboard-data`)
+    fetch(`${API_BASE}/dashboard-data`, { headers: authHeaders })
       .then(res => res.json())
       .then(data => setDashboard(data))
       .catch(err => console.error("Dashboard fetch error:", err));
-  }, []);
+  }, [authToken]);
 
   useEffect(() => {
-    fetch(`${API_BASE}/businesses/`)
+    fetch(`${API_BASE}/businesses/`, { headers: authHeaders })
       .then(r => r.json())
       .then(d => {
         if (d.status === 'success' && d.businesses.length > 0) {
           setBusinesses(d.businesses);
-          // Restore last selected business from localStorage
           const saved = localStorage.getItem('activeBizId');
           const found = d.businesses.find(b => b.id === saved);
           setActiveBusiness(found || d.businesses[0]);
         }
       })
       .catch(() => {});
-  }, []);
+  }, [authToken]);
 
   const handleSwitchBusiness = (biz) => {
     setActiveBusiness(biz);
@@ -83,8 +108,8 @@ function App() {
     <div className="app">
       <Sidebar page={page} setPage={setPage} activeBusiness={activeBusiness}/>
       <main>
-        <Topbar businesses={businesses} activeBusiness={activeBusiness} onSwitch={handleSwitchBusiness} onNavigate={setPage} notifications={notifications} unreadCount={unreadCount} onMarkAllRead={() => setUnreadCount(0)}/>
-        <Screen page={page} dashboard={dashboard} activeBusiness={activeBusiness} setPage={setPage}/>
+        <Topbar businesses={businesses} activeBusiness={activeBusiness} onSwitch={handleSwitchBusiness} onNavigate={setPage} notifications={notifications} unreadCount={unreadCount} onMarkAllRead={() => setUnreadCount(0)} authUser={authUser} onLogout={handleLogout}/>
+        <Screen page={page} dashboard={dashboard} activeBusiness={activeBusiness} setPage={setPage} authToken={authToken}/>
       </main>
     </div>
   );
@@ -147,7 +172,14 @@ function timeAgo(ts) {
   return `${Math.floor(diff/86400)}d ago`;
 }
 
-function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notifications, unreadCount, onMarkAllRead }) {
+function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notifications, unreadCount, onMarkAllRead, authUser, onLogout }) {
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = React.useRef(null);
+  React.useEffect(() => {
+    const handleClick = (e) => { if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setShowUserMenu(false); };
+    if (showUserMenu) document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showUserMenu]);
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [showNotifs, setShowNotifsState] = useState(false);
   const dropdownRef = React.useRef(null);
@@ -297,7 +329,33 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notification
       </div>
 
       <HelpCircle size={18} style={{color:'#94a3b8',cursor:'pointer'}}/>
-      <div className="avatar small">A</div>
+
+      {/* User avatar + logout menu */}
+      <div style={{position:'relative'}} ref={userMenuRef}>
+        <button
+          onClick={() => setShowUserMenu(p => !p)}
+          style={{width:34,height:34,borderRadius:'50%',background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center'}}
+        >
+          {authUser ? (authUser.name||authUser.email||'U')[0].toUpperCase() : 'A'}
+        </button>
+        {showUserMenu && (
+          <div style={{position:'absolute',top:'calc(100% + 8px)',right:0,background:'white',border:'1px solid #e2e8f0',borderRadius:10,boxShadow:'0 8px 30px rgba(0,0,0,0.15)',zIndex:9000,minWidth:220,overflow:'hidden'}}>
+            <div style={{padding:'12px 16px',borderBottom:'1px solid #f1f5f9'}}>
+              <div style={{fontSize:13,fontWeight:700,color:'#1e293b'}}>{authUser?.name || 'Admin'}</div>
+              <div style={{fontSize:11,color:'#94a3b8',marginTop:2}}>{authUser?.email || ''}</div>
+              {authUser?.role && <div style={{fontSize:10,padding:'2px 7px',borderRadius:8,background:'#eff6ff',color:'#3b82f6',fontWeight:600,display:'inline-block',marginTop:4}}>{authUser.role}</div>}
+            </div>
+            <button
+              onClick={() => { setShowUserMenu(false); onLogout(); }}
+              style={{width:'100%',padding:'11px 16px',background:'white',border:'none',cursor:'pointer',fontSize:13,color:'#ef4444',fontWeight:600,display:'flex',alignItems:'center',gap:8,transition:'background 0.1s'}}
+              onMouseEnter={e => e.currentTarget.style.background='#fef2f2'}
+              onMouseLeave={e => e.currentTarget.style.background='white'}
+            >
+              <LogOut size={14}/> Sign Out
+            </button>
+          </div>
+        )}
+      </div>
     </header>
   );
 }
@@ -4444,7 +4502,7 @@ function IntegrationsPage({ activeBusiness }) {
   const handleSave = () => {
     if (!activeModal) return;
     setSaving(true);
-    fetch(`${API_BASE}/integrations/`, {
+    fetch(`${API_BASE}/integrations/save`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Business-ID': bizId },
       body: JSON.stringify({
@@ -4467,7 +4525,7 @@ function IntegrationsPage({ activeBusiness }) {
 
   const handleDisconnect = (integId, integName) => {
     if (!window.confirm(`Disconnect ${integName}? This will disable the integration for this workspace.`)) return;
-    fetch(`${API_BASE}/integrations/`, {
+    fetch(`${API_BASE}/integrations/save`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Business-ID': bizId },
       body: JSON.stringify({ provider: integId, is_connected: false, credentials: {} })
@@ -6324,6 +6382,163 @@ function BroadcastsPage({ activeBusiness }) {
         </div>
       </div>
     </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────────────
+// LOGIN PAGE
+// ─────────────────────────────────────────────────────────────────────────────────────
+function LoginPage({ onLoginSuccess }) {
+  const [mode, setMode] = useState('login'); // 'login' | 'register'
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    if (!email || !password) { setError('Email and password are required.'); return; }
+    if (mode === 'register' && !name) { setError('Name is required.'); return; }
+    setLoading(true);
+    try {
+      const endpoint = mode === 'login' ? '/auth/login' : '/auth/register';
+      const body = mode === 'login'
+        ? { email: email.trim(), password }
+        : { email: email.trim(), password, name: name.trim() };
+      const res = await fetch(`${API_BASE}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok || data.status === 'error') {
+        setError(data.detail || data.message || 'Authentication failed. Please try again.');
+      } else if (mode === 'register') {
+        setSuccess('Account created! You can now sign in.');
+        setMode('login');
+        setPassword('');
+      } else {
+        onLoginSuccess(data.user, data.access_token);
+      }
+    } catch (err) {
+      setError('Network error. Please check your connection.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{minHeight:'100vh',background:'linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:20}}>
+      {/* Background pattern */}
+      <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(circle at 25% 25%, rgba(59,130,246,0.08) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(139,92,246,0.08) 0%, transparent 50%)',pointerEvents:'none'}} />
+
+      <div style={{width:'100%',maxWidth:440,position:'relative'}}>
+        {/* Logo / Brand */}
+        <div style={{textAlign:'center',marginBottom:32}}>
+          <div style={{width:56,height:56,borderRadius:16,background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',boxShadow:'0 8px 32px rgba(59,130,246,0.4)'}}>
+            <Bot size={28} color="white"/>
+          </div>
+          <h1 style={{fontSize:26,fontWeight:800,color:'white',margin:0,letterSpacing:'-0.02em'}}>AI Command Center</h1>
+          <p style={{fontSize:14,color:'#94a3b8',marginTop:6,marginBottom:0}}>Your intelligent business assistant</p>
+        </div>
+
+        {/* Card */}
+        <div style={{background:'rgba(255,255,255,0.05)',backdropFilter:'blur(20px)',borderRadius:20,border:'1px solid rgba(255,255,255,0.1)',padding:36,boxShadow:'0 24px 64px rgba(0,0,0,0.4)'}}>
+          {/* Tab switcher */}
+          <div style={{display:'flex',background:'rgba(255,255,255,0.05)',borderRadius:10,padding:4,marginBottom:28}}>
+            {['login','register'].map(m => (
+              <button key={m} onClick={() => { setMode(m); setError(''); setSuccess(''); }}
+                style={{flex:1,padding:'8px',borderRadius:7,border:'none',cursor:'pointer',fontSize:13,fontWeight:600,transition:'all 0.15s',
+                  background: mode===m ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  color: mode===m ? 'white' : '#94a3b8'}}>
+                {m==='login' ? '🔑 Sign In' : '✨ Create Account'}
+              </button>
+            ))}
+          </div>
+
+          {/* Error / Success banners */}
+          {error && (
+            <div style={{background:'rgba(239,68,68,0.15)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:8,padding:'10px 14px',marginBottom:18,fontSize:13,color:'#fca5a5',display:'flex',alignItems:'center',gap:8}}>
+              <AlertTriangle size={14}/> {error}
+            </div>
+          )}
+          {success && (
+            <div style={{background:'rgba(16,185,129,0.15)',border:'1px solid rgba(16,185,129,0.3)',borderRadius:8,padding:'10px 14px',marginBottom:18,fontSize:13,color:'#6ee7b7',display:'flex',alignItems:'center',gap:8}}>
+              <CheckCircle size={14}/> {success}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:16}}>
+            {mode === 'register' && (
+              <div>
+                <label style={{fontSize:12,fontWeight:600,color:'#94a3b8',display:'block',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Full Name</label>
+                <div style={{position:'relative'}}>
+                  <UserPlus size={15} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'#64748b'}}/>
+                  <input
+                    type="text" value={name} onChange={e => setName(e.target.value)}
+                    placeholder="Mohamed Aslam"
+                    style={{width:'100%',padding:'11px 11px 11px 38px',borderRadius:9,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.07)',color:'white',fontSize:14,outline:'none',boxSizing:'border-box'}}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label style={{fontSize:12,fontWeight:600,color:'#94a3b8',display:'block',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Email Address</label>
+              <div style={{position:'relative'}}>
+                <Mail size={15} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'#64748b'}}/>
+                <input
+                  type="email" value={email} onChange={e => setEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  style={{width:'100%',padding:'11px 11px 11px 38px',borderRadius:9,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.07)',color:'white',fontSize:14,outline:'none',boxSizing:'border-box'}}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label style={{fontSize:12,fontWeight:600,color:'#94a3b8',display:'block',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Password</label>
+              <div style={{position:'relative'}}>
+                <Lock size={15} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'#64748b'}}/>
+                <input
+                  type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
+                  placeholder={mode==='register' ? 'Min 8 characters' : 'Enter your password'}
+                  style={{width:'100%',padding:'11px 40px 11px 38px',borderRadius:9,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.07)',color:'white',fontSize:14,outline:'none',boxSizing:'border-box'}}
+                />
+                <button type="button" onClick={() => setShowPw(p => !p)}
+                  style={{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',color:'#64748b',padding:0,display:'flex',alignItems:'center'}}>
+                  {showPw ? <EyeOff size={15}/> : <Eye size={15}/>}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit" disabled={loading}
+              style={{marginTop:8,padding:'13px',borderRadius:10,background: loading ? 'rgba(59,130,246,0.5)' : 'linear-gradient(135deg,#3b82f6,#6366f1)',color:'white',border:'none',cursor: loading ? 'not-allowed' : 'pointer',fontSize:15,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow: loading ? 'none' : '0 4px 20px rgba(59,130,246,0.4)',transition:'all 0.15s'}}
+            >
+              {loading ? <RefreshCw size={16} style={{animation:'spin 1s linear infinite'}}/> : (mode==='login' ? <Lock size={16}/> : <UserPlus size={16}/>)}
+              {loading ? 'Please wait...' : (mode==='login' ? 'Sign In' : 'Create Account')}
+            </button>
+          </form>
+
+          {mode === 'login' && (
+            <div style={{textAlign:'center',marginTop:20,fontSize:12,color:'#64748b'}}>
+              Don't have an account?{' '}
+              <button onClick={() => { setMode('register'); setError(''); }}
+                style={{background:'none',border:'none',cursor:'pointer',color:'#60a5fa',fontWeight:600,fontSize:12,padding:0}}>Create one</button>
+            </div>
+          )}
+        </div>
+
+        <div style={{textAlign:'center',marginTop:20,fontSize:11,color:'#475569'}}>
+          AI Command Center &copy; {new Date().getFullYear()} &middot; Powered by Archon Solutions
+        </div>
+      </div>
+    </div>
   );
 }
 

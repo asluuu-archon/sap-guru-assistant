@@ -10,7 +10,8 @@ closed_at, state_reason
 NO category column, NO created_at column.
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Header
+from typing import Optional
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 
@@ -36,8 +37,9 @@ def safe_date(val):
 
 
 @router.get("/overview")
-def overview():
+def overview(business_id: Optional[str] = Header(None, alias="X-Business-ID")):
     try:
+        biz = business_id or None
         now = datetime.now(timezone.utc)
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         yesterday_start = today_start - timedelta(days=1)
@@ -46,22 +48,30 @@ def overview():
         # ─── FETCH DATA ───────────────────────────────────────────────────────
 
         # All leads
-        leads_result = supabase.table("leads").select("*").execute()
+        leads_q = supabase.table("leads").select("*")
+        if biz:
+            leads_q = leads_q.eq("business_id", biz)
+        leads_result = leads_q.execute()
         all_leads = leads_result.data or []
 
         # All conversations — only real columns
-        convs_result = (
+        convs_q = (
             supabase.table("conversations")
             .select(
                 "sender_id, updated_at, first_message_at, needs_human, "
                 "conversation_state, ai_replied, manual_replied, pending_reply"
             )
-            .execute()
         )
+        if biz:
+            convs_q = convs_q.eq("business_id", biz)
+        convs_result = convs_q.execute()
         all_convs = convs_result.data or []
 
         # Customer name map
-        customers_result = supabase.table("customers").select("channel_user_id, name").execute()
+        cust_q = supabase.table("customers").select("channel_user_id, name")
+        if biz:
+            cust_q = cust_q.eq("business_id", biz)
+        customers_result = cust_q.execute()
         customer_name_map = {
             c["channel_user_id"]: c.get("name", "")
             for c in (customers_result.data or [])

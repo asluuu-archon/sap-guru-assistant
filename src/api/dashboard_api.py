@@ -1,16 +1,23 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Header
+from typing import Optional
 
 from ..memory import supabase
 
 router = APIRouter()
 
+DEFAULT_BIZ_ID = None  # When None, no filter is applied (dev fallback)
 
-def build_customer_lookup():
-    customers_result = (
-        supabase.table("customers")
-        .select("*")
-        .execute()
-    )
+
+def _biz_id(header_val: Optional[str]) -> Optional[str]:
+    """Return the business_id to filter by, or None to skip filtering (dev mode)."""
+    return header_val or None
+
+
+def build_customer_lookup(business_id: Optional[str] = None):
+    q = supabase.table("customers").select("*")
+    if business_id:
+        q = q.eq("business_id", business_id)
+    customers_result = q.execute()
 
     customers = customers_result.data or []
     lookup = {}
@@ -44,27 +51,23 @@ def enrich_with_customer_profile(row: dict, customer_lookup: dict) -> dict:
 
 
 @router.get("/dashboard-data")
-def dashboard_data():
-    conversations_result = (
-        supabase.table("conversations")
-        .select("*")
-        .order("updated_at", desc=True)
-        .limit(100)
-        .execute()
-    )
+def dashboard_data(business_id: Optional[str] = Header(None, alias="X-Business-ID")):
+    biz = _biz_id(business_id)
 
-    leads_result = (
-        supabase.table("leads")
-        .select("*")
-        .order("updated_at", desc=True)
-        .limit(100)
-        .execute()
-    )
+    conv_q = supabase.table("conversations").select("*").order("updated_at", desc=True).limit(100)
+    if biz:
+        conv_q = conv_q.eq("business_id", biz)
+    conversations_result = conv_q.execute()
+
+    leads_q = supabase.table("leads").select("*").order("updated_at", desc=True).limit(100)
+    if biz:
+        leads_q = leads_q.eq("business_id", biz)
+    leads_result = leads_q.execute()
 
     conversations = conversations_result.data or []
     leads = leads_result.data or []
 
-    customer_lookup = build_customer_lookup()
+    customer_lookup = build_customer_lookup(biz)
 
     enriched_conversations = [
         enrich_with_customer_profile(conversation, customer_lookup)
@@ -116,17 +119,16 @@ def dashboard_data():
 
 
 @router.get("/all-leads")
-def all_leads():
-    leads_result = (
-        supabase.table("leads")
-        .select("*")
-        .order("updated_at", desc=True)
-        .limit(500)
-        .execute()
-    )
+def all_leads(business_id: Optional[str] = Header(None, alias="X-Business-ID")):
+    biz = _biz_id(business_id)
+
+    q = supabase.table("leads").select("*").order("updated_at", desc=True).limit(500)
+    if biz:
+        q = q.eq("business_id", biz)
+    leads_result = q.execute()
 
     leads = leads_result.data or []
-    customer_lookup = build_customer_lookup()
+    customer_lookup = build_customer_lookup(biz)
 
     enriched = [
         enrich_with_customer_profile(lead, customer_lookup)

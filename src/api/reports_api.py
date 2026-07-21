@@ -3,8 +3,9 @@ Reports API — comprehensive analytics and CSV export endpoints.
 All data pulled from Supabase leads and conversations tables.
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Header, Query
 from fastapi.responses import StreamingResponse
+from typing import Optional
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict
 import csv
@@ -40,7 +41,7 @@ def _days_ago(n):
 # ── GET /reports ───────────────────────────────────────────────────────────────
 
 @router.get("/reports")
-def get_reports(days: int = 30):
+def get_reports(days: int = 30, business_id: Optional[str] = Header(None, alias="X-Business-ID")):
     """
     Returns comprehensive report data for the given time window (default 30 days).
     Includes: summary cards, daily lead trend, module breakdown, temperature split,
@@ -48,17 +49,24 @@ def get_reports(days: int = 30):
     """
     try:
         supabase = _supabase()
+        biz = business_id or None
         now = datetime.now(timezone.utc)
         window_start = now - timedelta(days=days)
 
         # ── 1. Fetch all leads ─────────────────────────────────────────────────
-        leads_res = supabase.table("leads").select("*").execute()
+        leads_q = supabase.table("leads").select("*")
+        if biz:
+            leads_q = leads_q.eq("business_id", biz)
+        leads_res = leads_q.execute()
         all_leads = leads_res.data or []
 
         # ── 2. Fetch all conversations ─────────────────────────────────────────
-        conv_res = supabase.table("conversations").select(
+        conv_q = supabase.table("conversations").select(
             "sender_id, ai_replied, manual_replied, needs_human, pending_reply, updated_at, first_message_at"
-        ).execute()
+        )
+        if biz:
+            conv_q = conv_q.eq("business_id", biz)
+        conv_res = conv_q.execute()
         all_convs = conv_res.data or []
 
         # ── 3. Filter leads within window ──────────────────────────────────────
@@ -253,13 +261,17 @@ def get_reports(days: int = 30):
 # ── GET /reports/export-csv ────────────────────────────────────────────────────
 
 @router.get("/reports/export-csv")
-def export_leads_csv():
+def export_leads_csv(business_id: Optional[str] = Header(None, alias="X-Business-ID")):
     """
     Export all leads as a CSV file for download.
     """
     try:
         supabase = _supabase()
-        leads_res = supabase.table("leads").select("*").order("updated_at", desc=True).execute()
+        biz = business_id or None
+        leads_q = supabase.table("leads").select("*").order("updated_at", desc=True)
+        if biz:
+            leads_q = leads_q.eq("business_id", biz)
+        leads_res = leads_q.execute()
         leads = leads_res.data or []
 
         output = io.StringIO()

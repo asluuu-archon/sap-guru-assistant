@@ -1,10 +1,10 @@
 import os
 import requests
 
-def send_whatsapp_reply(recipient_id, message):
-    # Fetch token dynamically
-    token = os.getenv("META_PAGE_ACCESS_TOKEN") or os.getenv("WHATSAPP_ACCESS_TOKEN")
-    phone_number_id = os.getenv("WHATSAPP_PHONE_NUMBER_ID")
+def send_whatsapp_reply(recipient_id, message, access_token: str = None, phone_number_id: str = None):
+    # Use per-business credentials if provided, else fall back to env
+    token = access_token or os.getenv("META_PAGE_ACCESS_TOKEN") or os.getenv("WHATSAPP_ACCESS_TOKEN")
+    phone_number_id = phone_number_id or os.getenv("WHATSAPP_PHONE_NUMBER_ID")
     
     if not token or not phone_number_id:
         return {"error": "WhatsApp token or phone number ID not configured"}

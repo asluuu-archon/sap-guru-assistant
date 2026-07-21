@@ -8,7 +8,7 @@ pending_reply, needs_human, human_reason, conversation_state,
 closed_at, state_reason
 """
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Header
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
@@ -162,6 +162,7 @@ def list_conversations(
     search: Optional[str] = Query(default=None),
     limit: int = Query(default=100),
     offset: int = Query(default=0),
+    business_id: Optional[str] = Header(None, alias="X-Business-ID"),
 ):
     """
     Returns paginated list of conversations for the inbox.
@@ -171,7 +172,8 @@ def list_conversations(
     """
     try:
         # Only select columns that actually exist
-        result = (
+        biz = business_id or None
+        conv_q = (
             supabase.table("conversations")
             .select(
                 "sender_id, summary, last_question, last_reply, history, "
@@ -180,12 +182,17 @@ def list_conversations(
             )
             .order("updated_at", desc=True)
             .limit(500)
-            .execute()
         )
+        if biz:
+            conv_q = conv_q.eq("business_id", biz)
+        result = conv_q.execute()
         all_convs = result.data or []
 
-        # Customer name lookup
-        customers_result = supabase.table("customers").select("channel_user_id, name").execute()
+        # Customer name lookup (filtered by business)
+        cust_q = supabase.table("customers").select("channel_user_id, name")
+        if biz:
+            cust_q = cust_q.eq("business_id", biz)
+        customers_result = cust_q.execute()
         name_map = {
             c["channel_user_id"]: c.get("name", "")
             for c in (customers_result.data or [])

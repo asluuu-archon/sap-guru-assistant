@@ -30,6 +30,7 @@ from .api.whatsapp_broadcast_api import router as whatsapp_broadcast_router
 from .api.briefing_api import router as briefing_router
 from .api.appointment_api import router as appointment_router
 from .api.campaign_context_api import router as campaign_context_router
+from .api.auth_api import router as auth_router
 from .services.webhook_service import process_instagram_webhook
 
 
@@ -87,6 +88,7 @@ app.include_router(whatsapp_broadcast_router)
 app.include_router(briefing_router)
 app.include_router(appointment_router)
 app.include_router(campaign_context_router)
+app.include_router(auth_router)
 
 VERIFY_TOKEN = "sap_guru_2026"
 AUTO_REPLY = os.getenv("AUTO_REPLY", "false").lower() == "true"

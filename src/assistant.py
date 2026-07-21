@@ -345,7 +345,14 @@ def _normalize_output(data: dict, message: str, context: str) -> dict:
     }
 
 
-async def suggest_reply(message: str, channel: str = "instagram", context: str = "") -> dict:
+async def suggest_reply(
+    message: str,
+    channel: str = "instagram",
+    context: str = "",
+    business_id: str = None,
+    openai_api_key: str = None,
+    openai_model: str = None,
+) -> dict:
     # Determine if this is a returning customer based on context
     # If context has conversation history, we skip greeting shortcuts
     has_prior_conversation = bool(
@@ -500,8 +507,18 @@ async def suggest_reply(message: str, channel: str = "instagram", context: str =
         if len(message.split()) < 5:
             return _learning_lead_reply(message)
 
-    api_key = os.getenv("OPENAI_API_KEY")
-    model = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
+    # Use per-business key if provided, else fall back to env
+    if not openai_api_key and business_id:
+        try:
+            from .api.integrations_api import get_business_credentials
+            creds = get_business_credentials(business_id, "openai")
+            openai_api_key = creds.get("api_key")
+            openai_model = openai_model or creds.get("model")
+        except Exception:
+            pass
+
+    api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
+    model = openai_model or os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
 
     if not api_key or OpenAI is None:
         return _simple_fallback(message, context)

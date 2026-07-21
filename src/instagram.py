@@ -1,9 +1,9 @@
 import os
 import requests
 
-def send_instagram_reply(recipient_id, message):
-    # Fetch token dynamically so it picks up env vars in Render
-    token = os.getenv("META_PAGE_ACCESS_TOKEN") or os.getenv("INSTAGRAM_ACCESS_TOKEN")
+def send_instagram_reply(recipient_id, message, access_token: str = None):
+    # Use per-business token if provided, else fall back to env
+    token = access_token or os.getenv("META_PAGE_ACCESS_TOKEN") or os.getenv("INSTAGRAM_ACCESS_TOKEN")
     
     if not token:
         return {"error": "No access token configured"}
