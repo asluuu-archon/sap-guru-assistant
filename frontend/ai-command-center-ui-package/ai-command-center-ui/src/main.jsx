@@ -3364,6 +3364,7 @@ function SettingsPage() {
     industry: 'Education / Training',
     ai_enabled: true,
     ai_tone: 'Professional & Helpful',
+    reply_delay_minutes: 2,
     working_hours: { mon_fri: '09:00 - 18:00', sat: '10:00 - 14:00', sun: 'Closed' },
     templates: [],
     blacklist_keywords: []
@@ -3389,6 +3390,7 @@ function SettingsPage() {
             industry: s.industry || 'Education / Training',
             ai_enabled: s.ai_enabled !== undefined ? s.ai_enabled : true,
             ai_tone: s.ai_tone || 'Professional & Helpful',
+            reply_delay_minutes: s.reply_delay_minutes !== undefined ? s.reply_delay_minutes : 2,
             working_hours: s.working_hours || { mon_fri: '09:00 - 18:00', sat: '10:00 - 14:00', sun: 'Closed' },
             templates: s.templates || [],
             blacklist_keywords: s.blacklist_keywords || []
@@ -3538,7 +3540,34 @@ function SettingsPage() {
                 <div style={{fontSize:11,color:'#94a3b8',marginTop:5}}>This tone is injected into every AI prompt for this workspace.</div>
               </div>
 
-              <button onClick={() => handleSave('ai', { ai_enabled: form.ai_enabled, ai_tone: form.ai_tone })} disabled={saving==='ai'}
+              {/* Auto-Reply Delay Timer */}
+              <div style={{marginBottom:16}}>
+                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'0.04em'}}>Auto-Reply Delay</label>
+                <div style={{display:'flex',alignItems:'center',gap:10}}>
+                  <input
+                    type="number" min="0" max="60"
+                    value={form.reply_delay_minutes}
+                    onChange={e => setForm(p=>({...p, reply_delay_minutes: Math.max(0, parseInt(e.target.value)||0)}))}
+                    style={{width:90,padding:'9px 11px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:14,fontWeight:700,color:'#1e293b',textAlign:'center'}}
+                  />
+                  <span style={{fontSize:13,color:'#475569',fontWeight:500}}>minutes</span>
+                </div>
+                <div style={{fontSize:11,color:'#94a3b8',marginTop:5}}>
+                  The AI waits this many minutes after the last message before sending a reply. Set to <b>0</b> for instant replies. Recommended: <b>2–5 minutes</b> to feel more natural.
+                </div>
+                {form.reply_delay_minutes === 0 && (
+                  <div style={{marginTop:6,fontSize:11,color:'#f59e0b',background:'rgba(245,158,11,0.08)',padding:'5px 10px',borderRadius:6,border:'1px solid rgba(245,158,11,0.2)'}}>
+                    ⚡ Instant mode — AI replies immediately on every message.
+                  </div>
+                )}
+                {form.reply_delay_minutes > 0 && (
+                  <div style={{marginTop:6,fontSize:11,color:'#10b981',background:'rgba(16,185,129,0.06)',padding:'5px 10px',borderRadius:6,border:'1px solid rgba(16,185,129,0.2)'}}>
+                    ⏱ AI will wait {form.reply_delay_minutes} minute{form.reply_delay_minutes > 1 ? 's' : ''} of silence before replying.
+                  </div>
+                )}
+              </div>
+
+              <button onClick={() => handleSave('ai', { ai_enabled: form.ai_enabled, ai_tone: form.ai_tone, reply_delay_minutes: form.reply_delay_minutes })} disabled={saving==='ai'}
                 style={{padding:'9px 20px',borderRadius:7,background: saving==='ai' ? '#93c5fd' : '#3b82f6',color:'white',border:'none',cursor: saving==='ai' ? 'not-allowed' : 'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',gap:7}}>
                 <Save size={13}/> {saving==='ai' ? 'Saving...' : 'Save AI Settings'}
               </button>

@@ -16,6 +16,7 @@ class SettingsUpdate(BaseModel):
     industry: Optional[str] = None
     ai_enabled: Optional[bool] = None
     ai_tone: Optional[str] = None
+    reply_delay_minutes: Optional[int] = None
     working_hours: Optional[Dict[str, Any]] = None
     templates: Optional[List[Dict[str, Any]]] = None
     blacklist_keywords: Optional[List[str]] = None
@@ -43,6 +44,7 @@ async def get_settings(business_id: Optional[str] = Header(None, alias="X-Busine
             "industry": profile.get("industry", "Education / Training"),
             "ai_enabled": profile.get("auto_reply_enabled", True),
             "ai_tone": profile.get("ai_tone", "Professional & Helpful"),
+            "reply_delay_minutes": profile.get("reply_delay_minutes", 2),
             "working_hours": profile.get("working_hours", {
                 "mon_fri": "09:00 - 18:00",
                 "sat": "10:00 - 14:00",
@@ -76,6 +78,7 @@ async def update_settings(data: SettingsUpdate, business_id: Optional[str] = Hea
         if data.industry is not None: update_data["industry"] = data.industry
         if data.ai_enabled is not None: update_data["auto_reply_enabled"] = data.ai_enabled
         if data.ai_tone is not None: update_data["ai_tone"] = data.ai_tone
+        if data.reply_delay_minutes is not None: update_data["reply_delay_minutes"] = max(0, data.reply_delay_minutes)
         if data.working_hours is not None: update_data["working_hours"] = data.working_hours
         if data.templates is not None: update_data["templates"] = data.templates
         if data.blacklist_keywords is not None: update_data["blacklist_keywords"] = data.blacklist_keywords
