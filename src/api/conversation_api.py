@@ -92,27 +92,62 @@ class ConversationStatusUpdateRequest(BaseModel):
     reason: Optional[str] = None
 
 
+class StatusUpdateBody(BaseModel):
+    reason: Optional[str] = None
+
+
 @router.post("/conversations/{sender_id}/status")
-def update_conversation_status(sender_id: str, status: str):
+def update_conversation_status(sender_id: str, status: str, body: StatusUpdateBody = None):
+    """
+    Update conversation state. Supported statuses:
+    - closed       : Mark conversation done. AI will not reply to future messages.
+    - needs_human  : Flag for human review. AI will not reply until reopened.
+    - keep_human   : Permanently hand off to human. AI stays silent indefinitely.
+    - reopen       : Clear human/closed flags and let AI handle again.
+    """
     try:
-        update_data = {"updated_at": datetime.utcnow().isoformat()}
+        now = datetime.utcnow().isoformat()
+        reason = (body.reason if body else None) or ""
+        update_data = {"updated_at": now}
+
         if status == "closed":
-            update_data["closed_at"] = datetime.utcnow().isoformat()
+            update_data["closed_at"] = now
             update_data["conversation_state"] = "closed"
             update_data["needs_human"] = False
             update_data["pending_reply"] = False
-            update_data["human_reason"] = None
+            update_data["human_reason"] = reason or "Marked closed by agent"
+            update_data["state_reason"] = reason or "Marked closed by agent"
+
         elif status == "needs_human":
             update_data["needs_human"] = True
-            update_data["human_reason"] = "Marked by human"
+            update_data["human_reason"] = reason or "Marked by agent"
             update_data["conversation_state"] = "needs_human"
+            update_data["state_reason"] = reason or "Marked by agent"
             update_data["pending_reply"] = False
+
+        elif status == "keep_human":
+            # Permanent human handoff — AI will never reply until reopened
+            update_data["needs_human"] = True
+            update_data["human_reason"] = reason or "Handed off to human agent"
+            update_data["conversation_state"] = "keep_human"
+            update_data["state_reason"] = reason or "Handed off to human agent"
+            update_data["pending_reply"] = False
+
+        elif status == "reopen":
+            # Clear all human/closed flags — AI takes over again
+            update_data["needs_human"] = False
+            update_data["human_reason"] = ""
+            update_data["conversation_state"] = "active"
+            update_data["state_reason"] = "Reopened by agent"
+            update_data["pending_reply"] = False
+            update_data["closed_at"] = None
+
         else:
-            return {"status": "error", "message": "Invalid status provided"}
+            return {"status": "error", "message": f"Invalid status '{status}'. Use: closed, needs_human, keep_human, reopen"}
 
         supabase.table("conversations").update(update_data).eq("sender_id", sender_id).execute()
-
-        return {"status": "success", "message": f"Conversation {sender_id} status updated to {status}"}
+        print(f"CONVERSATION STATUS UPDATE: {sender_id} -> {status}", flush=True)
+        return {"status": "success", "message": f"Conversation {sender_id} updated to '{status}'"}
 
     except Exception as e:
         print(f"UPDATE CONVERSATION STATUS ERROR: {e}", flush=True)

@@ -29,6 +29,7 @@ from .api.website_chat_api import router as website_chat_router
 from .api.whatsapp_broadcast_api import router as whatsapp_broadcast_router
 from .api.briefing_api import router as briefing_router
 from .api.appointment_api import router as appointment_router
+from .api.campaign_context_api import router as campaign_context_router
 from .services.webhook_service import process_instagram_webhook
 
 
@@ -85,6 +86,7 @@ app.include_router(website_chat_router)
 app.include_router(whatsapp_broadcast_router)
 app.include_router(briefing_router)
 app.include_router(appointment_router)
+app.include_router(campaign_context_router)
 
 VERIFY_TOKEN = "sap_guru_2026"
 AUTO_REPLY = os.getenv("AUTO_REPLY", "false").lower() == "true"
@@ -314,6 +316,23 @@ async def receive_webhook(request: Request):
                         # Append transcription to message text so the AI can read it
                         message_text = (message_text + " " + transcribed_text).strip()
                         print(f"VOICE_NOTE_TRANSCRIBED: {message_text}", flush=True)
+
+        # ── KEEP HUMAN / CLOSED GUARD ────────────────────────────────────────
+        # If this conversation is already marked needs_human or closed,
+        # do NOT run the AI pipeline. Save the message and stay silent.
+        existing_conv = get_conversation(sender_id)
+        existing_state = existing_conv.get("conversation_state", "")
+        existing_needs_human = existing_conv.get("needs_human", False)
+
+        if existing_needs_human or existing_state in ("needs_human", "closed", "keep_human"):
+            print(f"KEEP_HUMAN_GUARD: Skipping AI for {sender_id} (state={existing_state}, needs_human={existing_needs_human})", flush=True)
+            save_conversation(sender_id, message_text, "", existing_state or "needs_human")
+            return {
+                "status": "keep_human_active",
+                "reason": "Conversation is marked for human handling — AI skipped.",
+                "sender_id": sender_id,
+            }
+        # ─────────────────────────────────────────────────────────────────────
 
         pipeline_result = await process_incoming_message(
             organization_id=1,

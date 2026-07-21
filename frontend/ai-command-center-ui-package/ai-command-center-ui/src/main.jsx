@@ -948,7 +948,31 @@ function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh }) 
   const [replyText, setReplyText] = useState('');
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState(null);
+  const [actionLoading, setActionLoading] = useState(null); // 'closed' | 'keep_human' | 'reopen'
+  const [actionResult, setActionResult] = useState(null);
   const chatEndRef = React.useRef(null);
+
+  const handleStatusAction = async (status, label) => {
+    setActionLoading(status);
+    setActionResult(null);
+    try {
+      const res = await fetch(`${API_BASE}/conversations/${conv.sender_id}/status?status=${status}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: `Marked ${label} by agent` }),
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setActionResult({ ok: true, msg: `Marked as ${label}` });
+        setTimeout(() => { onRefresh(); setActionResult(null); }, 1200);
+      } else {
+        setActionResult({ ok: false, msg: data.message || `Failed to mark ${label}` });
+      }
+    } catch (e) {
+      setActionResult({ ok: false, msg: 'Network error' });
+    }
+    setActionLoading(null);
+  };
 
   const history = fullConv?.history || [];
   const stateColor = conv.needs_human ? '#ef4444' : (CONV_STATE_COLORS[conv.conversation_state] || '#475569');
@@ -1012,11 +1036,51 @@ function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh }) 
             </div>
           </div>
         </div>
-        <div style={{display:'flex', gap:'8px'}}>
-          <button className="ghost" onClick={onRefresh} style={{padding:'4px 10px', fontSize:'0.8em'}}>↻</button>
-          <button className="outline" onClick={onClose} style={{padding:'4px 10px', fontSize:'0.8em'}}><X size={13}/></button>
+        <div style={{display:'flex', gap:'6px', alignItems:'center', flexWrap:'wrap'}}>
+          {/* Reopen AI — only show if conversation is closed/needs_human/keep_human */}
+          {(conv.needs_human || ['closed','needs_human','keep_human'].includes(conv.conversation_state)) && (
+            <button
+              onClick={() => handleStatusAction('reopen', 'Reopen')}
+              disabled={actionLoading === 'reopen'}
+              title="Let AI handle this conversation again"
+              style={{padding:'4px 10px', fontSize:'0.78em', background:'rgba(16,185,129,0.15)', color:'#10b981', border:'1px solid rgba(16,185,129,0.3)', borderRadius:6, cursor:'pointer', fontWeight:600, display:'flex', alignItems:'center', gap:4}}
+            >
+              {actionLoading === 'reopen' ? '...' : '▶ Reopen AI'}
+            </button>
+          )}
+          {/* Keep Human — only show if AI is currently active */}
+          {!conv.needs_human && !['closed','keep_human'].includes(conv.conversation_state) && (
+            <button
+              onClick={() => handleStatusAction('keep_human', 'Keep Human')}
+              disabled={actionLoading === 'keep_human'}
+              title="Hand off to human — AI will stay silent"
+              style={{padding:'4px 10px', fontSize:'0.78em', background:'rgba(245,158,11,0.15)', color:'#f59e0b', border:'1px solid rgba(245,158,11,0.3)', borderRadius:6, cursor:'pointer', fontWeight:600, display:'flex', alignItems:'center', gap:4}}
+            >
+              {actionLoading === 'keep_human' ? '...' : '👤 Keep Human'}
+            </button>
+          )}
+          {/* Mark Closed — hide if already closed */}
+          {conv.conversation_state !== 'closed' && (
+            <button
+              onClick={() => handleStatusAction('closed', 'Closed')}
+              disabled={actionLoading === 'closed'}
+              title="Mark conversation as resolved"
+              style={{padding:'4px 10px', fontSize:'0.78em', background:'rgba(100,116,139,0.15)', color:'#94a3b8', border:'1px solid rgba(100,116,139,0.3)', borderRadius:6, cursor:'pointer', fontWeight:600, display:'flex', alignItems:'center', gap:4}}
+            >
+              {actionLoading === 'closed' ? '...' : '✓ Close'}
+            </button>
+          )}
+          <button className="ghost" onClick={onRefresh} style={{padding:'4px 8px', fontSize:'0.8em', color:'#94a3b8'}}>↻</button>
+          <button className="outline" onClick={onClose} style={{padding:'4px 8px', fontSize:'0.8em'}}><X size={13}/></button>
         </div>
       </div>
+      {/* Action feedback bar */}
+      {actionResult && (
+        <div style={{padding:'6px 16px', fontSize:'0.8em', color: actionResult.ok ? '#10b981' : '#ef4444', background: actionResult.ok ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)', borderBottom:'1px solid #1e293b', display:'flex', alignItems:'center', gap:6}}>
+          <span>{actionResult.ok ? '✓' : '✗'}</span>
+          <span>{actionResult.msg}</span>
+        </div>
+      )}
 
       {/* Chat history */}
       <div style={{flex:1, overflowY:'auto', padding:'16px', display:'flex', flexDirection:'column', gap:'10px'}}>
@@ -2071,6 +2135,31 @@ function Playground() {
   );
 }
 
+// Campaign Context type colors
+const CAMPAIGN_TYPE_COLORS = {
+  post: '#2563eb',
+  offer: '#f59e0b',
+  job: '#ef4444',
+  announcement: '#8b5cf6',
+  reel: '#ec4899',
+  story: '#06b6d4',
+  general: '#64748b',
+};
+
+const CAMPAIGN_TYPE_LABELS = {
+  post: '📸 Post',
+  offer: '🎁 Offer',
+  job: '💼 Job Opening',
+  announcement: '📢 Announcement',
+  reel: '🎬 Reel',
+  story: '📖 Story',
+  general: '📌 General',
+};
+
+const EMPTY_CAMPAIGN = { title: '', context_type: 'general', description: '', valid_until: '', priority: 10 };
+
+const CAMPAIGN_TYPES = ['post', 'offer', 'job', 'announcement', 'reel', 'story', 'general'];
+
 const CATEGORY_COLORS = {
   greeting: '#2563eb',
   business_rule: '#10b981',
@@ -2102,6 +2191,15 @@ function BusinessBrain() {
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [activeCategory, setActiveCategory] = useState('All');
+  // Campaign Context state
+  const [activeTab, setActiveTab] = useState('rules'); // 'rules' | 'campaign'
+  const [campaigns, setCampaigns] = useState([]);
+  const [campaignLoading, setCampaignLoading] = useState(false);
+  const [showCampaignForm, setShowCampaignForm] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState(null);
+  const [campaignForm, setCampaignForm] = useState(EMPTY_CAMPAIGN);
+  const [campaignSaving, setCampaignSaving] = useState(false);
+  const [campaignDeleteConfirm, setCampaignDeleteConfirm] = useState(null);
 
   const loadRules = () => {
     setLoading(true);
@@ -2114,7 +2212,77 @@ function BusinessBrain() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { loadRules(); }, []);
+  const loadCampaigns = () => {
+    setCampaignLoading(true);
+    fetch(`${API_BASE}/campaign-context?include_inactive=true`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') setCampaigns(data.contexts || []);
+      })
+      .catch(err => console.error('Campaign context error:', err))
+      .finally(() => setCampaignLoading(false));
+  };
+
+  useEffect(() => { loadRules(); loadCampaigns(); }, []);
+
+  const openAddCampaign = () => {
+    setEditingCampaign(null);
+    setCampaignForm(EMPTY_CAMPAIGN);
+    setShowCampaignForm(true);
+  };
+
+  const openEditCampaign = (c) => {
+    setEditingCampaign(c);
+    // Parse context_type from context_text prefix [TYPE]
+    const typeMatch = (c.context_text || '').match(/^\[([A-Z]+)\]/);
+    const ctype = typeMatch ? typeMatch[1].toLowerCase() : 'general';
+    const desc = (c.context_text || '').replace(/^\[[A-Z]+\]\s*/, '');
+    setCampaignForm({
+      title: c.title || '',
+      context_type: CAMPAIGN_TYPES.includes(ctype) ? ctype : 'general',
+      description: desc,
+      valid_until: c.valid_until || '',
+      priority: c.priority || 10,
+    });
+    setShowCampaignForm(true);
+  };
+
+  const handleSaveCampaign = async () => {
+    if (!campaignForm.title.trim() || !campaignForm.description.trim()) return;
+    setCampaignSaving(true);
+    const payload = {
+      title: campaignForm.title.trim(),
+      context_type: campaignForm.context_type,
+      description: campaignForm.description.trim(),
+      valid_until: campaignForm.valid_until || null,
+      priority: Number(campaignForm.priority) || 10,
+    };
+    try {
+      if (editingCampaign) {
+        await fetch(`${API_BASE}/campaign-context/${editingCampaign.id}`, {
+          method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+        });
+      } else {
+        await fetch(`${API_BASE}/campaign-context`, {
+          method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+        });
+      }
+      setShowCampaignForm(false);
+      loadCampaigns();
+    } catch(e) { console.error(e); }
+    setCampaignSaving(false);
+  };
+
+  const handleToggleCampaign = async (c) => {
+    await fetch(`${API_BASE}/campaign-context/${c.id}/toggle`, { method: 'PATCH' });
+    loadCampaigns();
+  };
+
+  const handleDeleteCampaign = async (id) => {
+    await fetch(`${API_BASE}/campaign-context/${id}`, { method: 'DELETE' });
+    setCampaignDeleteConfirm(null);
+    loadCampaigns();
+  };
 
   const openAdd = () => {
     setEditingRule(null);
@@ -2177,16 +2345,46 @@ function BusinessBrain() {
   const filtered = activeCategory === 'All' ? rules : rules.filter(r => r.category === activeCategory);
   const activeCount = rules.filter(r => r.is_active).length;
 
+  const activeCampaigns = campaigns.filter(c => c.status === 'active').length;
+
   return (
     <section>
       <Title
         title="Business Brain"
-        sub="Teach your AI how to respond — like briefing a new employee"
+        sub="Teach your AI how to respond — and tell it about today's campaigns, offers, and posts"
         action={
-          <button onClick={openAdd}><Plus size={15}/> Add New Rule</button>
+          activeTab === 'rules'
+            ? <button onClick={openAdd}><Plus size={15}/> Add New Rule</button>
+            : <button onClick={openAddCampaign}><Plus size={15}/> Add Campaign Context</button>
         }
       />
 
+      {/* Main tab switcher */}
+      <div style={{display:'flex', gap:'4px', marginBottom:'20px', background:'rgba(255,255,255,0.04)', borderRadius:'10px', padding:'4px', width:'fit-content'}}>
+        <button
+          onClick={() => setActiveTab('rules')}
+          style={{padding:'7px 18px', borderRadius:'7px', border:'none', cursor:'pointer', fontWeight:600, fontSize:'0.85em',
+            background: activeTab === 'rules' ? '#2563eb' : 'transparent',
+            color: activeTab === 'rules' ? '#fff' : '#94a3b8'}}
+        >
+          🧠 Business Rules
+        </button>
+        <button
+          onClick={() => setActiveTab('campaign')}
+          style={{padding:'7px 18px', borderRadius:'7px', border:'none', cursor:'pointer', fontWeight:600, fontSize:'0.85em',
+            background: activeTab === 'campaign' ? '#f59e0b' : 'transparent',
+            color: activeTab === 'campaign' ? '#fff' : '#94a3b8'}}
+        >
+          📣 Campaign Context
+          {activeCampaigns > 0 && (
+            <span style={{marginLeft:'6px', background:'rgba(255,255,255,0.25)', borderRadius:'10px', padding:'1px 6px', fontSize:'0.8em'}}>{activeCampaigns}</span>
+          )}
+        </button>
+      </div>
+
+      {/* ═══ BUSINESS RULES TAB ═══ */}
+      {activeTab === 'rules' && (
+      <>
       {/* Stats */}
       <div className="grid4" style={{marginBottom:'20px'}}>
         <Stat label="Total Rules" value={loading ? '...' : rules.length} change="All configured rules"/>
@@ -2407,6 +2605,188 @@ function BusinessBrain() {
           })}
         </div>
       )}
+      </> /* end rules tab */
+      )}
+
+      {/* ═══ CAMPAIGN CONTEXT TAB ═══ */}
+      {activeTab === 'campaign' && (
+      <>
+        {/* Info banner */}
+        <div style={{padding:'12px 16px', background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.25)', borderRadius:'10px', marginBottom:'20px', fontSize:'0.87em', color:'#94a3b8', lineHeight:'1.6'}}>
+          <strong style={{color:'#f59e0b'}}>💡 How Campaign Context works:</strong> Describe today’s active posts, offers, job openings, or announcements below. The AI will automatically use this information when replying to customer enquiries — without you needing to update any rules.
+        </div>
+
+        {/* Stats */}
+        <div className="grid4" style={{marginBottom:'20px'}}>
+          <Stat label="Active Contexts" value={campaignLoading ? '...' : activeCampaigns} change="AI uses these now"/>
+          <Stat label="Total Entries" value={campaignLoading ? '...' : campaigns.length} change="All entries"/>
+          <Stat label="Inactive" value={campaignLoading ? '...' : campaigns.length - activeCampaigns} change="Paused entries"/>
+          <Stat label="Types" value={campaignLoading ? '...' : new Set(campaigns.map(c => (c.context_text||'').match(/^\[([A-Z]+)\]/)?.[1])).size} change="Context types"/>
+        </div>
+
+        {/* Add/Edit Campaign Form */}
+        {showCampaignForm && (
+          <div className="card" style={{marginBottom:'20px', border:'1px solid #f59e0b', borderRadius:'12px'}}>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'16px'}}>
+              <h3 style={{margin:0}}>{editingCampaign ? 'Edit Campaign Context' : 'Add Campaign Context'}</h3>
+              <button className="outline" onClick={() => setShowCampaignForm(false)}><X size={14}/></button>
+            </div>
+
+            <div style={{display:'grid', gridTemplateColumns:'2fr 1fr', gap:'12px'}}>
+              <label style={{display:'flex',flexDirection:'column',gap:'6px'}}>
+                <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Title *</span>
+                <input
+                  placeholder="e.g. July Weekend Batch Offer, New SAP FICO Job Opening"
+                  value={campaignForm.title}
+                  onChange={e => setCampaignForm({...campaignForm, title: e.target.value})}
+                />
+              </label>
+              <label style={{display:'flex',flexDirection:'column',gap:'6px'}}>
+                <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Type</span>
+                <select value={campaignForm.context_type} onChange={e => setCampaignForm({...campaignForm, context_type: e.target.value})}>
+                  {CAMPAIGN_TYPES.map(t => (
+                    <option key={t} value={t}>{CAMPAIGN_TYPE_LABELS[t] || t}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <label style={{display:'flex',flexDirection:'column',gap:'6px',marginTop:'12px'}}>
+              <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Description * <span style={{opacity:0.6}}>(plain English — the AI will use this when replying)</span></span>
+              <textarea
+                placeholder="e.g. We are running a July batch for SAP FICO starting 20th July. Weekend classes, 3 months duration, ₹25,000 total fee. Interested candidates should WhatsApp us."
+                value={campaignForm.description}
+                onChange={e => setCampaignForm({...campaignForm, description: e.target.value})}
+                style={{minHeight:'90px'}}
+              />
+            </label>
+
+            <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginTop:'12px'}}>
+              <label style={{display:'flex',flexDirection:'column',gap:'6px'}}>
+                <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Valid Until <span style={{opacity:0.6}}>(auto-deactivates after this date)</span></span>
+                <input
+                  type="date"
+                  value={campaignForm.valid_until}
+                  onChange={e => setCampaignForm({...campaignForm, valid_until: e.target.value})}
+                />
+              </label>
+              <label style={{display:'flex',flexDirection:'column',gap:'6px'}}>
+                <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Priority <span style={{opacity:0.6}}>(higher = injected first)</span></span>
+                <input
+                  type="number" min="1" max="100"
+                  value={campaignForm.priority}
+                  onChange={e => setCampaignForm({...campaignForm, priority: e.target.value})}
+                />
+              </label>
+            </div>
+
+            <div style={{display:'flex', gap:'10px', marginTop:'16px'}}>
+              <button onClick={handleSaveCampaign} disabled={campaignSaving || !campaignForm.title.trim() || !campaignForm.description.trim()}>
+                <Save size={14}/> {campaignSaving ? 'Saving...' : (editingCampaign ? 'Update' : 'Save Context')}
+              </button>
+              <button className="outline" onClick={() => setShowCampaignForm(false)}>Cancel</button>
+            </div>
+          </div>
+        )}
+
+        {/* Delete confirmation */}
+        {campaignDeleteConfirm && (
+          <div className="card" style={{marginBottom:'16px', border:'1px solid #ef4444', borderRadius:'12px', background:'rgba(239,68,68,0.06)'}}>
+            <div style={{display:'flex', alignItems:'center', gap:'10px', color:'#ef4444'}}>
+              <AlertTriangle size={18}/>
+              <span>Delete <b>"{campaignDeleteConfirm.title}"</b>? This cannot be undone.</span>
+            </div>
+            <div style={{display:'flex', gap:'10px', marginTop:'12px'}}>
+              <button style={{background:'#ef4444'}} onClick={() => handleDeleteCampaign(campaignDeleteConfirm.id)}>Yes, Delete</button>
+              <button className="outline" onClick={() => setCampaignDeleteConfirm(null)}>Cancel</button>
+            </div>
+          </div>
+        )}
+
+        {/* Campaign cards grid */}
+        {campaignLoading ? (
+          <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>Loading campaign contexts...</div>
+        ) : campaigns.length === 0 ? (
+          <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>
+            No campaign contexts yet. Click “Add Campaign Context” to tell the AI about today’s posts, offers, or announcements.
+          </div>
+        ) : (
+          <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(360px, 1fr))', gap:'16px'}}>
+            {campaigns.map(c => {
+              const typeMatch = (c.context_text || '').match(/^\[([A-Z]+)\]/);
+              const ctype = typeMatch ? typeMatch[1].toLowerCase() : 'general';
+              const desc = (c.context_text || '').replace(/^\[[A-Z]+\]\s*/, '');
+              const typeColor = CAMPAIGN_TYPE_COLORS[ctype] || '#64748b';
+              const isActive = c.status === 'active';
+              return (
+                <div key={c.id} className="card" style={{
+                  border: `1px solid ${isActive ? typeColor + '40' : '#334155'}`,
+                  opacity: isActive ? 1 : 0.6,
+                  transition: 'all 0.2s'
+                }}>
+                  <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'10px'}}>
+                    <div>
+                      <span style={{
+                        fontSize:'0.72em', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em',
+                        color: typeColor, background: typeColor + '18', padding:'2px 8px', borderRadius:'20px'
+                      }}>
+                        {CAMPAIGN_TYPE_LABELS[ctype] || ctype}
+                      </span>
+                      <h3 style={{margin:'8px 0 0', fontSize:'0.95em'}}>{c.title}</h3>
+                    </div>
+                    <button
+                      onClick={() => handleToggleCampaign(c)}
+                      style={{background:'none', border:'none', cursor:'pointer', padding:'4px', color: isActive ? '#10b981' : '#64748b'}}
+                      title={isActive ? 'Click to deactivate' : 'Click to activate'}
+                    >
+                      {isActive ? <ToggleRight size={26}/> : <ToggleLeft size={26}/>}
+                    </button>
+                  </div>
+
+                  <div style={{
+                    fontSize:'0.83em', color:'#94a3b8', lineHeight:'1.5',
+                    background:'rgba(255,255,255,0.03)', borderRadius:'8px',
+                    padding:'8px 10px', marginBottom:'12px',
+                    borderLeft: `3px solid ${typeColor}40`,
+                    maxHeight:'80px', overflow:'hidden',
+                    display:'-webkit-box', WebkitLineClamp:4, WebkitBoxOrient:'vertical'
+                  }}>
+                    {desc}
+                  </div>
+
+                  <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                    <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                      <span style={{fontSize:'0.75em', color: isActive ? '#10b981' : '#64748b'}}>
+                        {isActive ? '● Active — AI is using this' : '○ Inactive'}
+                      </span>
+                      {c.valid_until && (
+                        <span style={{fontSize:'0.72em', color:'#64748b'}}>Expires: {c.valid_until}</span>
+                      )}
+                    </div>
+                    <div style={{display:'flex', gap:'6px'}}>
+                      <button
+                        className="outline"
+                        style={{padding:'4px 10px', fontSize:'0.78em'}}
+                        onClick={() => openEditCampaign(c)}
+                      >
+                        <Pencil size={11}/> Edit
+                      </button>
+                      <button
+                        style={{padding:'4px 10px', fontSize:'0.78em', background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.3)', color:'#ef4444'}}
+                        onClick={() => setCampaignDeleteConfirm(c)}
+                      >
+                        <Trash2 size={11}/>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </> /* end campaign tab */
+      )}
+
     </section>
   );
 }
