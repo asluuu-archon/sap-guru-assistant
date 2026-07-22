@@ -1,7 +1,7 @@
 import requests
 import json
 from datetime import datetime
-from src.services.follower_dm_service import _supabase, _get_token, handle_new_follower
+from .follower_dm_service import _supabase, _get_token, handle_new_follower
 
 def get_all_instagram_businesses():
     """Get all connected Instagram businesses."""
