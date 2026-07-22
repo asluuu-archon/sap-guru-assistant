@@ -523,6 +523,15 @@ html[data-theme="dark"] main div[style*="background:#dbeafe"],
 html[data-theme="dark"] main div[style*="background: #dbeafe"] {
   background: #1c2d4f !important;
   border-color: #2f4a7a !important;
+  color: #93c5fd !important;
+}
+html[data-theme="dark"] main div[style*="background:#eff6ff"] *,
+html[data-theme="dark"] main div[style*="background: #eff6ff"] *,
+html[data-theme="dark"] main div[style*="background:#f0f9ff"] *,
+html[data-theme="dark"] main div[style*="background: #f0f9ff"] *,
+html[data-theme="dark"] main div[style*="background:#dbeafe"] *,
+html[data-theme="dark"] main div[style*="background: #dbeafe"] * {
+  color: #93c5fd !important;
 }
 
 html[data-theme="dark"] main div[style*="background:#f0fdf4"],
@@ -531,6 +540,13 @@ html[data-theme="dark"] main div[style*="background:#dcfce7"],
 html[data-theme="dark"] main div[style*="background: #dcfce7"] {
   background: #0d2e1a !important;
   border-color: #1a4d2e !important;
+  color: #4ade80 !important;
+}
+html[data-theme="dark"] main div[style*="background:#f0fdf4"] *,
+html[data-theme="dark"] main div[style*="background: #f0fdf4"] *,
+html[data-theme="dark"] main div[style*="background:#dcfce7"] *,
+html[data-theme="dark"] main div[style*="background: #dcfce7"] * {
+  color: #4ade80 !important;
 }
 
 html[data-theme="dark"] main div[style*="background:#fffbeb"],
@@ -539,6 +555,13 @@ html[data-theme="dark"] main div[style*="background:#fef3c7"],
 html[data-theme="dark"] main div[style*="background: #fef3c7"] {
   background: #2e2000 !important;
   border-color: #4a3500 !important;
+  color: #fde68a !important;
+}
+html[data-theme="dark"] main div[style*="background:#fffbeb"] *,
+html[data-theme="dark"] main div[style*="background: #fffbeb"] *,
+html[data-theme="dark"] main div[style*="background:#fef3c7"] *,
+html[data-theme="dark"] main div[style*="background: #fef3c7"] * {
+  color: #fde68a !important;
 }
 
 html[data-theme="dark"] main div[style*="background:#fef2f2"],
@@ -547,6 +570,13 @@ html[data-theme="dark"] main div[style*="background:#fee2e2"],
 html[data-theme="dark"] main div[style*="background: #fee2e2"] {
   background: #3f1010 !important;
   border-color: #6b1a1a !important;
+  color: #f87171 !important;
+}
+html[data-theme="dark"] main div[style*="background:#fef2f2"] *,
+html[data-theme="dark"] main div[style*="background: #fef2f2"] *,
+html[data-theme="dark"] main div[style*="background:#fee2e2"] *,
+html[data-theme="dark"] main div[style*="background: #fee2e2"] * {
+  color: #f87171 !important;
 }
 
 html[data-theme="dark"] main div[style*="background:#f3f0ff"],
@@ -557,6 +587,15 @@ html[data-theme="dark"] main div[style*="background:#ede9fe"],
 html[data-theme="dark"] main div[style*="background: #ede9fe"] {
   background: #1e1040 !important;
   border-color: #3b2080 !important;
+  color: #c4b5fd !important;
+}
+html[data-theme="dark"] main div[style*="background:#f3f0ff"] *,
+html[data-theme="dark"] main div[style*="background: #f3f0ff"] *,
+html[data-theme="dark"] main div[style*="background:#f5f3ff"] *,
+html[data-theme="dark"] main div[style*="background: #f5f3ff"] *,
+html[data-theme="dark"] main div[style*="background:#ede9fe"] *,
+html[data-theme="dark"] main div[style*="background: #ede9fe"] * {
+  color: #c4b5fd !important;
 }
 
 /* Dark navy backgrounds used in some hero sections — keep dark but ensure text is light */
