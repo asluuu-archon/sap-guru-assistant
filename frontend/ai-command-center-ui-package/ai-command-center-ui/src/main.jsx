@@ -6393,10 +6393,23 @@ function LoginPage({ onLoginSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [businessName, setBusinessName] = useState('');
+  const [existingBusinessId, setExistingBusinessId] = useState('');
+  const [existingBusinesses, setExistingBusinesses] = useState([]);
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Load existing businesses for the selector
+  React.useEffect(() => {
+    if (mode === 'register') {
+      fetch(`${API_BASE}/businesses`)
+        .then(r => r.json())
+        .then(d => { if (d.businesses) setExistingBusinesses(d.businesses); })
+        .catch(() => {});
+    }
+  }, [mode]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -6409,7 +6422,13 @@ function LoginPage({ onLoginSuccess }) {
       const endpoint = mode === 'login' ? '/auth/login' : '/auth/register';
       const body = mode === 'login'
         ? { email: email.trim(), password }
-        : { email: email.trim(), password, name: name.trim() };
+        : {
+            email: email.trim(),
+            password,
+            name: name.trim(),
+            business_name: existingBusinessId ? '' : businessName.trim(),
+            existing_business_id: existingBusinessId || undefined,
+          };
       const res = await fetch(`${API_BASE}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -6475,17 +6494,47 @@ function LoginPage({ onLoginSuccess }) {
 
           <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:16}}>
             {mode === 'register' && (
-              <div>
-                <label style={{fontSize:12,fontWeight:600,color:'#94a3b8',display:'block',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Full Name</label>
-                <div style={{position:'relative'}}>
-                  <UserPlus size={15} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'#64748b'}}/>
-                  <input
-                    type="text" value={name} onChange={e => setName(e.target.value)}
-                    placeholder="Mohamed Aslam"
-                    style={{width:'100%',padding:'11px 11px 11px 38px',borderRadius:9,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.07)',color:'white',fontSize:14,outline:'none',boxSizing:'border-box'}}
-                  />
+              <>
+                <div>
+                  <label style={{fontSize:12,fontWeight:600,color:'#94a3b8',display:'block',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Full Name</label>
+                  <div style={{position:'relative'}}>
+                    <UserPlus size={15} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'#64748b'}}/>
+                    <input
+                      type="text" value={name} onChange={e => setName(e.target.value)}
+                      placeholder="Mohamed Aslam"
+                      style={{width:'100%',padding:'11px 11px 11px 38px',borderRadius:9,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.07)',color:'white',fontSize:14,outline:'none',boxSizing:'border-box'}}
+                    />
+                  </div>
                 </div>
-              </div>
+                <div>
+                  <label style={{fontSize:12,fontWeight:600,color:'#94a3b8',display:'block',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Business</label>
+                  {existingBusinesses.length > 0 ? (
+                    <>
+                      <select value={existingBusinessId} onChange={e => setExistingBusinessId(e.target.value)}
+                        style={{width:'100%',padding:'11px 11px',borderRadius:9,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(30,41,59,0.9)',color:'white',fontSize:14,outline:'none',boxSizing:'border-box',marginBottom:8}}>
+                        <option value="">-- Create a new business --</option>
+                        {existingBusinesses.map(b => (
+                          <option key={b.id} value={b.id}>{b.name}</option>
+                        ))}
+                      </select>
+                      {!existingBusinessId && (
+                        <input
+                          type="text" value={businessName} onChange={e => setBusinessName(e.target.value)}
+                          placeholder="New business name (e.g. Archon Solutions)"
+                          style={{width:'100%',padding:'11px',borderRadius:9,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.07)',color:'white',fontSize:14,outline:'none',boxSizing:'border-box'}}
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <input
+                      type="text" value={businessName} onChange={e => setBusinessName(e.target.value)}
+                      placeholder="Your business name (e.g. SAP Guru)"
+                      style={{width:'100%',padding:'11px',borderRadius:9,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.07)',color:'white',fontSize:14,outline:'none',boxSizing:'border-box'}}
+                    />
+                  )}
+                  <p style={{fontSize:11,color:'#64748b',margin:'6px 0 0'}}>Select an existing business or create a new one</p>
+                </div>
+              </>
             )}
 
             <div>
