@@ -363,15 +363,15 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notification
 function Screen({page, dashboard, activeBusiness, setPage}) {
   return (
     <>
-      {page==='Overview'&&<Overview dashboard={dashboard} setPage={setPage}/>}
-      {page==='Conversations'&&<Conversations dashboard={dashboard}/>}
-      {page==='Leads'&&<Leads/>}
-      {page==='Pipeline Debugger'&&<Debugger/>}
-      {page==='AI Playground'&&<Playground/>}
-      {page==='Business Brain'&&<BusinessBrain/>}
-      {page==='Customer 360°'&&<Customer360/>}
-      {page==='Reports'&&<Reports dashboard={dashboard}/>}
-      {page==='Automation'&&<Automation/>}
+      {page==='Overview'&&<Overview dashboard={dashboard} setPage={setPage} activeBusiness={activeBusiness}/>}
+      {page==='Conversations'&&<Conversations dashboard={dashboard} activeBusiness={activeBusiness}/>}
+      {page==='Leads'&&<Leads activeBusiness={activeBusiness}/>}
+      {page==='Pipeline Debugger'&&<Debugger activeBusiness={activeBusiness}/>}
+      {page==='AI Playground'&&<Playground activeBusiness={activeBusiness}/>}
+      {page==='Business Brain'&&<BusinessBrain activeBusiness={activeBusiness}/>}
+      {page==='Customer 360°'&&<Customer360 activeBusiness={activeBusiness}/>}
+      {page==='Reports'&&<Reports dashboard={dashboard} activeBusiness={activeBusiness}/>}
+      {page==='Automation'&&<Automation activeBusiness={activeBusiness}/>}
       {page==='Businesses'&&<BusinessesAdmin activeBusiness={activeBusiness} setPage={setPage}/>}
       {page==='Integrations'&&<IntegrationsPage activeBusiness={activeBusiness}/>}
       {page==='Publisher'&&<PublisherPage activeBusiness={activeBusiness} setPage={setPage}/>}
@@ -379,7 +379,7 @@ function Screen({page, dashboard, activeBusiness, setPage}) {
       {page==='Import & Export'&&<LeadImportExport activeBusiness={activeBusiness}/>}
       {page==='Google Reviews'&&<GoogleReviewsPage activeBusiness={activeBusiness}/>}
       {page==='Broadcasts'&&<BroadcastsPage activeBusiness={activeBusiness}/>}
-      {page==='Settings'&&<SettingsPage/>}
+      {page==='Settings'&&<SettingsPage activeBusiness={activeBusiness}/>}
     </>
   );
 }
@@ -392,7 +392,9 @@ function Stat({label,value,change}) {
   return <div className="card stat"><p>{label}</p><h2>{value}</h2><span>{change}</span><small>live data</small></div>;
 }
 
-function Overview({ setPage }) {
+function Overview({ setPage, activeBusiness }) {
+  const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
+  const bizHeaders = { 'X-Business-ID': bizId };
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(null);
@@ -401,7 +403,7 @@ function Overview({ setPage }) {
 
   const fetchBriefing = () => {
     setBriefingLoading(true);
-    fetch(`${API_BASE}/briefing/latest`)
+    fetch(`${API_BASE}/briefing/latest`, { headers: bizHeaders })
       .then(r => r.json())
       .then(d => { if (d.status === 'success') setBriefing(d.briefing); })
       .catch(() => {})
@@ -410,7 +412,7 @@ function Overview({ setPage }) {
 
   const fetchOverview = () => {
     setLoading(true);
-    fetch(`${API_BASE}/overview`)
+    fetch(`${API_BASE}/overview`, { headers: bizHeaders })
       .then(r => r.json())
       .then(d => {
         if (d.status === 'success') {
@@ -422,7 +424,7 @@ function Overview({ setPage }) {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchOverview(); fetchBriefing(); }, []);
+  useEffect(() => { fetchOverview(); fetchBriefing(); }, [bizId]);
 
   const s = data?.stat_cards || {};
   const tempBreakdown = data?.temperature_breakdown || [];
@@ -771,7 +773,9 @@ const CONV_STATE_COLORS = {
   replied: '#10b981',
 };
 
-function Conversations() {
+function Conversations({ activeBusiness }) {
+  const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
+  const bizHeaders = { 'X-Business-ID': bizId };
   const [conversations, setConversations] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -786,7 +790,7 @@ function Conversations() {
     setLoading(true);
     const params = new URLSearchParams({ filter: f, limit: '100' });
     if (s) params.set('search', s);
-    fetch(`${API_BASE}/conversations?${params}`)
+    fetch(`${API_BASE}/conversations?${params}`, { headers: bizHeaders })
       .then(r => r.json())
       .then(data => {
         if (data.status === 'success') {
@@ -798,7 +802,11 @@ function Conversations() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchConversations(); }, []);
+  useEffect(() => {
+    setSelected(null);
+    setFullConv(null);
+    fetchConversations();
+  }, [bizId]);
 
   const handleFilterChange = (f) => {
     setFilter(f);
@@ -817,7 +825,7 @@ function Conversations() {
     setSelected(conv);
     setFullConv(null);
     setFullLoading(true);
-    fetch(`${API_BASE}/conversation/${conv.sender_id}`)
+    fetch(`${API_BASE}/conversation/${conv.sender_id}`, { headers: bizHeaders })
       .then(r => r.json())
       .then(data => {
         if (data.status === 'success') {
@@ -995,6 +1003,7 @@ function Conversations() {
             loading={fullLoading}
             onClose={() => { setSelected(null); setFullConv(null); }}
             onRefresh={() => handleSelectConversation(selected)}
+            bizId={bizId}
           />
         )}
       </div>
@@ -1002,7 +1011,8 @@ function Conversations() {
   );
 }
 
-function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh }) {
+function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh, bizId }) {
+  const bizHeaders = { 'X-Business-ID': bizId || '00000000-0000-0000-0000-000000000000' };
   const [replyText, setReplyText] = useState('');
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState(null);
@@ -1016,7 +1026,7 @@ function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh }) 
     try {
       const res = await fetch(`${API_BASE}/conversations/${conv.sender_id}/status?status=${status}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...bizHeaders },
         body: JSON.stringify({ reason: `Marked ${label} by agent` }),
       });
       const data = await res.json();
@@ -1055,7 +1065,7 @@ function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh }) 
     try {
       const res = await fetch(`${API_BASE}/conversation/send-reply`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...bizHeaders },
         body: JSON.stringify({ sender_id: conv.sender_id, message: replyText.trim() }),
       });
       const data = await res.json();
@@ -1253,7 +1263,9 @@ function LeadTemperatureDot({ temp }) {
   );
 }
 
-function Leads() {
+function Leads({ activeBusiness }) {
+  const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
+  const bizHeaders = { 'X-Business-ID': bizId };
   const [allLeads, setAllLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('All Leads');
@@ -1265,7 +1277,7 @@ function Leads() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`${API_BASE}/all-leads`)
+    fetch(`${API_BASE}/all-leads`, { headers: bizHeaders })
       .then(res => res.json())
       .then(data => {
         if (data.status === 'success') {
@@ -1276,7 +1288,7 @@ function Leads() {
       })
       .catch(err => console.error('Leads fetch error:', err))
       .finally(() => setLoading(false));
-  }, []);
+  }, [bizId]);
 
   const getLeadName = (lead) => {
     const name = lead.customer_name || lead.name || lead.instagram_username;
@@ -1431,14 +1443,15 @@ function Leads() {
 
         {/* Lead Detail Panel */}
         {selectedLead && (
-          <LeadDetailPanel lead={selectedLead} onClose={() => setSelectedLead(null)} getLeadName={getLeadName}/>
+          <LeadDetailPanel lead={selectedLead} onClose={() => setSelectedLead(null)} getLeadName={getLeadName} bizId={bizId}/>
         )}
       </div>
     </section>
   );
 }
 
-function LeadDetailPanel({ lead: initialLead, onClose, getLeadName }) {
+function LeadDetailPanel({ lead: initialLead, onClose, getLeadName, bizId }) {
+  const bizHeaders = { 'X-Business-ID': bizId || '00000000-0000-0000-0000-000000000000' };
   const [lead, setLead] = useState(initialLead);
   const [qualifying, setQualifying] = useState(false);
   const [qualifyDone, setQualifyDone] = useState(false);
@@ -1462,7 +1475,7 @@ function LeadDetailPanel({ lead: initialLead, onClose, getLeadName }) {
     if (!lead.id) return;
     setQualifying(true);
     try {
-      const res = await fetch(`${API_BASE}/leads/${lead.id}/qualify`, { method: 'PATCH' });
+      const res = await fetch(`${API_BASE}/leads/${lead.id}/qualify`, { method: 'PATCH', headers: bizHeaders });
       const data = await res.json();
       if (data.status === 'success') {
         setLead({ ...lead, is_qualified: true, status: 'qualified', lead_stage: 'qualified', temperature: 'hot' });
@@ -1478,7 +1491,7 @@ function LeadDetailPanel({ lead: initialLead, onClose, getLeadName }) {
     setSummaryLoading(true);
     setSummaryError('');
     try {
-      const res = await fetch(`${API_BASE}/leads/${lead.sender_id}/summary`);
+      const res = await fetch(`${API_BASE}/leads/${lead.sender_id}/summary`, { headers: bizHeaders });
       const data = await res.json();
       if (data.status === 'success') {
         setSummary(data);
@@ -1670,7 +1683,9 @@ const STAGE_COLORS = {
   running:   { bg: '#eff6ff', border: '#93c5fd', dot: '#2563eb', text: '#1e3a8a' },
 };
 
-function Debugger() {
+function Debugger({ activeBusiness }) {
+  const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
+  const bizHeaders = { 'X-Business-ID': bizId };
   const [message, setMessage] = useState('I want to learn SAP FICO. I am based in Mumbai. Please share fee details.');
   const [senderId, setSenderId] = useState('debug_test_user');
   const [running, setRunning] = useState(false);
@@ -1687,7 +1702,7 @@ function Debugger() {
     try {
       const res = await fetch(`${API_BASE}/debug/pipeline`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...bizHeaders },
         body: JSON.stringify({ message: message.trim(), sender_id: senderId.trim() || 'debug_test_user' }),
       });
       const data = await res.json();
@@ -1899,7 +1914,9 @@ function Debugger() {
   );
 }
 
-function Playground() {
+function Playground({ activeBusiness }) {
+  const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
+  const bizHeaders = { 'X-Business-ID': bizId };
   const [message, setMessage] = React.useState('');
   const [senderId, setSenderId] = React.useState('playground_test_user');
   const [loading, setLoading] = React.useState(false);
@@ -1911,14 +1928,14 @@ function Playground() {
 
   const loadHistory = () => {
     setHistoryLoading(true);
-    fetch(`${API_BASE}/playground/history?limit=20`)
+    fetch(`${API_BASE}/playground/history?limit=20`, { headers: bizHeaders })
       .then(r => r.json())
       .then(d => setHistory(d.history || []))
       .catch(() => {})
       .finally(() => setHistoryLoading(false));
   };
 
-  React.useEffect(() => { loadHistory(); }, []);
+  React.useEffect(() => { loadHistory(); }, [bizId]);
 
   const runTest = async () => {
     if (!message.trim()) return;
@@ -1929,7 +1946,7 @@ function Playground() {
     try {
       const res = await fetch(`${API_BASE}/playground/test-message`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...bizHeaders },
         body: JSON.stringify({ message: message.trim(), sender_id: senderId.trim() || 'playground_test_user' })
       });
       const data = await res.json();
@@ -2240,7 +2257,9 @@ const CATEGORY_LABELS = {
 
 const EMPTY_RULE = { rule_name: '', category: 'business_rule', trigger_keywords: '', response_template: '', priority: 10, notes: '' };
 
-function BusinessBrain() {
+function BusinessBrain({ activeBusiness }) {
+  const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
+  const bizHeaders = { 'X-Business-ID': bizId };
   const [rules, setRules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -2261,7 +2280,7 @@ function BusinessBrain() {
 
   const loadRules = () => {
     setLoading(true);
-    fetch(`${API_BASE}/brain/rules`)
+    fetch(`${API_BASE}/brain/rules`, { headers: bizHeaders })
       .then(r => r.json())
       .then(data => {
         if (data.status === 'success') setRules(data.rules || []);
@@ -2272,7 +2291,7 @@ function BusinessBrain() {
 
   const loadCampaigns = () => {
     setCampaignLoading(true);
-    fetch(`${API_BASE}/campaign-context?include_inactive=true`)
+    fetch(`${API_BASE}/campaign-context?include_inactive=true`, { headers: bizHeaders })
       .then(r => r.json())
       .then(data => {
         if (data.status === 'success') setCampaigns(data.contexts || []);
@@ -2281,7 +2300,7 @@ function BusinessBrain() {
       .finally(() => setCampaignLoading(false));
   };
 
-  useEffect(() => { loadRules(); loadCampaigns(); }, []);
+  useEffect(() => { loadRules(); loadCampaigns(); }, [bizId]);
 
   const openAddCampaign = () => {
     setEditingCampaign(null);
@@ -2318,11 +2337,11 @@ function BusinessBrain() {
     try {
       if (editingCampaign) {
         await fetch(`${API_BASE}/campaign-context/${editingCampaign.id}`, {
-          method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+          method: 'PATCH', headers: {'Content-Type':'application/json', ...bizHeaders}, body: JSON.stringify(payload)
         });
       } else {
         await fetch(`${API_BASE}/campaign-context`, {
-          method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+          method: 'POST', headers: {'Content-Type':'application/json', ...bizHeaders}, body: JSON.stringify(payload)
         });
       }
       setShowCampaignForm(false);
@@ -2332,12 +2351,12 @@ function BusinessBrain() {
   };
 
   const handleToggleCampaign = async (c) => {
-    await fetch(`${API_BASE}/campaign-context/${c.id}/toggle`, { method: 'PATCH' });
+    await fetch(`${API_BASE}/campaign-context/${c.id}/toggle`, { method: 'PATCH', headers: bizHeaders });
     loadCampaigns();
   };
 
   const handleDeleteCampaign = async (id) => {
-    await fetch(`${API_BASE}/campaign-context/${id}`, { method: 'DELETE' });
+    await fetch(`${API_BASE}/campaign-context/${id}`, { method: 'DELETE', headers: bizHeaders });
     setCampaignDeleteConfirm(null);
     loadCampaigns();
   };
@@ -2375,11 +2394,11 @@ function BusinessBrain() {
     try {
       if (editingRule) {
         await fetch(`${API_BASE}/brain/rules/${editingRule.id}`, {
-          method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+          method: 'PATCH', headers: {'Content-Type':'application/json', ...bizHeaders}, body: JSON.stringify(payload)
         });
       } else {
         await fetch(`${API_BASE}/brain/rules`, {
-          method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+          method: 'POST', headers: {'Content-Type':'application/json', ...bizHeaders}, body: JSON.stringify(payload)
         });
       }
       setShowForm(false);
@@ -2389,12 +2408,12 @@ function BusinessBrain() {
   };
 
   const handleToggle = async (rule) => {
-    await fetch(`${API_BASE}/brain/rules/${rule.id}/toggle`, { method: 'PATCH' });
+    await fetch(`${API_BASE}/brain/rules/${rule.id}/toggle`, { method: 'PATCH', headers: bizHeaders });
     loadRules();
   };
 
   const handleDelete = async (ruleId) => {
-    await fetch(`${API_BASE}/brain/rules/${ruleId}`, { method: 'DELETE' });
+    await fetch(`${API_BASE}/brain/rules/${ruleId}`, { method: 'DELETE', headers: bizHeaders });
     setDeleteConfirm(null);
     loadRules();
   };
@@ -2854,7 +2873,9 @@ const TIMELINE_ICONS = { start: '💬', lead: '🔥', qualified: '✅', activity
 const SENTIMENT_COLORS = { positive: '#10b981', neutral: '#64748b', negative: '#ef4444' };
 const URGENCY_COLORS = { high: '#ef4444', medium: '#f59e0b', low: '#10b981' };
 
-function Customer360() {
+function Customer360({ activeBusiness }) {
+  const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
+  const bizHeaders = { 'X-Business-ID': bizId };
   const [customers, setCustomers] = useState([]);
   const [searchQ, setSearchQ] = useState('');
   const [loadingList, setLoadingList] = useState(true);
@@ -2863,12 +2884,12 @@ function Customer360() {
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
 
-  useEffect(() => { fetchCustomers(''); }, []);
+  useEffect(() => { fetchCustomers(''); }, [bizId]);
 
   const fetchCustomers = async (q) => {
     setLoadingList(true);
     try {
-      const res = await fetch(`${API_BASE}/customers/search?q=${encodeURIComponent(q)}&limit=50`);
+      const res = await fetch(`${API_BASE}/customers/search?q=${encodeURIComponent(q)}&limit=50`, { headers: bizHeaders });
       const data = await res.json();
       setCustomers(data.customers || []);
     } catch (e) { setCustomers([]); }
@@ -2881,7 +2902,7 @@ function Customer360() {
     setShowHistory(false);
     setLoadingProfile(true);
     try {
-      const res = await fetch(`${API_BASE}/customer/${encodeURIComponent(sid)}`);
+      const res = await fetch(`${API_BASE}/customer/${encodeURIComponent(sid)}`, { headers: bizHeaders });
       const data = await res.json();
       setProfile(data);
     } catch (e) { setProfile({ status: 'error', message: 'Failed to load profile' }); }
@@ -3141,7 +3162,9 @@ function Customer360() {
   );
 }
 
-function Reports() {
+function Reports({ activeBusiness }) {
+  const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
+  const bizHeaders = { 'X-Business-ID': bizId };
   const [data, setData] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
@@ -3150,7 +3173,7 @@ function Reports() {
   const fetchReports = React.useCallback(() => {
     setLoading(true);
     setError('');
-    fetch(`${API_BASE}/reports?days=${days}`)
+    fetch(`${API_BASE}/reports?days=${days}`, { headers: bizHeaders })
       .then(r => r.json())
       .then(d => {
         if (d.status === 'success') setData(d);
@@ -3158,7 +3181,7 @@ function Reports() {
       })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
-  }, [days]);
+  }, [days, bizId]);
 
   React.useEffect(() => { fetchReports(); }, [fetchReports]);
 
@@ -3411,7 +3434,9 @@ function Reports() {
   );
 }
 
-function SettingsPage() {
+function SettingsPage({ activeBusiness }) {
+  const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
+  const bizHeaders = { 'X-Business-ID': bizId };
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
@@ -3438,7 +3463,7 @@ function SettingsPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`${API_BASE}/settings/`)
+    fetch(`${API_BASE}/settings/`, { headers: bizHeaders })
       .then(r => r.json())
       .then(d => {
         if (d.status === 'success') {
@@ -3457,13 +3482,13 @@ function SettingsPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [bizId]);
 
   const handleSave = (section, payload) => {
     setSaving(section);
     fetch(`${API_BASE}/settings/`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...bizHeaders },
       body: JSON.stringify(payload)
     })
       .then(r => r.json())
@@ -3757,7 +3782,9 @@ function SettingsPage() {
   );
 }
 
-function Automation() {
+function Automation({ activeBusiness }) {
+  const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
+  const bizHeaders = { 'X-Business-ID': bizId };
   const [rules, setRules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -3784,21 +3811,21 @@ function Automation() {
 
   const fetchRules = () => {
     setLoading(true);
-    fetch(`${API_BASE}/automation/rules`)
+    fetch(`${API_BASE}/automation/rules`, { headers: bizHeaders })
       .then(r => r.json())
       .then(d => { if (d.status === 'success') setRules(d.rules || []); })
       .catch(() => setRules([]))
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchRules(); }, []);
+  useEffect(() => { fetchRules(); }, [bizId]);
 
   const handleToggle = (rule) => {
     const newState = !rule.is_active;
     setRules(prev => prev.map(r => r.id === rule.id ? { ...r, is_active: newState } : r));
     fetch(`${API_BASE}/automation/rules/${rule.id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...bizHeaders },
       body: JSON.stringify({ is_active: newState })
     })
       .then(r => r.json())
@@ -3810,7 +3837,7 @@ function Automation() {
     setSendingRule(rule.id);
     fetch(`${API_BASE}/automation/preview-audience`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...bizHeaders },
       body: JSON.stringify({ target_group: rule.target_group, message_template: rule.message_template })
     })
       .then(r => r.json())
@@ -3826,7 +3853,7 @@ function Automation() {
     setSendingRule(sendConfirm.ruleId);
     fetch(`${API_BASE}/automation/send-bulk`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...bizHeaders },
       body: JSON.stringify({ target_group: sendConfirm.target, message_template: sendConfirm.message })
     })
       .then(r => r.json())
@@ -3840,7 +3867,7 @@ function Automation() {
 
   const handleDeleteRule = (ruleId, ruleName) => {
     if (!window.confirm(`Delete rule "${ruleName}"?`)) return;
-    fetch(`${API_BASE}/automation/rules/${ruleId}`, { method: 'DELETE' })
+    fetch(`${API_BASE}/automation/rules/${ruleId}`, { method: 'DELETE', headers: bizHeaders })
       .then(() => { setRules(prev => prev.filter(r => r.id !== ruleId)); showToast('Rule deleted'); })
       .catch(() => showToast('Delete failed'));
   };
@@ -3850,7 +3877,7 @@ function Automation() {
     setSaving(true);
     fetch(`${API_BASE}/automation/rules`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...bizHeaders },
       body: JSON.stringify({ ...newRule, is_active: false })
     })
       .then(r => r.json())
@@ -3870,7 +3897,7 @@ function Automation() {
     if (!bulkForm.message_template.trim()) { showToast('Enter a message first'); return; }
     fetch(`${API_BASE}/automation/preview-audience`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...bizHeaders },
       body: JSON.stringify(bulkForm)
     })
       .then(r => r.json())
@@ -3883,7 +3910,7 @@ function Automation() {
     setBulkSending(true);
     fetch(`${API_BASE}/automation/send-bulk`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...bizHeaders },
       body: JSON.stringify(bulkForm)
     })
       .then(r => r.json())
