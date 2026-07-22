@@ -1,4 +1,6 @@
-/* ── CSS Variables: Light Theme (default) ── */
+/* ══════════════════════════════════════════════════════
+   CSS VARIABLES — Light (default) and Dark themes
+   ══════════════════════════════════════════════════════ */
 :root {
   --bg-page:       #f4f7fb;
   --bg-card:       #ffffff;
@@ -10,8 +12,6 @@
   --bg-search:     #ffffff;
   --bg-tab:        #ffffff;
   --bg-ghost:      #ffffff;
-  --bg-tooltip:    #1e293b;
-
   --text-primary:  #0f172a;
   --text-secondary:#64748b;
   --text-muted:    #94a3b8;
@@ -19,22 +19,18 @@
   --text-nav:      #cbd5e1;
   --text-tab:      #334155;
   --text-th:       #475569;
-  --text-tooltip:  #ffffff;
-
   --border:        #e2e8f0;
   --border-card:   #e2e8f0;
   --border-input:  #e2e8f0;
   --border-tab:    #e2e8f0;
   --border-ghost:  #dbe5ff;
-
   --shadow-card:   0 6px 18px rgba(15,23,42,0.04);
   --accent:        #2563eb;
   --accent-light:  #dbeafe;
   --accent-text:   #1d4ed8;
 }
 
-/* ── CSS Variables: Dark Theme ── */
-[data-theme="dark"] {
+html[data-theme="dark"] {
   --bg-page:       #0d1117;
   --bg-card:       #161b22;
   --bg-sidebar:    linear-gradient(180deg,#0d1117,#010409);
@@ -45,8 +41,6 @@
   --bg-search:     #21262d;
   --bg-tab:        #21262d;
   --bg-ghost:      #21262d;
-  --bg-tooltip:    #f1f5f9;
-
   --text-primary:  #e6edf3;
   --text-secondary:#8b949e;
   --text-muted:    #6e7681;
@@ -54,22 +48,22 @@
   --text-nav:      #8b949e;
   --text-tab:      #c9d1d9;
   --text-th:       #8b949e;
-  --text-tooltip:  #0f172a;
-
   --border:        #30363d;
   --border-card:   #30363d;
   --border-input:  #30363d;
   --border-tab:    #30363d;
   --border-ghost:  #30363d;
-
   --shadow-card:   0 6px 18px rgba(0,0,0,0.3);
   --accent:        #2f81f7;
   --accent-light:  #1c2d4f;
   --accent-text:   #79c0ff;
 }
 
-/* ── Reset & Base ── */
+/* ══════════════════════════════════════════════════════
+   RESET & BASE
+   ══════════════════════════════════════════════════════ */
 * { box-sizing: border-box; }
+
 body {
   margin: 0;
   font-family: Inter, ui-sans-serif, system-ui, 'Segoe UI', Arial;
@@ -78,10 +72,23 @@ body {
   transition: background 0.25s, color 0.25s;
 }
 
-/* ── Layout ── */
+html[data-theme="dark"] body {
+  background: #0d1117 !important;
+  color: #e6edf3 !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   LAYOUT
+   ══════════════════════════════════════════════════════ */
 .app { display: flex; min-height: 100vh; }
 
-/* ── Sidebar ── */
+html[data-theme="dark"] .app {
+  background: #0d1117 !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   SIDEBAR
+   ══════════════════════════════════════════════════════ */
 aside {
   width: 250px;
   background: var(--bg-sidebar);
@@ -111,18 +118,94 @@ nav button.active, nav button:hover { background: var(--accent); color: white; }
 .profile { margin-top: auto; display: flex; gap: 10px; align-items: center; }
 .profile small { display: block; color: var(--text-muted); }
 
-/* ── Main content ── */
-main { flex: 1; padding: 0 22px 28px; background: var(--bg-page); transition: background 0.25s; }
+/* ══════════════════════════════════════════════════════
+   MAIN CONTENT
+   ══════════════════════════════════════════════════════ */
+main {
+  flex: 1;
+  padding: 0 22px 28px;
+  background: var(--bg-page);
+  transition: background 0.25s;
+  overflow-y: auto;
+}
 
-/* ── Topbar / Header ── */
+html[data-theme="dark"] main {
+  background: #0d1117 !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   HEADER / TOPBAR
+   ══════════════════════════════════════════════════════ */
 header {
-  height: 62px; display: flex; align-items: center;
-  justify-content: flex-end; gap: 18px;
+  height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
   background: var(--bg-header);
   border-bottom: 1px solid var(--border);
   padding: 0 4px;
   transition: background 0.25s, border-color 0.25s;
 }
+
+html[data-theme="dark"] header {
+  background: #161b22 !important;
+  border-bottom-color: #30363d !important;
+}
+
+html[data-theme="dark"] header span,
+html[data-theme="dark"] header div,
+html[data-theme="dark"] header input {
+  color: #e6edf3 !important;
+}
+
+html[data-theme="dark"] header input::placeholder {
+  color: #6e7681 !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   THEME TOGGLE BUTTON
+   ══════════════════════════════════════════════════════ */
+.theme-toggle {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--bg-ghost);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+.theme-toggle:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+html[data-theme="dark"] .theme-toggle {
+  background: #21262d !important;
+  border-color: #30363d !important;
+  color: #e6edf3 !important;
+}
+
+/* Header buttons should NOT inherit the global white-text button rule */
+header button {
+  background: transparent;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+header input {
+  color: #1e293b;
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+/* ══════════════════════════════════════════════════════
+   SEARCH BAR
+   ══════════════════════════════════════════════════════ */
 .search {
   display: flex; align-items: center; gap: 8px;
   background: var(--bg-search);
@@ -139,12 +222,16 @@ header {
 .wide { margin-left: auto; }
 .small { width: 30px; height: 30px; }
 
-/* ── Page title ── */
+/* ══════════════════════════════════════════════════════
+   PAGE TITLE
+   ══════════════════════════════════════════════════════ */
 .title { display: flex; justify-content: space-between; align-items: center; margin: 10px 0 18px; }
 .title h1 { margin: 0; font-size: 24px; color: var(--text-heading); }
 .title p { margin: 5px 0; color: var(--text-secondary); }
 
-/* ── Buttons ── */
+/* ══════════════════════════════════════════════════════
+   BUTTONS
+   ══════════════════════════════════════════════════════ */
 button {
   background: var(--accent); color: white;
   border: 0; border-radius: 8px; padding: 10px 14px;
@@ -155,36 +242,25 @@ button {
   color: var(--accent);
   border: 1px solid var(--border-ghost);
 }
-[data-theme="dark"] .ghost,
-[data-theme="dark"] .outline,
-[data-theme="dark"] .icon {
-  color: var(--accent);
-  border-color: var(--border);
+html[data-theme="dark"] .ghost,
+html[data-theme="dark"] .outline,
+html[data-theme="dark"] .icon {
+  background: #21262d !important;
+  color: var(--accent) !important;
+  border-color: #30363d !important;
 }
 
-/* ── Theme toggle button ── */
-.theme-toggle {
-  display: flex; align-items: center; gap: 6px;
-  background: var(--bg-ghost);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 5px 12px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-  white-space: nowrap;
-}
-.theme-toggle:hover { background: var(--accent); color: white; border-color: var(--accent); }
-
-/* ── Grids ── */
+/* ══════════════════════════════════════════════════════
+   GRIDS
+   ══════════════════════════════════════════════════════ */
 .grid4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
 .grid5 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
 .grid2 { display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; margin-top: 14px; }
 .grid3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
 
-/* ── Cards ── */
+/* ══════════════════════════════════════════════════════
+   CARDS
+   ══════════════════════════════════════════════════════ */
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border-card);
@@ -194,13 +270,34 @@ button {
 }
 .card h3 { margin: 0 0 14px; color: var(--text-heading); }
 
-/* ── Stat cards ── */
+html[data-theme="dark"] .card {
+  background: #161b22 !important;
+  border-color: #30363d !important;
+}
+
+html[data-theme="dark"] .card h3,
+html[data-theme="dark"] .card h2,
+html[data-theme="dark"] .card h4,
+html[data-theme="dark"] .card p,
+html[data-theme="dark"] .card span,
+html[data-theme="dark"] .card label {
+  color: #e6edf3 !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   STAT CARDS
+   ══════════════════════════════════════════════════════ */
 .stat p { margin: 0; color: var(--text-secondary); font-weight: 700; }
 .stat h2 { margin: 10px 0 4px; font-size: 28px; color: var(--text-heading); }
 .stat span { color: #10b981; font-weight: 800; }
 .stat small { color: var(--text-muted); display: block; }
 
-/* ── Tabs ── */
+html[data-theme="dark"] .stat h2 { color: #f0f6fc !important; }
+html[data-theme="dark"] .stat p { color: #8b949e !important; }
+
+/* ══════════════════════════════════════════════════════
+   TABS
+   ══════════════════════════════════════════════════════ */
 .tabs { display: flex; gap: 8px; margin-bottom: 15px; }
 .tabs button {
   background: var(--bg-tab);
@@ -210,7 +307,20 @@ button {
 }
 .tabs button.active { background: var(--accent); color: white; border-color: var(--accent); }
 
-/* ── Toolbar ── */
+html[data-theme="dark"] .tabs button {
+  background: #21262d !important;
+  color: #8b949e !important;
+  border-color: #30363d !important;
+}
+html[data-theme="dark"] .tabs button.active {
+  background: var(--accent) !important;
+  color: white !important;
+  border-color: var(--accent) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   TOOLBAR
+   ══════════════════════════════════════════════════════ */
 .toolbar { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
 .toolbar select, label input, label select, textarea {
   border: 1px solid var(--border-input);
@@ -221,14 +331,36 @@ button {
 }
 textarea { width: 100%; min-height: 110px; }
 
-/* ── Table ── */
+/* ══════════════════════════════════════════════════════
+   TABLE
+   ══════════════════════════════════════════════════════ */
 .table { overflow: auto; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 th, td { padding: 13px 14px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
 th { color: var(--text-th); background: var(--bg-table-head); font-size: 12px; }
 td { color: var(--text-primary); background: var(--bg-table-row); }
 
-/* ── Misc ── */
+html[data-theme="dark"] .table {
+  background: #161b22 !important;
+  border-color: #30363d !important;
+}
+html[data-theme="dark"] th {
+  background: #1c2128 !important;
+  color: #8b949e !important;
+  border-bottom-color: #30363d !important;
+}
+html[data-theme="dark"] td {
+  background: #161b22 !important;
+  color: #e6edf3 !important;
+  border-bottom-color: #21262d !important;
+}
+html[data-theme="dark"] tr:hover td {
+  background: #1c2128 !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   MISC COMPONENTS
+   ══════════════════════════════════════════════════════ */
 .name { display: flex; align-items: center; gap: 8px; font-weight: 700; }
 .mini { width: 26px; height: 26px; border-radius: 999px; background: #fde68a; display: inline-grid; place-items: center; }
 .badge { padding: 5px 9px; border-radius: 999px; font-size: 12px; font-weight: 800; background: var(--accent-light); color: var(--accent-text); }
@@ -239,28 +371,215 @@ td { color: var(--text-primary); background: var(--bg-table-row); }
 .manual-replied { background: #ede9fe; color: #7c3aed; }
 .blue { color: var(--accent); }
 
-/* ── Dark mode badge/status overrides ── */
-[data-theme="dark"] .hot { background: #3f1010; color: #f87171; }
-[data-theme="dark"] .warm { background: #3f2010; color: #fb923c; }
-[data-theme="dark"] .active,
-[data-theme="dark"] .ai-replied,
-[data-theme="dark"] .lead-detected { background: #0d2e1a; color: #4ade80; }
-[data-theme="dark"] .paused,
-[data-theme="dark"] .pending-reply { background: #2e2000; color: #fbbf24; }
-[data-theme="dark"] .manual-replied { background: #1e1040; color: #a78bfa; }
-[data-theme="dark"] .badge { background: var(--accent-light); color: var(--accent-text); }
-[data-theme="dark"] .mini { background: #3f2e00; color: #fde68a; }
+html[data-theme="dark"] .name { color: #e6edf3 !important; }
+html[data-theme="dark"] .mini { background: #3f2e00 !important; color: #fde68a !important; }
+html[data-theme="dark"] .badge { background: var(--accent-light) !important; color: var(--accent-text) !important; }
+html[data-theme="dark"] .hot { background: #3f1010 !important; color: #f87171 !important; }
+html[data-theme="dark"] .warm { background: #3f2010 !important; color: #fb923c !important; }
+html[data-theme="dark"] .active,
+html[data-theme="dark"] .ai-replied,
+html[data-theme="dark"] .lead-detected { background: #0d2e1a !important; color: #4ade80 !important; }
+html[data-theme="dark"] .paused,
+html[data-theme="dark"] .pending-reply { background: #2e2000 !important; color: #fbbf24 !important; }
+html[data-theme="dark"] .manual-replied { background: #1e1040 !important; color: #a78bfa !important; }
 
-/* ── Charts / recharts ── */
-[data-theme="dark"] .recharts-cartesian-axis-tick text { fill: #8b949e; }
-[data-theme="dark"] .recharts-tooltip-wrapper { filter: brightness(0.9); }
+/* ══════════════════════════════════════════════════════
+   FORMS & INPUTS
+   ══════════════════════════════════════════════════════ */
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  background: #21262d !important;
+  color: #e6edf3 !important;
+  border-color: #30363d !important;
+}
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder { color: #6e7681 !important; }
+html[data-theme="dark"] select option {
+  background: #21262d !important;
+  color: #e6edf3 !important;
+}
 
-/* ── Pie chart ── */
+/* ══════════════════════════════════════════════════════
+   ALL TEXT ELEMENTS IN DARK MODE — with !important
+   to override React inline styles
+   ══════════════════════════════════════════════════════ */
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] h5,
+html[data-theme="dark"] h6 {
+  color: #f0f6fc !important;
+}
+
+html[data-theme="dark"] p {
+  color: #c9d1d9 !important;
+}
+
+html[data-theme="dark"] label {
+  color: #8b949e !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   FORCE LIGHT TEXT ON ALL MAIN CONTENT IN DARK MODE
+   Uses !important to override React inline styles
+   ══════════════════════════════════════════════════════ */
+html[data-theme="dark"] main div,
+html[data-theme="dark"] main span,
+html[data-theme="dark"] main p,
+html[data-theme="dark"] main li,
+html[data-theme="dark"] main label,
+html[data-theme="dark"] main h1,
+html[data-theme="dark"] main h2,
+html[data-theme="dark"] main h3,
+html[data-theme="dark"] main h4,
+html[data-theme="dark"] main h5 {
+  color: #e6edf3 !important;
+}
+
+/* Table cells override */
+html[data-theme="dark"] main td,
+html[data-theme="dark"] main th {
+  color: #e6edf3 !important;
+}
+
+/* Secondary/muted text — slightly dimmer */
+html[data-theme="dark"] main small {
+  color: #8b949e !important;
+}
+
+/* Preserve coloured status badges — these use className so they win */
+html[data-theme="dark"] main .hot { color: #f87171 !important; }
+html[data-theme="dark"] main .warm { color: #fb923c !important; }
+html[data-theme="dark"] main .active,
+html[data-theme="dark"] main .ai-replied,
+html[data-theme="dark"] main .lead-detected { color: #4ade80 !important; }
+html[data-theme="dark"] main .paused,
+html[data-theme="dark"] main .pending-reply { color: #fbbf24 !important; }
+html[data-theme="dark"] main .manual-replied { color: #a78bfa !important; }
+html[data-theme="dark"] main .badge { color: var(--accent-text) !important; }
+
+/* Preserve white text on accent/coloured buttons */
+html[data-theme="dark"] main button[style*="background:#"],
+html[data-theme="dark"] main button[style*="background: #"],
+html[data-theme="dark"] main button[style*="background:rgb"],
+html[data-theme="dark"] main button[style*="background: rgb"] {
+  color: white !important;
+}
+
+/* Restore accent colours for links */
+html[data-theme="dark"] main a { color: #58a6ff !important; }
+
+/* SVG icons inherit from parent */
+html[data-theme="dark"] main svg { color: inherit; }
+
+/* White/light backgrounds in dark mode */
+html[data-theme="dark"] main > div {
+  background: var(--bg-page);
+}
+
+/* Cards and panels */
+html[data-theme="dark"] .card,
+html[data-theme="dark"] [class*="panel"],
+html[data-theme="dark"] [class*="modal"] {
+  background: #161b22 !important;
+  border-color: #30363d !important;
+  color: #e6edf3 !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   INLINE-STYLE BACKGROUND OVERRIDES FOR DARK MODE
+   React renders style attributes WITHOUT spaces after colon,
+   e.g. background:'#f8fafc' → style="background:#f8fafc"
+   Both variants are listed to be safe.
+   ══════════════════════════════════════════════════════ */
+
+/* Light grey / white card backgrounds → dark card */
+html[data-theme="dark"] main div[style*="background:#fff"],
+html[data-theme="dark"] main div[style*="background: #fff"],
+html[data-theme="dark"] main div[style*="background:#ffffff"],
+html[data-theme="dark"] main div[style*="background: #ffffff"],
+html[data-theme="dark"] main div[style*="background:white"],
+html[data-theme="dark"] main div[style*="background: white"],
+html[data-theme="dark"] main div[style*="background:#f8fafc"],
+html[data-theme="dark"] main div[style*="background: #f8fafc"],
+html[data-theme="dark"] main div[style*="background:#fafafa"],
+html[data-theme="dark"] main div[style*="background: #fafafa"],
+html[data-theme="dark"] main div[style*="background:#f1f5f9"],
+html[data-theme="dark"] main div[style*="background: #f1f5f9"],
+html[data-theme="dark"] main div[style*="background:#f4f7fb"],
+html[data-theme="dark"] main div[style*="background: #f4f7fb"] {
+  background: #161b22 !important;
+  border-color: #30363d !important;
+}
+
+/* Very light tinted backgrounds (info/success/warning boxes) → dark tinted */
+html[data-theme="dark"] main div[style*="background:#eff6ff"],
+html[data-theme="dark"] main div[style*="background: #eff6ff"],
+html[data-theme="dark"] main div[style*="background:#f0f9ff"],
+html[data-theme="dark"] main div[style*="background: #f0f9ff"],
+html[data-theme="dark"] main div[style*="background:#dbeafe"],
+html[data-theme="dark"] main div[style*="background: #dbeafe"] {
+  background: #1c2d4f !important;
+  border-color: #2f4a7a !important;
+}
+
+html[data-theme="dark"] main div[style*="background:#f0fdf4"],
+html[data-theme="dark"] main div[style*="background: #f0fdf4"],
+html[data-theme="dark"] main div[style*="background:#dcfce7"],
+html[data-theme="dark"] main div[style*="background: #dcfce7"] {
+  background: #0d2e1a !important;
+  border-color: #1a4d2e !important;
+}
+
+html[data-theme="dark"] main div[style*="background:#fffbeb"],
+html[data-theme="dark"] main div[style*="background: #fffbeb"],
+html[data-theme="dark"] main div[style*="background:#fef3c7"],
+html[data-theme="dark"] main div[style*="background: #fef3c7"] {
+  background: #2e2000 !important;
+  border-color: #4a3500 !important;
+}
+
+html[data-theme="dark"] main div[style*="background:#fef2f2"],
+html[data-theme="dark"] main div[style*="background: #fef2f2"],
+html[data-theme="dark"] main div[style*="background:#fee2e2"],
+html[data-theme="dark"] main div[style*="background: #fee2e2"] {
+  background: #3f1010 !important;
+  border-color: #6b1a1a !important;
+}
+
+html[data-theme="dark"] main div[style*="background:#f3f0ff"],
+html[data-theme="dark"] main div[style*="background: #f3f0ff"],
+html[data-theme="dark"] main div[style*="background:#f5f3ff"],
+html[data-theme="dark"] main div[style*="background: #f5f3ff"],
+html[data-theme="dark"] main div[style*="background:#ede9fe"],
+html[data-theme="dark"] main div[style*="background: #ede9fe"] {
+  background: #1e1040 !important;
+  border-color: #3b2080 !important;
+}
+
+/* Dark navy backgrounds used in some hero sections — keep dark but ensure text is light */
+html[data-theme="dark"] main div[style*="background:#0f172a"],
+html[data-theme="dark"] main div[style*="background: #0f172a"],
+html[data-theme="dark"] main div[style*="background:#1e293b"],
+html[data-theme="dark"] main div[style*="background: #1e293b"] {
+  background: #0d1117 !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   CHARTS
+   ══════════════════════════════════════════════════════ */
+html[data-theme="dark"] .recharts-cartesian-axis-tick text { fill: #8b949e; }
+html[data-theme="dark"] .recharts-tooltip-wrapper { filter: brightness(0.9); }
+
+/* ══════════════════════════════════════════════════════
+   MISC COMPONENTS
+   ══════════════════════════════════════════════════════ */
 .pie { display: grid; grid-template-columns: 1fr 1fr; align-items: center; }
 .pie p { color: var(--text-secondary); }
 .pie i { display: inline-block; width: 10px; height: 10px; border-radius: 999px; }
 
-/* ── Debug / playground ── */
 .debug-input { display: flex; gap: 10px; margin-bottom: 14px; }
 .debug-input input { flex: 1; border: 1px solid var(--border-input); border-radius: 8px; padding: 12px; background: var(--bg-input); color: var(--text-primary); }
 .stage { display: grid; grid-template-columns: 1fr 110px 70px; border-bottom: 1px solid var(--border); padding: 10px 0; }
@@ -269,312 +588,32 @@ td { color: var(--text-primary); background: var(--bg-table-row); }
 .kv span { color: var(--text-secondary); }
 .reply { background: var(--accent-light); border: 1px solid var(--border-ghost); border-radius: 10px; padding: 14px; margin-top: 12px; line-height: 1.5; color: var(--text-primary); }
 
-/* ── Customer 360 ── */
 .customer { display: grid; grid-template-columns: 340px 1fr; gap: 14px; }
 .profileBig { text-align: center; }
 .big { width: 82px; height: 82px; margin: auto; font-size: 30px; }
 .chips { display: flex; gap: 8px; flex-wrap: wrap; }
 .chips span { background: var(--accent-light); color: var(--accent-text); border: 1px solid var(--border-ghost); border-radius: 999px; padding: 7px 10px; font-weight: 700; font-size: 12px; }
 
-/* ── Settings ── */
 .settings { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .settings label { display: grid; gap: 7px; margin-bottom: 14px; color: var(--text-secondary); font-weight: 700; }
 
-/* ── Instagram badge ── */
 .ig { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: #fce7f3; color: #db2777; font-size: 11px; font-weight: 900; }
-[data-theme="dark"] .ig { background: #3d1020; color: #f472b6; }
+html[data-theme="dark"] .ig { background: #3d1020 !important; color: #f472b6 !important; }
 
-/* ── Input / select dark mode ── */
-[data-theme="dark"] input,
-[data-theme="dark"] select,
-[data-theme="dark"] textarea {
-  background: var(--bg-input);
-  color: var(--text-primary);
-  border-color: var(--border-input);
-}
-[data-theme="dark"] input::placeholder,
-[data-theme="dark"] textarea::placeholder { color: var(--text-muted); }
+/* ══════════════════════════════════════════════════════
+   SCROLLBAR
+   ══════════════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-/* ── Scrollbar dark mode ── */
-[data-theme="dark"] ::-webkit-scrollbar { width: 6px; height: 6px; }
-[data-theme="dark"] ::-webkit-scrollbar-track { background: #161b22; }
-[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+html[data-theme="dark"] ::-webkit-scrollbar-track { background: #161b22; }
+html[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #30363d; }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   DARK MODE — COMPREHENSIVE INLINE STYLE OVERRIDES
-   These target all hardcoded hex colours used in inline JSX styles
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ── All generic divs, spans, sections with hardcoded dark text ── */
-[data-theme="dark"] section,
-[data-theme="dark"] div,
-[data-theme="dark"] span,
-[data-theme="dark"] p,
-[data-theme="dark"] label {
-  color: inherit;
-}
-
-/* ── White card backgrounds used inline ── */
-[data-theme="dark"] [style*="background:white"],
-[data-theme="dark"] [style*="background: white"],
-[data-theme="dark"] [style*="background:'white'"],
-[data-theme="dark"] [style*="background: '#ffffff'"],
-[data-theme="dark"] [style*="background:'#ffffff'"],
-[data-theme="dark"] [style*="background: #ffffff"],
-[data-theme="dark"] [style*="background:#ffffff"] {
-  background: #161b22 !important;
-}
-
-/* ── Light grey page backgrounds used inline ── */
-[data-theme="dark"] [style*="background:'#f8fafc'"],
-[data-theme="dark"] [style*="background: #f8fafc"],
-[data-theme="dark"] [style*="background:#f8fafc"],
-[data-theme="dark"] [style*="background:'#f1f5f9'"],
-[data-theme="dark"] [style*="background: #f1f5f9"],
-[data-theme="dark"] [style*="background:#f1f5f9"],
-[data-theme="dark"] [style*="background:'#f4f7fb'"],
-[data-theme="dark"] [style*="background: #f4f7fb"],
-[data-theme="dark"] [style*="background:#f4f7fb"] {
-  background: #1c2128 !important;
-}
-
-/* ── Dark text colours used inline ── */
-[data-theme="dark"] [style*="color:'#1e293b'"],
-[data-theme="dark"] [style*="color: #1e293b"],
-[data-theme="dark"] [style*="color:#1e293b"],
-[data-theme="dark"] [style*="color:'#0f172a'"],
-[data-theme="dark"] [style*="color: #0f172a"],
-[data-theme="dark"] [style*="color:#0f172a"],
-[data-theme="dark"] [style*="color:'#111827'"],
-[data-theme="dark"] [style*="color: #111827"],
-[data-theme="dark"] [style*="color:#111827"],
-[data-theme="dark"] [style*="color:'#374151'"],
-[data-theme="dark"] [style*="color: #374151"],
-[data-theme="dark"] [style*="color:#374151"] {
-  color: #e6edf3 !important;
-}
-
-/* ── Secondary/muted text colours used inline ── */
-[data-theme="dark"] [style*="color:'#64748b'"],
-[data-theme="dark"] [style*="color: #64748b"],
-[data-theme="dark"] [style*="color:#64748b"],
-[data-theme="dark"] [style*="color:'#475569'"],
-[data-theme="dark"] [style*="color: #475569"],
-[data-theme="dark"] [style*="color:#475569"],
-[data-theme="dark"] [style*="color:'#6b7280'"],
-[data-theme="dark"] [style*="color: #6b7280"],
-[data-theme="dark"] [style*="color:#6b7280"] {
-  color: #8b949e !important;
-}
-
-/* ── Very muted text ── */
-[data-theme="dark"] [style*="color:'#94a3b8'"],
-[data-theme="dark"] [style*="color: #94a3b8"],
-[data-theme="dark"] [style*="color:#94a3b8"],
-[data-theme="dark"] [style*="color:'#9ca3af'"],
-[data-theme="dark"] [style*="color: #9ca3af"],
-[data-theme="dark"] [style*="color:#9ca3af"],
-[data-theme="dark"] [style*="color:'#cbd5e1'"],
-[data-theme="dark"] [style*="color: #cbd5e1"],
-[data-theme="dark"] [style*="color:#cbd5e1"] {
-  color: #6e7681 !important;
-}
-
-/* ── Border colours used inline ── */
-[data-theme="dark"] [style*="border:'1px solid #e2e8f0'"],
-[data-theme="dark"] [style*="border: 1px solid #e2e8f0"],
-[data-theme="dark"] [style*="border:1px solid #e2e8f0"],
-[data-theme="dark"] [style*="borderColor:'#e2e8f0'"],
-[data-theme="dark"] [style*="borderColor: #e2e8f0"],
-[data-theme="dark"] [style*="borderColor:#e2e8f0"] {
-  border-color: #30363d !important;
-}
-
-/* ── Table header background used inline ── */
-[data-theme="dark"] [style*="background:'#f8fafc'"][style*="fontSize:12"],
-[data-theme="dark"] th[style*="background"] {
-  background: #1c2128 !important;
-  color: #8b949e !important;
-}
-
-/* ── Lead name column and table cell text ── */
-[data-theme="dark"] td {
-  color: #e6edf3 !important;
-  background: #161b22 !important;
-}
-[data-theme="dark"] tr:hover td {
-  background: #1c2128 !important;
-}
-
-/* ── Stat card numbers ── */
-[data-theme="dark"] [style*="fontSize:24"][style*="fontWeight:700"],
-[data-theme="dark"] [style*="fontSize:28"][style*="fontWeight:700"],
-[data-theme="dark"] [style*="fontSize:32"][style*="fontWeight:700"] {
-  color: #f0f6fc !important;
-}
-
-/* ── Section/page headers ── */
-[data-theme="dark"] [style*="fontSize:24"][style*="fontWeight:800"],
-[data-theme="dark"] [style*="fontSize:22"][style*="fontWeight:700"],
-[data-theme="dark"] [style*="fontSize:20"][style*="fontWeight:700"],
-[data-theme="dark"] [style*="fontSize:18"][style*="fontWeight:700"],
-[data-theme="dark"] [style*="fontSize:16"][style*="fontWeight:700"],
-[data-theme="dark"] [style*="fontSize:15"][style*="fontWeight:700"] {
-  color: #f0f6fc !important;
-}
-
-/* ── Inline card containers ── */
-[data-theme="dark"] [style*="borderRadius:10"][style*="background:white"],
-[data-theme="dark"] [style*="borderRadius:12"][style*="background:white"],
-[data-theme="dark"] [style*="borderRadius:8"][style*="background:white"] {
-  background: #161b22 !important;
-}
-
-/* ── Modal overlays ── */
-[data-theme="dark"] [style*="background:'rgba(0,0,0,0.4)'"],
-[data-theme="dark"] [style*="background: rgba(0,0,0,0.4)"] {
-  background: rgba(0,0,0,0.7) !important;
-}
-
-/* ── Modal inner panels ── */
-[data-theme="dark"] [style*="position:'fixed'"] > [style*="background:white"],
-[data-theme="dark"] [style*="position:'fixed'"] > [style*="background:'white'"] {
-  background: #161b22 !important;
-  color: #e6edf3 !important;
-}
-
-/* ── Light background info boxes ── */
-[data-theme="dark"] [style*="background:'#eff6ff'"],
-[data-theme="dark"] [style*="background: #eff6ff"],
-[data-theme="dark"] [style*="background:#eff6ff"] {
-  background: #1c2d4f !important;
-  color: #79c0ff !important;
-}
-
-[data-theme="dark"] [style*="background:'#f0fdf4'"],
-[data-theme="dark"] [style*="background: #f0fdf4"],
-[data-theme="dark"] [style*="background:#f0fdf4"] {
-  background: #0d2e1a !important;
-  color: #4ade80 !important;
-}
-
-[data-theme="dark"] [style*="background:'#fef3c7'"],
-[data-theme="dark"] [style*="background: #fef3c7"],
-[data-theme="dark"] [style*="background:#fef3c7"] {
-  background: #2e2000 !important;
-  color: #fbbf24 !important;
-}
-
-[data-theme="dark"] [style*="background:'#fee2e2'"],
-[data-theme="dark"] [style*="background: #fee2e2"],
-[data-theme="dark"] [style*="background:#fee2e2"] {
-  background: #3f1010 !important;
-  color: #f87171 !important;
-}
-
-[data-theme="dark"] [style*="background:'#fdf2f8'"],
-[data-theme="dark"] [style*="background:'#fce7f3'"],
-[data-theme="dark"] [style*="background: #fce7f3"] {
-  background: #3d1020 !important;
-  color: #f472b6 !important;
-}
-
-[data-theme="dark"] [style*="background:'#f5f3ff'"],
-[data-theme="dark"] [style*="background: #f5f3ff"],
-[data-theme="dark"] [style*="background:#f5f3ff"] {
-  background: #1e1040 !important;
-  color: #a78bfa !important;
-}
-
-/* ── Conversation chat panel ── */
-[data-theme="dark"] [style*="background:'#f0f4ff'"],
-[data-theme="dark"] [style*="background: #f0f4ff"],
-[data-theme="dark"] [style*="background:#f0f4ff"] {
-  background: #1c2d4f !important;
-}
-
-/* ── Inline monospace code blocks ── */
-[data-theme="dark"] [style*="fontFamily:'monospace'"],
-[data-theme="dark"] [style*="fontFamily: monospace"] {
-  background: #1c2128 !important;
-  color: #c9d1d9 !important;
-}
-
-/* ── Leads table name column ── */
-[data-theme="dark"] [style*="fontWeight:700"][style*="color:'#1e293b'"] {
-  color: #e6edf3 !important;
-}
-
-/* ── Conversation list items ── */
-[data-theme="dark"] [style*="background:'#fafbff'"],
-[data-theme="dark"] [style*="background: #fafbff"],
-[data-theme="dark"] [style*="background:#fafbff"] {
-  background: #1c2128 !important;
-}
-
-/* ── Lead detail panel ── */
-[data-theme="dark"] [style*="background:'#f8f9ff'"],
-[data-theme="dark"] [style*="background: #f8f9ff"],
-[data-theme="dark"] [style*="background:#f8f9ff"] {
-  background: #1c2128 !important;
-}
-
-/* ── AI summary card ── */
-[data-theme="dark"] [style*="background:'#f0f7ff'"],
-[data-theme="dark"] [style*="background: #f0f7ff"],
-[data-theme="dark"] [style*="background:#f0f7ff"] {
-  background: #1c2d4f !important;
-}
-
-/* ── Morning briefing banner ── */
-[data-theme="dark"] [style*="background:'linear-gradient(135deg,#1e3a8a"],
-[data-theme="dark"] [style*="background: linear-gradient(135deg, #1e3a8a"] {
-  background: linear-gradient(135deg, #0d1b3e, #0a1628) !important;
-}
-
-/* ── Topbar business switcher button ── */
-[data-theme="dark"] [style*="background:'#f0f4ff'"],
-[data-theme="dark"] [style*="background:'#eef2ff'"],
-[data-theme="dark"] [style*="background: #eef2ff"] {
-  background: #1c2d4f !important;
-  color: #79c0ff !important;
-}
-
-/* ── Inline border overrides for dark mode ── */
-[data-theme="dark"] [style*="border:'1px solid #bfdbfe'"],
-[data-theme="dark"] [style*="border: 1px solid #bfdbfe"],
-[data-theme="dark"] [style*="border:1px solid #bfdbfe"] {
-  border-color: #1c2d4f !important;
-}
-
-[data-theme="dark"] [style*="border:'1px solid #bbf7d0'"],
-[data-theme="dark"] [style*="border: 1px solid #bbf7d0"],
-[data-theme="dark"] [style*="border:1px solid #bbf7d0"] {
-  border-color: #0d2e1a !important;
-}
-
-/* ── Dividers ── */
-[data-theme="dark"] hr,
-[data-theme="dark"] [style*="borderBottom:'1px solid #e2e8f0'"],
-[data-theme="dark"] [style*="borderBottom: 1px solid #e2e8f0"],
-[data-theme="dark"] [style*="borderTop:'1px solid #e2e8f0'"],
-[data-theme="dark"] [style*="borderTop: 1px solid #e2e8f0"] {
-  border-color: #30363d !important;
-}
-
-/* ── Section group labels in sidebar ── */
-[data-theme="dark"] [style*="color:'#94a3b8'"][style*="fontSize:10"],
-[data-theme="dark"] [style*="color:'#94a3b8'"][style*="fontSize:11"] {
-  color: #6e7681 !important;
-}
-
-/* ── Inline background for active nav items ── */
-[data-theme="dark"] [style*="background:'rgba(255,255,255,0.1)'"],
-[data-theme="dark"] [style*="background: rgba(255,255,255,0.1)"] {
-  background: rgba(255,255,255,0.08) !important;
-}
-
-/* ── Responsive ── */
+/* ══════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════ */
 @media(max-width:1000px){
   aside{width:86px}
   .brand b,.profile span,nav button{font-size:0}
