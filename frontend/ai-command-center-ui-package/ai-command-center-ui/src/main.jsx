@@ -224,16 +224,16 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notification
 
   return (
     <header style={{position:'relative'}}>
-      <div style={{display:'flex',alignItems:'center',gap:10,background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:10,padding:'6px 14px',width:320}}>
+      <div style={{display:'flex',alignItems:'center',gap:10,background:'var(--bg-input)',border:'1px solid var(--border)',borderRadius:10,padding:'6px 14px',width:320}}>
         <Search size={16} color="#94a3b8"/>
-        <input placeholder="Search anything..." style={{border:'none',background:'none',fontSize:13,color:'#1e293b',outline:'none',width:'100%'}}/>
+        <input placeholder="Search anything..." style={{border:'none',background:'none',fontSize:13,color:'var(--text-primary)',outline:'none',width:'100%'}}/>
       </div>
 
       {/* Business Switcher */}
       <div style={{position:'relative'}} ref={dropdownRef}>
         <button
           onClick={() => setShowSwitcher(p => !p)}
-          style={{display:'flex',alignItems:'center',gap:8,padding:'6px 12px',borderRadius:8,border:'1px solid #e2e8f0',background: showSwitcher ? '#f0f9ff' : 'white',cursor:'pointer',fontSize:13,fontWeight:500,color:'#1e293b',maxWidth:220,transition:'background 0.15s'}}
+          style={{display:'flex',alignItems:'center',gap:8,padding:'6px 12px',borderRadius:8,border:'1px solid var(--border)',background: showSwitcher ? 'var(--bg-tab)' : 'var(--bg-card)',cursor:'pointer',fontSize:13,fontWeight:500,color:'var(--text-primary)',maxWidth:220,transition:'background 0.15s'}}
         >
           <Building2 size={14} color="#3b82f6"/>
           <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:140}}>
