@@ -3118,25 +3118,25 @@ function Customer360({ activeBusiness }) {
                     <div style={{fontSize:'0.85em', fontWeight:700, color: URGENCY_COLORS[profile.ai_profile.urgency] || '#64748b'}}>{profile.ai_profile.urgency}</div>
                   </div>
                   {profile.ai_profile.key_facts?.length > 0 && (
-                    <div style={{gridColumn:'1/-1', padding:'10px 12px', background:'#fffbeb', border:'1px solid #fde68a', borderRadius:'8px'}}>
-                      <div style={{fontSize:'0.7em', color:'#92400e', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'6px'}}>Key Facts</div>
+                    <div style={{gridColumn:'1/-1', padding:'10px 12px', background:'#2e2000', border:'1px solid #f59e0b', borderRadius:'8px'}}>
+                      <div style={{fontSize:'0.7em', color:'#fde68a', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'6px'}}>Key Facts</div>
                       {profile.ai_profile.key_facts.map((f,i) => (
-                        <div key={i} style={{fontSize:'0.84em', color:'#78350f', marginBottom:'3px', display:'flex', gap:'6px'}}>
-                          <span style={{color:'#f59e0b', flexShrink:0}}>•</span><span>{f}</span>
+                        <div key={i} style={{fontSize:'0.84em', color:'#fde68a', marginBottom:'3px', display:'flex', gap:'6px'}}>
+                          <span style={{color:'#f59e0b', flexShrink:0}}>•</span><span style={{color:'#fde68a'}}>{f}</span>
                         </div>
                       ))}
                     </div>
                   )}
                   {profile.ai_profile.recommended_action && (
-                    <div style={{gridColumn:'1/-1', padding:'10px 12px', background:'#f0fdf4', border:'1px solid #86efac', borderRadius:'8px'}}>
-                      <div style={{fontSize:'0.7em', color:'#14532d', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'4px'}}>Recommended Next Action</div>
-                      <div style={{fontSize:'0.88em', color:'#14532d', fontWeight:600}}>{profile.ai_profile.recommended_action}</div>
+                    <div style={{gridColumn:'1/-1', padding:'10px 12px', background:'#0d2e1a', border:'1px solid #4ade80', borderRadius:'8px'}}>
+                      <div style={{fontSize:'0.7em', color:'#4ade80', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'4px'}}>Recommended Next Action</div>
+                      <div style={{fontSize:'0.88em', color:'#4ade80', fontWeight:600}}>{profile.ai_profile.recommended_action}</div>
                     </div>
                   )}
                   {profile.ai_profile.follow_up_message && (
-                    <div style={{gridColumn:'1/-1', padding:'10px 12px', background:'#eff6ff', border:'1px solid #bfdbfe', borderRadius:'8px'}}>
-                      <div style={{fontSize:'0.7em', color:'#1e40af', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'4px'}}>Suggested Follow-up Message</div>
-                      <div style={{fontSize:'0.88em', color:'#1e3a8a', fontStyle:'italic', lineHeight:'1.5'}}>"{profile.ai_profile.follow_up_message}"</div>
+                    <div style={{gridColumn:'1/-1', padding:'10px 12px', background:'#1c2d4f', border:'1px solid #93c5fd', borderRadius:'8px'}}>
+                      <div style={{fontSize:'0.7em', color:'#93c5fd', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'4px'}}>Suggested Follow-up Message</div>
+                      <div style={{fontSize:'0.88em', color:'#93c5fd', fontStyle:'italic', lineHeight:'1.5'}}>"{ profile.ai_profile.follow_up_message}"</div>
                     </div>
                   )}
                 </div>
