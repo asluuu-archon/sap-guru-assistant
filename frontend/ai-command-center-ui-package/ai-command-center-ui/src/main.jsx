@@ -3801,9 +3801,220 @@ function SettingsPage({ activeBusiness }) {
   );
 }
 
+
+// ─── FOLLOWER DM PANEL ────────────────────────────────────────────────────────
+function FollowerDMPanel({ bizId, bizHeaders }) {
+  const [settings, setSettings] = useState({
+    enabled: true,
+    welcome_message: '',
+    whatsapp_group_link: '',
+    business_context: '',
+  });
+  const [conversations, setConversations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState('');
+  const [activeSubTab, setActiveSubTab] = useState('settings');
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3500); };
+
+  useEffect(() => {
+    // Load settings
+    fetch(`${API_BASE}/follower-dm/settings`, { headers: bizHeaders })
+      .then(r => r.json())
+      .then(d => { if (d.settings) setSettings(d.settings); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+    // Load conversations
+    fetch(`${API_BASE}/follower-dm/conversations`, { headers: bizHeaders })
+      .then(r => r.json())
+      .then(d => { if (d.conversations) setConversations(d.conversations); })
+      .catch(() => {});
+  }, [bizId]);
+
+  const handleSave = () => {
+    setSaving(true);
+    fetch(`${API_BASE}/follower-dm/settings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...bizHeaders },
+      body: JSON.stringify(settings),
+    })
+      .then(r => r.json())
+      .then(d => { showToast(d.message || 'Settings saved!'); })
+      .catch(() => showToast('Failed to save settings'))
+      .finally(() => setSaving(false));
+  };
+
+  const INTENT_COLORS = {
+    job_support: { bg: '#fef3c7', color: '#92400e', label: '💼 Job Support' },
+    training: { bg: '#dbeafe', color: '#1e40af', label: '🎓 Training' },
+    content: { bg: '#f0fdf4', color: '#166534', label: '📱 Content' },
+    greeting_only: { bg: '#f8fafc', color: '#64748b', label: '👋 Greeting' },
+    other: { bg: '#f5f3ff', color: '#5b21b6', label: '💬 Other' },
+  };
+  const STAGE_COLORS = {
+    awaiting_intent: { color: '#f59e0b', label: 'Awaiting Reply' },
+    awaiting_intent_retry: { color: '#f59e0b', label: 'Awaiting Reply' },
+    awaiting_contact: { color: '#3b82f6', label: 'Collecting Contact' },
+    engaged: { color: '#10b981', label: 'Engaged' },
+    completed: { color: '#6b7280', label: 'Completed' },
+  };
+
+  if (loading) return <div style={{textAlign:'center',padding:40,color:'#64748b'}}>Loading follower DM settings...</div>;
+
+  return (
+    <div>
+      {toast && (
+        <div style={{position:'fixed',bottom:24,right:24,background:'#1e293b',color:'white',padding:'12px 20px',borderRadius:10,fontSize:13,fontWeight:500,zIndex:9999,boxShadow:'0 4px 20px rgba(0,0,0,0.2)'}}>
+          {toast}
+        </div>
+      )}
+
+      {/* Sub-tabs */}
+      <div style={{display:'flex',gap:8,marginBottom:20}}>
+        {[
+          {id:'settings', label:'⚙️ Settings'},
+          {id:'conversations', label:`💬 Conversations (${conversations.length})`},
+        ].map(t => (
+          <button key={t.id} onClick={() => setActiveSubTab(t.id)}
+            style={{padding:'7px 16px',borderRadius:20,border:'1px solid',borderColor: activeSubTab===t.id ? '#2563eb' : '#e2e8f0',background: activeSubTab===t.id ? '#eff6ff' : 'white',color: activeSubTab===t.id ? '#2563eb' : '#64748b',fontWeight: activeSubTab===t.id ? 600 : 400,fontSize:13,cursor:'pointer'}}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {activeSubTab === 'settings' && (
+        <div style={{background:'white',borderRadius:12,border:'1px solid #e2e8f0',padding:24,display:'flex',flexDirection:'column',gap:20}}>
+          {/* Enable toggle */}
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 18px',background: settings.enabled ? '#f0fdf4' : '#f8fafc',borderRadius:10,border:`1px solid ${settings.enabled ? '#bbf7d0' : '#e2e8f0'}`}}>
+            <div>
+              <div style={{fontSize:15,fontWeight:700,color:'#1e293b'}}>New Follower Auto-DM</div>
+              <div style={{fontSize:12,color:'#64748b',marginTop:2}}>Automatically send a welcome DM when someone follows your Instagram page</div>
+            </div>
+            <button onClick={() => setSettings(p => ({...p, enabled: !p.enabled}))}
+              style={{background:'none',border:'none',cursor:'pointer',padding:0}}>
+              {settings.enabled
+                ? <span style={{fontSize:13,fontWeight:700,color:'#10b981',background:'#dcfce7',padding:'5px 14px',borderRadius:20}}>● Enabled</span>
+                : <span style={{fontSize:13,fontWeight:700,color:'#94a3b8',background:'#f1f5f9',padding:'5px 14px',borderRadius:20}}>○ Disabled</span>}
+            </button>
+          </div>
+
+          {/* Welcome message */}
+          <div>
+            <label style={{fontSize:12,fontWeight:700,color:'#475569',display:'block',marginBottom:6}}>WELCOME MESSAGE</label>
+            <div style={{fontSize:11,color:'#94a3b8',marginBottom:6}}>Use <code style={{background:'#f1f5f9',padding:'1px 5px',borderRadius:3}}>{'{name}'}</code> to personalise with the follower's first name</div>
+            <textarea
+              value={settings.welcome_message}
+              onChange={e => setSettings(p => ({...p, welcome_message: e.target.value}))}
+              rows={6}
+              style={{width:'100%',padding:'10px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,resize:'vertical',fontFamily:'inherit',lineHeight:1.6,boxSizing:'border-box'}}
+            />
+          </div>
+
+          {/* WhatsApp group link */}
+          <div>
+            <label style={{fontSize:12,fontWeight:700,color:'#475569',display:'block',marginBottom:6}}>WHATSAPP GROUP LINK</label>
+            <div style={{fontSize:11,color:'#94a3b8',marginBottom:6}}>Shared with followers who say they are looking for job support or placement help</div>
+            <input
+              value={settings.whatsapp_group_link}
+              onChange={e => setSettings(p => ({...p, whatsapp_group_link: e.target.value}))}
+              placeholder="https://chat.whatsapp.com/..."
+              style={{width:'100%',padding:'9px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,boxSizing:'border-box'}}
+            />
+          </div>
+
+          {/* Business context */}
+          <div>
+            <label style={{fontSize:12,fontWeight:700,color:'#475569',display:'block',marginBottom:6}}>BUSINESS CONTEXT (for AI replies)</label>
+            <div style={{fontSize:11,color:'#94a3b8',marginBottom:6}}>Helps the AI generate smarter, more relevant replies for your specific business</div>
+            <input
+              value={settings.business_context}
+              onChange={e => setSettings(p => ({...p, business_context: e.target.value}))}
+              placeholder="e.g. SAP ERP training, career guidance, and job placement support"
+              style={{width:'100%',padding:'9px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,boxSizing:'border-box'}}
+            />
+          </div>
+
+          {/* Intent flow summary */}
+          <div style={{background:'#f8fafc',borderRadius:10,padding:16,border:'1px solid #e2e8f0'}}>
+            <div style={{fontSize:13,fontWeight:700,color:'#1e293b',marginBottom:12}}>How the Smart DM Flow Works</div>
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              {[
+                { icon:'👋', label:'New follower detected', desc:'Welcome DM sent automatically with your message above' },
+                { icon:'💼', label:'They say: Job support / placement', desc:'AI sends your WhatsApp group link and encourages them to join' },
+                { icon:'🎓', label:'They say: Training / course interest', desc:'AI asks for their phone or email → saved as a lead in your CRM' },
+                { icon:'📱', label:'They say: Following for content', desc:'AI acknowledges and asks what topics they want to see' },
+                { icon:'💬', label:'Any other reply', desc:'AI generates a smart, contextual reply based on your business context' },
+              ].map((item, i) => (
+                <div key={i} style={{display:'flex',gap:10,alignItems:'flex-start'}}>
+                  <span style={{fontSize:16,minWidth:24}}>{item.icon}</span>
+                  <div>
+                    <span style={{fontSize:12,fontWeight:600,color:'#1e293b'}}>{item.label}</span>
+                    <span style={{fontSize:12,color:'#64748b'}}> — {item.desc}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{display:'flex',justifyContent:'flex-end'}}>
+            <button onClick={handleSave} disabled={saving}
+              style={{padding:'9px 24px',borderRadius:8,background: saving ? '#93c5fd' : '#2563eb',color:'white',border:'none',cursor: saving ? 'not-allowed' : 'pointer',fontSize:13,fontWeight:700}}>
+              {saving ? 'Saving...' : 'Save Settings'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {activeSubTab === 'conversations' && (
+        <div>
+          {conversations.length === 0 ? (
+            <div style={{background:'white',borderRadius:12,border:'1px solid #e2e8f0',padding:48,textAlign:'center'}}>
+              <div style={{fontSize:32,marginBottom:12}}>👋</div>
+              <div style={{fontSize:16,fontWeight:600,color:'#1e293b',marginBottom:6}}>No follower conversations yet</div>
+              <div style={{fontSize:13,color:'#64748b'}}>When new followers reply to your welcome DM, their conversations will appear here</div>
+            </div>
+          ) : (
+            <div style={{display:'flex',flexDirection:'column',gap:10}}>
+              {conversations.map(conv => {
+                const intentInfo = INTENT_COLORS[conv.intent] || { bg:'#f8fafc', color:'#64748b', label: conv.intent || 'Unknown' };
+                const stageInfo = STAGE_COLORS[conv.stage] || { color:'#64748b', label: conv.stage || 'Unknown' };
+                return (
+                  <div key={conv.id} style={{background:'white',borderRadius:10,border:'1px solid #e2e8f0',padding:'14px 18px',display:'flex',alignItems:'center',gap:14}}>
+                    <div style={{width:38,height:38,borderRadius:'50%',background:'#eff6ff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
+                      {conv.intent === 'job_support' ? '💼' : conv.intent === 'training' ? '🎓' : conv.intent === 'content' ? '📱' : '👋'}
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
+                        <span style={{fontSize:14,fontWeight:700,color:'#1e293b'}}>@{conv.username || conv.sender_id}</span>
+                        {conv.intent && (
+                          <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:intentInfo.bg,color:intentInfo.color}}>{intentInfo.label}</span>
+                        )}
+                        <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:'#f8fafc',color:stageInfo.color}}>● {stageInfo.label}</span>
+                        {conv.contact_captured && (
+                          <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:'#f0fdf4',color:'#166534'}}>✓ Lead Saved</span>
+                        )}
+                      </div>
+                      <div style={{fontSize:12,color:'#94a3b8'}}>
+                        {conv.name && <span>{conv.name} · </span>}
+                        {conv.updated_at ? new Date(conv.updated_at).toLocaleString() : ''}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Automation({ activeBusiness }) {
   const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
   const bizHeaders = { 'X-Business-ID': bizId };
+  const [activeTab, setActiveTab] = useState('rules');
   const [rules, setRules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -3948,18 +4159,36 @@ function Automation({ activeBusiness }) {
 
       <Title
         title="Automation"
-        sub="Manage automation rules and send bulk messages to your lead groups"
+        sub="Manage automation rules, bulk messages, and new follower DM flows"
         action={
-          <div style={{display:'flex',gap:8}}>
-            <button onClick={() => setShowBulkModal(true)} style={{padding:'7px 14px',borderRadius:6,background:'#10b981',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',gap:6}}>
-              <Zap size={14}/> Bulk Message
-            </button>
-            <button onClick={() => setShowAddModal(true)} style={{padding:'7px 14px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',gap:6}}>
-              <Plus size={14}/> New Rule
-            </button>
-          </div>
+          activeTab === 'rules' ? (
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={() => setShowBulkModal(true)} style={{padding:'7px 14px',borderRadius:6,background:'#10b981',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',gap:6}}>
+                <Zap size={14}/> Bulk Message
+              </button>
+              <button onClick={() => setShowAddModal(true)} style={{padding:'7px 14px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',gap:6}}>
+                <Plus size={14}/> New Rule
+              </button>
+            </div>
+          ) : null
         }
       />
+
+      {/* Tabs */}
+      <div style={{display:'flex',gap:4,marginBottom:20,borderBottom:'1px solid #e2e8f0',paddingBottom:0}}>
+        {[
+          {id:'rules', label:'⚡ Automation Rules'},
+          {id:'follower_dm', label:'👋 New Follower DM'},
+        ].map(tab => (
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+            style={{padding:'9px 18px',borderRadius:'8px 8px 0 0',border:'1px solid',borderBottom: activeTab===tab.id ? '1px solid white' : '1px solid #e2e8f0',background: activeTab===tab.id ? 'white' : '#f8fafc',color: activeTab===tab.id ? '#2563eb' : '#64748b',fontWeight: activeTab===tab.id ? 700 : 500,fontSize:13,cursor:'pointer',marginBottom:-1}}>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'follower_dm' && <FollowerDMPanel bizId={bizId} bizHeaders={bizHeaders}/>}
+      {activeTab === 'rules' && <>
 
       {/* Stats strip */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
@@ -4059,6 +4288,9 @@ function Automation({ activeBusiness }) {
           </div>
         </div>
       )}
+
+      </>
+      }
 
       {/* ── Add Rule Modal ── */}
       {showAddModal && (
