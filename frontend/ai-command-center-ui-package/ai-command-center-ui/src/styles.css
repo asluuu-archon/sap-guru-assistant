@@ -519,6 +519,23 @@ html[data-theme="dark"] main div[style*="background:#f4f7fb"],
 html[data-theme="dark"] main div[style*="background: #f4f7fb"] {
   background: #161b22 !important;
   border-color: #30363d !important;
+  color: #e6edf3 !important;
+}
+html[data-theme="dark"] main div[style*="background:#fff"] *,
+html[data-theme="dark"] main div[style*="background: #fff"] *,
+html[data-theme="dark"] main div[style*="background:#ffffff"] *,
+html[data-theme="dark"] main div[style*="background: #ffffff"] *,
+html[data-theme="dark"] main div[style*="background:white"] *,
+html[data-theme="dark"] main div[style*="background: white"] *,
+html[data-theme="dark"] main div[style*="background:#f8fafc"] *,
+html[data-theme="dark"] main div[style*="background: #f8fafc"] *,
+html[data-theme="dark"] main div[style*="background:#fafafa"] *,
+html[data-theme="dark"] main div[style*="background: #fafafa"] *,
+html[data-theme="dark"] main div[style*="background:#f1f5f9"] *,
+html[data-theme="dark"] main div[style*="background: #f1f5f9"] *,
+html[data-theme="dark"] main div[style*="background:#f4f7fb"] *,
+html[data-theme="dark"] main div[style*="background: #f4f7fb"] * {
+  color: #e6edf3 !important;
 }
 
 /* Very light tinted backgrounds (info/success/warning boxes) → dark tinted */

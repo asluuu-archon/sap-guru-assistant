@@ -148,7 +148,7 @@ function Sidebar({page,setPage,activeBusiness}) {
       <nav style={{flex:1,overflowY:'auto',padding:'10px 0'}}>
         {navGroups.map(group => (
           <div key={group.label} style={{marginBottom:16}}>
-            <div style={{padding:'0 16px',fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>
+            <div style={{padding:'0 16px',fontSize:10,fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>
               {group.label}
             </div>
             {group.items.map(([n,Icon])=>(
@@ -164,7 +164,7 @@ function Sidebar({page,setPage,activeBusiness}) {
         <div className="avatar" style={{width:32,height:32,borderRadius:8,background:'#3b82f6',color:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700}}>{initials}</div>
         <div style={{marginLeft:10,overflow:'hidden'}}>
           <div style={{fontSize:13,fontWeight:700,color:'#f8fafc',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{bizName}</div>
-          <div style={{fontSize:11,color:'#94a3b8'}}>Administrator</div>
+          <div style={{fontSize:11,color:'var(--text-muted)'}}>Administrator</div>
         </div>
       </div>
     </aside>
@@ -239,32 +239,32 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notification
           <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:140}}>
             {activeBusiness ? activeBusiness.name : 'Select Workspace'}
           </span>
-          <span style={{fontSize:10,color:'#94a3b8',marginLeft:2,display:'inline-block',transform: showSwitcher ? 'rotate(180deg)' : 'rotate(0deg)',transition:'transform 0.15s'}}>▾</span>
+          <span style={{fontSize:10,color:'var(--text-muted)',marginLeft:2,display:'inline-block',transform: showSwitcher ? 'rotate(180deg)' : 'rotate(0deg)',transition:'transform 0.15s'}}>▾</span>
         </button>
 
         {showSwitcher && (
-          <div style={{position:'absolute',top:'calc(100% + 6px)',right:0,background:'white',border:'1px solid #e2e8f0',borderRadius:10,boxShadow:'0 8px 30px rgba(0,0,0,0.15)',zIndex:9000,minWidth:260,overflow:'hidden'}}>
-            <div style={{padding:'10px 14px',fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.05em',borderBottom:'1px solid #f1f5f9'}}>Switch Workspace</div>
+          <div style={{position:'absolute',top:'calc(100% + 6px)',right:0,background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:10,boxShadow:'0 8px 30px rgba(0,0,0,0.15)',zIndex:9000,minWidth:260,overflow:'hidden'}}>
+            <div style={{padding:'10px 14px',fontSize:11,fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em',borderBottom:'1px solid var(--border)'}}>Switch Workspace</div>
             {businesses.length === 0 && (
-              <div style={{padding:'16px 14px',fontSize:13,color:'#94a3b8',textAlign:'center'}}>No workspaces yet</div>
+              <div style={{padding:'16px 14px',fontSize:13,color:'var(--text-muted)',textAlign:'center'}}>No workspaces yet</div>
             )}
             {businesses.map(biz => {
               const isSelected = activeBusiness && activeBusiness.id === biz.id;
               return (
                 <button key={biz.id} onClick={() => { onSwitch(biz); setShowSwitcher(false); }}
-                  style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'10px 14px',background: isSelected ? '#f0f9ff' : 'white',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'1px solid #f8fafc'}}>
-                  <div style={{width:30,height:30,borderRadius:7,background: isSelected ? '#3b82f6' : '#e2e8f0',display:'flex',alignItems:'center',justifyContent:'center',color: isSelected ? 'white' : '#64748b',fontSize:13,fontWeight:700,flexShrink:0}}>{(biz.name||'?')[0].toUpperCase()}</div>
+                  style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'10px 14px',background: isSelected ? 'var(--bg-tab)' : 'var(--bg-card)',border:'none',cursor:'pointer',textAlign:'left',borderBottom:'1px solid var(--border)'}}>
+                  <div style={{width:30,height:30,borderRadius:7,background: isSelected ? '#3b82f6' : 'var(--border)',display:'flex',alignItems:'center',justifyContent:'center',color: isSelected ? 'white' : '#64748b',fontSize:13,fontWeight:700,flexShrink:0}}>{(biz.name||'?')[0].toUpperCase()}</div>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:13,fontWeight:600,color:'#1e293b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{biz.name}</div>
-                    <div style={{fontSize:11,color:'#94a3b8'}}>{biz.industry || 'Business'}</div>
+                    <div style={{fontSize:13,fontWeight:600,color:'var(--text-primary)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{biz.name}</div>
+                    <div style={{fontSize:11,color:'var(--text-muted)'}}>{biz.industry || 'Business'}</div>
                   </div>
                   {isSelected && <CheckCircle size={15} color="#3b82f6"/>}
                 </button>
               );
             })}
-            <div style={{padding:'8px 14px',borderTop:'1px solid #f1f5f9'}}>
+            <div style={{padding:'8px 14px',borderTop:'1px solid var(--border)'}}>
               <button onClick={() => { setShowSwitcher(false); onNavigate('Businesses'); }}
-                style={{width:'100%',padding:'8px',borderRadius:6,background:'#f8fafc',border:'1px solid #e2e8f0',cursor:'pointer',fontSize:12,color:'#3b82f6',fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+                style={{width:'100%',padding:'8px',borderRadius:6,background:'var(--bg-input)',border:'1px solid var(--border)',cursor:'pointer',fontSize:12,color:'#3b82f6',fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
                 <Plus size={13}/> Add New Business
               </button>
             </div>
@@ -285,13 +285,13 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notification
         </button>
 
         {showNotifs && (
-          <div style={{position:'absolute',top:'calc(100% + 8px)',right:0,background:'white',border:'1px solid #e2e8f0',borderRadius:12,boxShadow:'0 12px 40px rgba(0,0,0,0.15)',zIndex:9000,width:360,maxHeight:480,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+          <div style={{position:'absolute',top:'calc(100% + 8px)',right:0,background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:12,boxShadow:'0 12px 40px rgba(0,0,0,0.15)',zIndex:9000,width:360,maxHeight:480,display:'flex',flexDirection:'column',overflow:'hidden'}}>
             {/* Header */}
-            <div style={{padding:'14px 16px',borderBottom:'1px solid #f1f5f9',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}}>
-              <div style={{fontSize:14,fontWeight:700,color:'#1e293b'}}>Notifications</div>
+            <div style={{padding:'14px 16px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}}>
+              <div style={{fontSize:14,fontWeight:700,color:'var(--text-primary)'}}>Notifications</div>
               <div style={{display:'flex',alignItems:'center',gap:8}}>
                 {notifications.length > 0 && (
-                  <span style={{fontSize:11,color:'#64748b'}}>{notifications.length} alerts</span>
+                  <span style={{fontSize:11,color:'var(--text-secondary)'}}>{notifications.length} alerts</span>
                 )}
               </div>
             </div>
@@ -300,8 +300,8 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notification
             <div style={{overflowY:'auto',flex:1}}>
               {notifications.length === 0 ? (
                 <div style={{padding:32,textAlign:'center'}}>
-                  <Bell size={28} color="#e2e8f0" style={{margin:'0 auto 10px',display:'block'}}/>
-                  <div style={{fontSize:13,color:'#94a3b8',fontWeight:500}}>All caught up!</div>
+                  <Bell size={28} color="var(--border)" style={{margin:'0 auto 10px',display:'block'}}/>
+                  <div style={{fontSize:13,color:'var(--text-muted)',fontWeight:500}}>All caught up!</div>
                   <div style={{fontSize:12,color:'#cbd5e1',marginTop:4}}>No new alerts right now</div>
                 </div>
               ) : (
@@ -310,17 +310,17 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notification
                   return (
                     <div key={notif.id}
                       onClick={() => { onNavigate(notif.target_page); setShowNotifsState(false); }}
-                      style={{display:'flex',gap:12,padding:'12px 16px',borderBottom:'1px solid #f8fafc',cursor:'pointer',background: notif.is_read ? 'white' : '#fafbff',transition:'background 0.1s'}}
+                      style={{display:'flex',gap:12,padding:'12px 16px',borderBottom:'1px solid var(--border)',cursor:'pointer',background: notif.is_read ? 'white' : '#fafbff',transition:'background 0.1s'}}
                       onMouseEnter={e => e.currentTarget.style.background='#f8fafc'}
                       onMouseLeave={e => e.currentTarget.style.background= notif.is_read ? 'white' : '#fafbff'}
                     >
                       <div style={{width:36,height:36,borderRadius:9,background:cfg.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>{cfg.icon}</div>
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:2}}>
-                          <span style={{fontSize:12,fontWeight:700,color:'#1e293b'}}>{notif.title}</span>
-                          <span style={{fontSize:10,color:'#94a3b8',flexShrink:0,marginLeft:8}}>{timeAgo(notif.time)}</span>
+                          <span style={{fontSize:12,fontWeight:700,color:'var(--text-primary)'}}>{notif.title}</span>
+                          <span style={{fontSize:10,color:'var(--text-muted)',flexShrink:0,marginLeft:8}}>{timeAgo(notif.time)}</span>
                         </div>
-                        <div style={{fontSize:12,color:'#64748b',lineHeight:1.4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{notif.message}</div>
+                        <div style={{fontSize:12,color:'var(--text-secondary)',lineHeight:1.4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{notif.message}</div>
                         <div style={{fontSize:11,color:cfg.color,fontWeight:600,marginTop:4}}>{notif.action} →</div>
                       </div>
                     </div>
@@ -331,9 +331,9 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notification
 
             {/* Footer */}
             {notifications.length > 0 && (
-              <div style={{padding:'10px 16px',borderTop:'1px solid #f1f5f9',flexShrink:0}}>
+              <div style={{padding:'10px 16px',borderTop:'1px solid var(--border)',flexShrink:0}}>
                 <button onClick={() => { onNavigate('Leads'); setShowNotifsState(false); }}
-                  style={{width:'100%',padding:'7px',borderRadius:6,background:'#f8fafc',border:'1px solid #e2e8f0',cursor:'pointer',fontSize:12,color:'#475569',fontWeight:500}}>
+                  style={{width:'100%',padding:'7px',borderRadius:6,background:'var(--bg-input)',border:'1px solid var(--border)',cursor:'pointer',fontSize:12,color:'var(--text-secondary)',fontWeight:500}}>
                   View All Leads
                 </button>
               </div>
@@ -354,7 +354,7 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notification
         }
       </button>
 
-      <HelpCircle size={18} style={{color:'#94a3b8',cursor:'pointer'}}/>
+      <HelpCircle size={18} style={{color:'var(--text-muted)',cursor:'pointer'}}/>
 
       {/* User avatar + logout menu */}
       <div style={{position:'relative'}} ref={userMenuRef}>
@@ -365,15 +365,15 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notification
           {authUser ? (authUser.name||authUser.email||'U')[0].toUpperCase() : 'A'}
         </button>
         {showUserMenu && (
-          <div style={{position:'absolute',top:'calc(100% + 8px)',right:0,background:'white',border:'1px solid #e2e8f0',borderRadius:10,boxShadow:'0 8px 30px rgba(0,0,0,0.15)',zIndex:9000,minWidth:220,overflow:'hidden'}}>
-            <div style={{padding:'12px 16px',borderBottom:'1px solid #f1f5f9'}}>
-              <div style={{fontSize:13,fontWeight:700,color:'#1e293b'}}>{authUser?.name || 'Admin'}</div>
-              <div style={{fontSize:11,color:'#94a3b8',marginTop:2}}>{authUser?.email || ''}</div>
+          <div style={{position:'absolute',top:'calc(100% + 8px)',right:0,background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:10,boxShadow:'0 8px 30px rgba(0,0,0,0.15)',zIndex:9000,minWidth:220,overflow:'hidden'}}>
+            <div style={{padding:'12px 16px',borderBottom:'1px solid var(--border)'}}>
+              <div style={{fontSize:13,fontWeight:700,color:'var(--text-primary)'}}>{authUser?.name || 'Admin'}</div>
+              <div style={{fontSize:11,color:'var(--text-muted)',marginTop:2}}>{authUser?.email || ''}</div>
               {authUser?.role && <div style={{fontSize:10,padding:'2px 7px',borderRadius:8,background:'#eff6ff',color:'#3b82f6',fontWeight:600,display:'inline-block',marginTop:4}}>{authUser.role}</div>}
             </div>
             <button
               onClick={() => { setShowUserMenu(false); onLogout(); }}
-              style={{width:'100%',padding:'11px 16px',background:'white',border:'none',cursor:'pointer',fontSize:13,color:'#ef4444',fontWeight:600,display:'flex',alignItems:'center',gap:8,transition:'background 0.1s'}}
+              style={{width:'100%',padding:'11px 16px',background:'var(--bg-card)',border:'none',cursor:'pointer',fontSize:13,color:'#ef4444',fontWeight:600,display:'flex',alignItems:'center',gap:8,transition:'background 0.1s'}}
               onMouseEnter={e => e.currentTarget.style.background='#fef2f2'}
               onMouseLeave={e => e.currentTarget.style.background='white'}
             >
@@ -396,7 +396,7 @@ class ErrorBoundary extends React.Component {
         <div style={{padding:'40px', textAlign:'center'}}>
           <div style={{fontSize:'2em', marginBottom:'12px'}}>⚠️</div>
           <h2 style={{color:'#ef4444', marginBottom:'8px', fontSize:'1.1em'}}>Something went wrong loading this page</h2>
-          <p style={{fontSize:'0.85em', color:'#64748b', marginBottom:'20px'}}>{this.state.error?.message || 'An unexpected error occurred.'}</p>
+          <p style={{fontSize:'0.85em', color:'var(--text-secondary)', marginBottom:'20px'}}>{this.state.error?.message || 'An unexpected error occurred.'}</p>
           <button onClick={() => this.setState({ hasError: false, error: null })} style={{padding:'8px 20px', fontSize:'0.88em', borderRadius:'8px', background:'#3b82f6', color:'white', border:'none', cursor:'pointer'}}>Try Again</button>
         </div>
       );
@@ -510,12 +510,12 @@ function Overview({ setPage, activeBusiness }) {
             )}
           </div>
           {briefingLoading ? (
-            <div style={{fontSize:13,color:'#94a3b8'}}>Generating your briefing...</div>
+            <div style={{fontSize:13,color:'var(--text-muted)'}}>Generating your briefing...</div>
           ) : briefing ? (
             <div style={{fontSize:13,color:'#cbd5e1',lineHeight:1.6,whiteSpace:'pre-wrap'}}>{briefing?.summary || briefing}</div>
           ) : (
             <div style={{display:'flex',alignItems:'center',gap:12}}>
-              <div style={{fontSize:13,color:'#64748b'}}>No briefing generated yet for today.</div>
+              <div style={{fontSize:13,color:'var(--text-secondary)'}}>No briefing generated yet for today.</div>
               <button onClick={fetchBriefing} style={{fontSize:12,padding:'4px 12px',borderRadius:6,background:'rgba(251,191,36,0.15)',border:'1px solid rgba(251,191,36,0.3)',color:'#fbbf24',cursor:'pointer',fontWeight:600}}>Generate Now</button>
             </div>
           )}
@@ -587,7 +587,7 @@ function Overview({ setPage, activeBusiness }) {
             <div style={{width:'40px', height:'40px', borderRadius:'50%', background:'#ef4444', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontSize:'1.2em'}}>🔥</div>
             <div>
               <div style={{fontWeight:700, color:'#f8fafc'}}>Attention Required</div>
-              <div style={{fontSize:'0.85em', color:'#94a3b8'}}>You have {s.hot_leads} hot leads and {s.needs_human} messages waiting for manual reply.</div>
+              <div style={{fontSize:'0.85em', color:'var(--text-muted)'}}>You have {s.hot_leads} hot leads and {s.needs_human} messages waiting for manual reply.</div>
             </div>
           </div>
           <button onClick={() => setPage('Hot Lead Queue')} style={{background:'#ef4444', color:'white', border:'none', padding:'8px 16px', borderRadius:'8px', fontWeight:600, cursor:'pointer'}}>Open Action Queue</button>
@@ -605,16 +605,16 @@ function Overview({ setPage, activeBusiness }) {
                 <YAxis tick={{fontSize:11, fill:'#64748b'}}/>
                 <Tooltip
                   contentStyle={{background:'#1e293b', border:'1px solid #334155', borderRadius:'8px', fontSize:'0.82em'}}
-                  labelStyle={{color:'#e2e8f0'}}
+                  labelStyle={{color:'var(--border)'}}
                 />
                 <Bar dataKey="leads" name="New Leads" fill="#2563eb" radius={[4,4,0,0]}/>
                 <Bar dataKey="conversations" name="Conversations" fill="#8b5cf6" radius={[4,4,0,0]}/>
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div style={{height:'220px', display:'flex', alignItems:'center', justifyContent:'center', color:'#475569'}}>Loading chart data...</div>
+            <div style={{height:'220px', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-secondary)'}}>Loading chart data...</div>
           )}
-          <div style={{display:'flex', gap:'16px', marginTop:'8px', fontSize:'0.78em', color:'#64748b'}}>
+          <div style={{display:'flex', gap:'16px', marginTop:'8px', fontSize:'0.78em', color:'var(--text-secondary)'}}>
             <span><i style={{display:'inline-block', width:'10px', height:'10px', borderRadius:'2px', background:'#2563eb', marginRight:'5px'}}/> New Leads</span>
             <span><i style={{display:'inline-block', width:'10px', height:'10px', borderRadius:'2px', background:'#8b5cf6', marginRight:'5px'}}/> Conversations</span>
           </div>
@@ -646,7 +646,7 @@ function Overview({ setPage, activeBusiness }) {
               </div>
             </div>
           ) : (
-            <div style={{height:'200px', display:'flex', alignItems:'center', justifyContent:'center', color:'#475569'}}>Loading...</div>
+            <div style={{height:'200px', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-secondary)'}}>Loading...</div>
           )}
         </Card>
       </div>
@@ -662,8 +662,8 @@ function Overview({ setPage, activeBusiness }) {
                 return (
                   <div key={i}>
                     <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.83em', marginBottom:'4px'}}>
-                      <span style={{color:'#e2e8f0'}}>{loc.label}</span>
-                      <span style={{color:'#64748b'}}>{loc.value} leads</span>
+                      <span style={{color:'var(--border)'}}>{loc.label}</span>
+                      <span style={{color:'var(--text-secondary)'}}>{loc.value} leads</span>
                     </div>
                     <div style={{background:'rgba(255,255,255,0.06)', borderRadius:'4px', height:'6px'}}>
                       <div style={{width:`${pct}%`, height:'6px', borderRadius:'4px', background:'#3b82f6'}}/>
@@ -672,7 +672,7 @@ function Overview({ setPage, activeBusiness }) {
                 );
               })}
             </div>
-          ) : <div style={{padding:'20px', textAlign:'center', color:'#475569', fontSize:'0.85em'}}>No location data yet</div>}
+          ) : <div style={{padding:'20px', textAlign:'center', color:'var(--text-secondary)', fontSize:'0.85em'}}>No location data yet</div>}
         </Card>
 
         <Card title="Lead Source Breakdown">
@@ -693,14 +693,14 @@ function Overview({ setPage, activeBusiness }) {
                   <div key={i} style={{display:'flex', justifyContent:'space-between', marginBottom:'8px', fontSize:'0.82em'}}>
                     <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
                       <div style={{width:'8px', height:'8px', borderRadius:'50%', background:['#e1306c', '#25d366', '#3b82f6', '#8b5cf6'][i % 4]}}></div>
-                      <span style={{color:'#94a3b8'}}>{item.source.replace('_', ' ')}</span>
+                      <span style={{color:'var(--text-muted)'}}>{item.source.replace('_', ' ')}</span>
                     </div>
                     <span style={{fontWeight:700, color:'#f8fafc'}}>{item.percentage}%</span>
                   </div>
                 ))}
               </div>
             </div>
-          ) : <div style={{padding:'20px', textAlign:'center', color:'#475569', fontSize:'0.85em'}}>No source data yet</div>}
+          ) : <div style={{padding:'20px', textAlign:'center', color:'var(--text-secondary)', fontSize:'0.85em'}}>No source data yet</div>}
         </Card>
       </div>
 
@@ -708,7 +708,7 @@ function Overview({ setPage, activeBusiness }) {
       <div className="grid2" style={{marginTop:'20px'}}>
         {/* Top modules */}
         <Card title="Top Interested Products / Services">
-          <div style={{fontSize:'0.75em',color:'#64748b',marginBottom:8}}>What leads are most interested in (by volume)</div>
+          <div style={{fontSize:'0.75em',color:'var(--text-secondary)',marginBottom:8}}>What leads are most interested in (by volume)</div>
           {moduleBreakdown.length > 0 ? (
             <div style={{display:'flex', flexDirection:'column', gap:'10px', marginTop:'4px'}}>
               {moduleBreakdown.map((mod, i) => {
@@ -717,8 +717,8 @@ function Overview({ setPage, activeBusiness }) {
                 return (
                   <div key={i}>
                     <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.83em', marginBottom:'4px'}}>
-                      <span style={{color:'#e2e8f0',fontWeight:500}}>{mod.label || mod.module || 'Unknown'}</span>
-                      <span style={{color:'#94a3b8'}}>{mod.value} leads</span>
+                      <span style={{color:'var(--border)',fontWeight:500}}>{mod.label || mod.module || 'Unknown'}</span>
+                      <span style={{color:'var(--text-muted)'}}>{mod.value} leads</span>
                     </div>
                     <div style={{background:'rgba(255,255,255,0.06)', borderRadius:'4px', height:'6px'}}>
                       <div style={{width:`${pct}%`, height:'6px', borderRadius:'4px', background: colors[i % colors.length]}}/>
@@ -728,7 +728,7 @@ function Overview({ setPage, activeBusiness }) {
               })}
             </div>
           ) : (
-            <div style={{padding:'20px', textAlign:'center', color:'#475569', fontSize:'0.85em'}}>No product/service interest data yet</div>
+            <div style={{padding:'20px', textAlign:'center', color:'var(--text-secondary)', fontSize:'0.85em'}}>No product/service interest data yet</div>
           )}
         </Card>
 
@@ -739,8 +739,8 @@ function Overview({ setPage, activeBusiness }) {
               {needsHumanList.map((item, i) => (
                 <div key={i} style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 10px', background:'rgba(239,68,68,0.06)', borderRadius:'8px', borderLeft:'3px solid #ef4444'}}>
                   <div>
-                    <div style={{fontSize:'0.88em', color:'#e2e8f0', fontWeight:600}}>{item.name}</div>
-                    <div style={{fontSize:'0.75em', color:'#64748b', marginTop:'2px'}}>
+                    <div style={{fontSize:'0.88em', color:'var(--border)', fontWeight:600}}>{item.name}</div>
+                    <div style={{fontSize:'0.75em', color:'var(--text-secondary)', marginTop:'2px'}}>
                       {item.updated_at ? new Date(item.updated_at).toLocaleString() : '-'}
                     </div>
                   </div>
@@ -784,15 +784,15 @@ function Overview({ setPage, activeBusiness }) {
               heads={['Name', 'Module', 'Phone', 'Temperature', 'Stage', 'Last Active']}
               rows={recentLeads.map(lead => [
                 <Name name={lead.name}/>,
-                lead.interested_module || <span style={{color:'#475569'}}>—</span>,
-                lead.phone || <span style={{color:'#475569'}}>—</span>,
+                lead.interested_module || <span style={{color:'var(--text-secondary)'}}>—</span>,
+                lead.phone || <span style={{color:'var(--text-secondary)'}}>—</span>,
                 <LeadTemperatureDot temp={lead.temperature}/>,
                 <Badge text={STAGE_LABELS_OV[lead.lead_stage] || lead.lead_stage || 'New'}/>,
                 lead.updated_at ? new Date(lead.updated_at).toLocaleDateString() : '—',
               ])}
             />
           ) : (
-            <div style={{padding:'20px', textAlign:'center', color:'#475569'}}>Loading recent leads...</div>
+            <div style={{padding:'20px', textAlign:'center', color:'var(--text-secondary)'}}>Loading recent leads...</div>
           )}
         </Card>
       </div>
@@ -900,7 +900,7 @@ function Conversations({ activeBusiness }) {
 
       {/* Channel filter */}
       <div style={{display:'flex', gap:'6px', marginBottom:'10px', flexWrap:'wrap', alignItems:'center'}}>
-        <span style={{fontSize:'0.75em', color:'#64748b', marginRight:'4px', fontWeight:600}}>CHANNEL:</span>
+        <span style={{fontSize:'0.75em', color:'var(--text-secondary)', marginRight:'4px', fontWeight:600}}>CHANNEL:</span>
         {[['all','All Channels'],['instagram','📸 Instagram'],['whatsapp','💬 WhatsApp']].map(([val, label]) => (
           <button
             key={val}
@@ -964,9 +964,9 @@ function Conversations({ activeBusiness }) {
         {/* Inbox list */}
         <div style={{display:'flex', flexDirection:'column', gap:'6px'}}>
           {loading ? (
-            <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>Loading conversations...</div>
+            <div style={{padding:'40px', textAlign:'center', color:'var(--text-secondary)'}}>Loading conversations...</div>
           ) : conversations.length === 0 ? (
-            <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>No conversations found.</div>
+            <div style={{padding:'40px', textAlign:'center', color:'var(--text-secondary)'}}>No conversations found.</div>
           ) : filteredByChannel.map((conv, i) => {
             const isSelected = selected?.sender_id === conv.sender_id;
             const stateColor = conv.needs_human ? '#ef4444' : (CONV_STATE_COLORS[conv.conversation_state] || '#475569');
@@ -1000,7 +1000,7 @@ function Conversations({ activeBusiness }) {
                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'10px'}}>
                   <div style={{display:'flex', alignItems:'center', gap:'14px'}}>
                     <div style={{position:'relative'}}>
-                      <div style={{width:'46px', height:'46px', borderRadius:'14px', background: isSelected ? '#3b82f6' : 'rgba(255,255,255,0.07)', border:`1px solid ${isSelected ? '#3b82f6' : 'rgba(255,255,255,0.1)'}`, display:'flex', alignItems:'center', justifyContent:'center', color: isSelected ? '#fff' : '#e2e8f0', fontSize:'1.2em', fontWeight:800, flexShrink:0, transition:'all 0.2s'}}>
+                      <div style={{width:'46px', height:'46px', borderRadius:'14px', background: isSelected ? '#3b82f6' : 'rgba(255,255,255,0.07)', border:`1px solid ${isSelected ? '#3b82f6' : 'rgba(255,255,255,0.1)'}`, display:'flex', alignItems:'center', justifyContent:'center', color: isSelected ? '#fff' : 'var(--border)', fontSize:'1.2em', fontWeight:800, flexShrink:0, transition:'all 0.2s'}}>
                         {String(displayName || '?')[0].toUpperCase()}
                       </div>
                       <div style={{position:'absolute', bottom:'-2px', right:'-2px', width:'20px', height:'20px', borderRadius:'50%', background:'#0f172a', border:'2px solid #0f172a', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 4px rgba(0,0,0,0.3)'}}>
@@ -1012,17 +1012,17 @@ function Conversations({ activeBusiness }) {
                     </div>
                     <div>
                       <div style={{fontSize:'1.05em', fontWeight:700, color: isSelected ? '#fff' : '#f8fafc', transition:'all 0.2s', marginBottom:'3px'}}>{displayName}</div>
-                      <div style={{fontSize:'0.78em', color:'#94a3b8', display:'flex', alignItems:'center', gap:'8px'}}>
+                      <div style={{fontSize:'0.78em', color:'var(--text-muted)', display:'flex', alignItems:'center', gap:'8px'}}>
                         <span style={{color: (conv.channel || 'instagram') === 'whatsapp' ? '#22c55e' : '#ec4899', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', fontSize:'0.9em'}}>
                           {(conv.channel || 'instagram')}
                         </span>
-                        <span style={{color:'#334155'}}>•</span>
-                        <span style={{color:'#64748b'}}>{conv.message_count || 0} messages</span>
+                        <span style={{color:'var(--text-secondary)'}}>•</span>
+                        <span style={{color:'var(--text-secondary)'}}>{conv.message_count || 0} messages</span>
                       </div>
                     </div>
                   </div>
                   <div style={{textAlign:'right', flexShrink:0}}>
-                    <div style={{fontSize:'0.75em', color:'#475569', fontWeight:500, marginBottom:'5px'}}>
+                    <div style={{fontSize:'0.75em', color:'var(--text-secondary)', fontWeight:500, marginBottom:'5px'}}>
                       {conv.updated_at ? timeAgo(conv.updated_at) : '-'}
                     </div>
                     <span style={{fontSize:'0.72em', padding:'3px 9px', borderRadius:'12px', background:`${stateColor}20`, color:stateColor, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.02em'}}>
@@ -1032,7 +1032,7 @@ function Conversations({ activeBusiness }) {
                 </div>
                 <div style={{fontSize:'0.88em', color: isUserLast ? '#cbd5e1' : '#94a3b8', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', paddingLeft:'60px', lineHeight:'1.4'}}>
                   {isUserLast ? '' : <span style={{color:'#8b5cf6', fontWeight:700, marginRight:'6px'}}>AI:</span>}
-                  {String(lastMsg).slice(0, 100) || <span style={{fontStyle:'italic', color:'#475569'}}>No messages</span>}
+                  {String(lastMsg).slice(0, 100) || <span style={{fontStyle:'italic', color:'var(--text-secondary)'}}>No messages</span>}
                 </div>
               </div>
             );
@@ -1136,7 +1136,7 @@ function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh, bi
             {String(panelDisplayName || '?')[0].toUpperCase()}
           </div>
           <div>
-            <div style={{fontWeight:700, color:'#e2e8f0', fontSize:'0.95em'}}>{panelDisplayName}</div>
+            <div style={{fontWeight:700, color:'var(--border)', fontSize:'0.95em'}}>{panelDisplayName}</div>
             <div style={{fontSize:'0.75em', display:'flex', alignItems:'center', gap:'6px'}}>
               {isWhatsApp ? (
                             <span style={{fontSize:'0.85em', background:'#25d36620', color:'#25d366', padding:'1px 5px', borderRadius:'4px', fontWeight:700}}>WA</span>
@@ -1144,7 +1144,7 @@ function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh, bi
                             <span className="ig" style={{fontSize:'0.85em'}}>IG</span>
                           )}
               <span style={{color: stateColor, fontWeight:600}}>{stateLabel}</span>
-              <span style={{color:'#475569'}}>· {history.length} messages</span>
+              <span style={{color:'var(--text-secondary)'}}>· {history.length} messages</span>
             </div>
           </div>
         </div>
@@ -1177,12 +1177,12 @@ function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh, bi
               onClick={() => handleStatusAction('closed', 'Closed')}
               disabled={actionLoading === 'closed'}
               title="Mark conversation as resolved"
-              style={{padding:'4px 10px', fontSize:'0.78em', background:'rgba(100,116,139,0.15)', color:'#94a3b8', border:'1px solid rgba(100,116,139,0.3)', borderRadius:6, cursor:'pointer', fontWeight:600, display:'flex', alignItems:'center', gap:4}}
+              style={{padding:'4px 10px', fontSize:'0.78em', background:'rgba(100,116,139,0.15)', color:'var(--text-muted)', border:'1px solid rgba(100,116,139,0.3)', borderRadius:6, cursor:'pointer', fontWeight:600, display:'flex', alignItems:'center', gap:4}}
             >
               {actionLoading === 'closed' ? '...' : '✓ Close'}
             </button>
           )}
-          <button className="ghost" onClick={onRefresh} style={{padding:'4px 8px', fontSize:'0.8em', color:'#94a3b8'}}>↻</button>
+          <button className="ghost" onClick={onRefresh} style={{padding:'4px 8px', fontSize:'0.8em', color:'var(--text-muted)'}}>↻</button>
           <button className="outline" onClick={onClose} style={{padding:'4px 8px', fontSize:'0.8em'}}><X size={13}/></button>
         </div>
       </div>
@@ -1197,21 +1197,21 @@ function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh, bi
       {/* Chat history */}
       <div style={{flex:1, overflowY:'auto', padding:'16px', display:'flex', flexDirection:'column', gap:'10px'}}>
         {loading ? (
-          <div style={{textAlign:'center', color:'#64748b', padding:'40px'}}>Loading messages...</div>
+          <div style={{textAlign:'center', color:'var(--text-secondary)', padding:'40px'}}>Loading messages...</div>
         ) : history.length === 0 ? (
-          <div style={{textAlign:'center', color:'#64748b', padding:'40px', fontStyle:'italic'}}>No message history found.</div>
+          <div style={{textAlign:'center', color:'var(--text-secondary)', padding:'40px', fontStyle:'italic'}}>No message history found.</div>
         ) : history.map((item, i) => (
           <React.Fragment key={i}>
             {item.user && (
               <div style={{display:'flex', justifyContent:'flex-start'}}>
                 <div style={{
                   maxWidth:'78%', padding:'10px 13px',
-                  background:'#f1f5f9',
+                  background:'var(--bg-input)',
                   border:'1px solid #cbd5e1',
                   borderRadius:'16px 16px 16px 4px',
-                  fontSize:'0.88em', color:'#1e293b', lineHeight:'1.6',
+                  fontSize:'0.88em', color:'var(--text-primary)', lineHeight:'1.6',
                 }}>
-                  <div style={{fontSize:'0.75em', color:'#64748b', marginBottom:'4px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>Customer</div>
+                  <div style={{fontSize:'0.75em', color:'var(--text-secondary)', marginBottom:'4px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>Customer</div>
                   {item.user}
                 </div>
               </div>
@@ -1269,7 +1269,7 @@ function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh, bi
             )}
           </button>
         </div>
-        <div style={{fontSize:'0.72em', color:'#475569', marginTop:'5px', display:'flex', alignItems:'center', gap:8}}>
+        <div style={{fontSize:'0.72em', color:'var(--text-secondary)', marginTop:'5px', display:'flex', alignItems:'center', gap:8}}>
           <span style={{color:'#3b82f6', fontWeight:500}}>⚡ Live</span>
           <span>Ctrl+Enter to send · Sends directly to Instagram DM · Reply appears in their inbox instantly</span>
         </div>
@@ -1444,9 +1444,9 @@ function Leads({ activeBusiness }) {
         {/* Table */}
         <div className="table">
           {loading ? (
-            <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>Loading leads...</div>
+            <div style={{padding:'40px', textAlign:'center', color:'var(--text-secondary)'}}>Loading leads...</div>
           ) : filtered.length === 0 ? (
-            <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>
+            <div style={{padding:'40px', textAlign:'center', color:'var(--text-secondary)'}}>
               {searchQuery ? `No leads found for "${searchQuery}"` : 'No leads in this category yet.'}
             </div>
           ) : (
@@ -1471,12 +1471,12 @@ function Leads({ activeBusiness }) {
                   >
                     <td><Name name={getLeadName(lead)} source={lead.source}/></td>
                     <td style={{fontSize:'0.9em', color:'#f1f5f9', fontWeight:500}}>{lead.phone || lead.email || '-'}</td>
-                    <td style={{fontSize:'0.9em', color:'#94a3b8'}}>{lead.location || '-'}</td>
+                    <td style={{fontSize:'0.9em', color:'var(--text-muted)'}}>{lead.location || '-'}</td>
                     <td><span style={{fontSize:'0.78em', padding:'3px 9px', borderRadius:'10px', background:'rgba(139,92,246,0.15)', color:'#a78bfa', fontWeight:600}}>{lead.interested_module || '-'}</span></td>
                     <td><LeadTemperatureDot temp={lead.temperature}/></td>
-                    <td><span style={{fontSize:'0.8em', color:'#94a3b8', fontWeight:600, textTransform:'capitalize'}}>{(lead.lead_stage || '').replace('_', ' ')}</span></td>
+                    <td><span style={{fontSize:'0.8em', color:'var(--text-muted)', fontWeight:600, textTransform:'capitalize'}}>{(lead.lead_stage || '').replace('_', ' ')}</span></td>
                     <td><Badge text={lead.status || 'new'}/></td>
-                    <td style={{fontSize:'0.78em', color:'#475569'}}>{lead.updated_at ? timeAgo(lead.updated_at) : '-'}</td>
+                    <td style={{fontSize:'0.78em', color:'var(--text-secondary)'}}>{lead.updated_at ? timeAgo(lead.updated_at) : '-'}</td>
                     <td><ChevronRight size={14} color="#334155"/></td>
                   </tr>
                 ))}
@@ -1572,22 +1572,22 @@ function LeadDetailPanel({ lead: initialLead, onClose, getLeadName, bizId }) {
       {/* Contact info */}
       <div style={{display:'flex', flexDirection:'column', gap:'8px', marginBottom:'16px'}}>
         {lead.phone && (
-          <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'0.88em', color:'#94a3b8'}}>
+          <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'0.88em', color:'var(--text-muted)'}}>
             <Phone size={13}/> {lead.phone}
           </div>
         )}
         {lead.location && (
-          <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'0.88em', color:'#94a3b8'}}>
+          <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'0.88em', color:'var(--text-muted)'}}>
             <MapPin size={13}/> {lead.location}
           </div>
         )}
         {lead.interested_module && (
-          <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'0.88em', color:'#94a3b8'}}>
+          <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'0.88em', color:'var(--text-muted)'}}>
             <BookOpen size={13}/> {lead.interested_module}
           </div>
         )}
         {lead.updated_at && (
-          <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'0.88em', color:'#94a3b8'}}>
+          <div style={{display:'flex', alignItems:'center', gap:'8px', fontSize:'0.88em', color:'var(--text-muted)'}}>
             <Clock size={13}/> Last updated: {new Date(lead.updated_at).toLocaleString()}
           </div>
         )}
@@ -1604,7 +1604,7 @@ function LeadDetailPanel({ lead: initialLead, onClose, getLeadName, bizId }) {
 
       {/* Notes */}
       {lead.notes && (
-        <div style={{marginTop:'14px', padding:'10px 12px', background:'rgba(37,99,235,0.06)', borderRadius:'8px', fontSize:'0.82em', color:'#94a3b8', borderLeft:'3px solid #2563eb'}}>
+        <div style={{marginTop:'14px', padding:'10px 12px', background:'rgba(37,99,235,0.06)', borderRadius:'8px', fontSize:'0.82em', color:'var(--text-muted)', borderLeft:'3px solid #2563eb'}}>
           <b style={{color:'#cbd5e1', display:'block', marginBottom:'4px'}}>Notes</b>
           {lead.notes}
         </div>
@@ -1657,16 +1657,16 @@ function LeadDetailPanel({ lead: initialLead, onClose, getLeadName, bizId }) {
 
               {/* Intent + Stage + Urgency row */}
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'8px'}}>
-                <div style={{padding:'8px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', textAlign:'center'}}>
-                  <div style={{fontSize:'0.7em', color:'#64748b', marginBottom:'3px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>INTENT</div>
-                  <div style={{fontSize:'0.82em', color:'#1e293b', fontWeight:600}}>{summary.summary?.intent || '-'}</div>
+                <div style={{padding:'8px', background:'var(--bg-input)', border:'1px solid var(--border)', borderRadius:'8px', textAlign:'center'}}>
+                  <div style={{fontSize:'0.7em', color:'var(--text-secondary)', marginBottom:'3px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>INTENT</div>
+                  <div style={{fontSize:'0.82em', color:'var(--text-primary)', fontWeight:600}}>{summary.summary?.intent || '-'}</div>
                 </div>
-                <div style={{padding:'8px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', textAlign:'center'}}>
-                  <div style={{fontSize:'0.7em', color:'#64748b', marginBottom:'3px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>STAGE</div>
-                  <div style={{fontSize:'0.82em', color:'#1e293b', fontWeight:600}}>{summary.summary?.stage || '-'}</div>
+                <div style={{padding:'8px', background:'var(--bg-input)', border:'1px solid var(--border)', borderRadius:'8px', textAlign:'center'}}>
+                  <div style={{fontSize:'0.7em', color:'var(--text-secondary)', marginBottom:'3px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>STAGE</div>
+                  <div style={{fontSize:'0.82em', color:'var(--text-primary)', fontWeight:600}}>{summary.summary?.stage || '-'}</div>
                 </div>
-                <div style={{padding:'8px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', textAlign:'center'}}>
-                  <div style={{fontSize:'0.7em', color:'#64748b', marginBottom:'3px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>URGENCY</div>
+                <div style={{padding:'8px', background:'var(--bg-input)', border:'1px solid var(--border)', borderRadius:'8px', textAlign:'center'}}>
+                  <div style={{fontSize:'0.7em', color:'var(--text-secondary)', marginBottom:'3px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>URGENCY</div>
                   <div style={{fontSize:'0.82em', fontWeight:700, color: URGENCY_COLORS[summary.summary?.urgency] || '#475569', textTransform:'capitalize'}}>
                     {summary.summary?.urgency || '-'}
                   </div>
@@ -1675,11 +1675,11 @@ function LeadDetailPanel({ lead: initialLead, onClose, getLeadName, bizId }) {
 
               {/* Key facts */}
               {summary.summary?.key_facts?.length > 0 && (
-                <div style={{background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', padding:'10px 12px'}}>
-                  <div style={{fontSize:'0.75em', color:'#475569', marginBottom:'6px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em'}}>Key Facts</div>
+                <div style={{background:'var(--bg-input)', border:'1px solid var(--border)', borderRadius:'8px', padding:'10px 12px'}}>
+                  <div style={{fontSize:'0.75em', color:'var(--text-secondary)', marginBottom:'6px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em'}}>Key Facts</div>
                   <ul style={{margin:0, padding:'0 0 0 16px', display:'flex', flexDirection:'column', gap:'5px'}}>
                     {summary.summary.key_facts.map((fact, i) => (
-                      <li key={i} style={{fontSize:'0.85em', color:'#1e293b', lineHeight:'1.5'}}>{fact}</li>
+                      <li key={i} style={{fontSize:'0.85em', color:'var(--text-primary)', lineHeight:'1.5'}}>{fact}</li>
                     ))}
                   </ul>
                 </div>
@@ -1694,7 +1694,7 @@ function LeadDetailPanel({ lead: initialLead, onClose, getLeadName, bizId }) {
               )}
 
               {/* Meta */}
-              <div style={{fontSize:'0.75em', color:'#64748b', display:'flex', gap:'12px'}}>
+              <div style={{fontSize:'0.75em', color:'var(--text-secondary)', display:'flex', gap:'12px'}}>
                 <span>{summary.message_count} messages</span>
                 {summary.last_active && <span>Last active: {new Date(summary.last_active).toLocaleDateString()}</span>}
               </div>
@@ -1722,7 +1722,7 @@ const STAGE_ICONS = {
 
 const STAGE_COLORS = {
   completed: { bg: '#f0fdf4', border: '#86efac', dot: '#10b981', text: '#14532d' },
-  skipped:   { bg: '#f8fafc', border: '#e2e8f0', dot: '#94a3b8', text: '#64748b' },
+  skipped:   { bg: '#f8fafc', border: 'var(--border)', dot: '#94a3b8', text: '#64748b' },
   error:     { bg: '#fef2f2', border: '#fca5a5', dot: '#ef4444', text: '#7f1d1d' },
   running:   { bg: '#eff6ff', border: '#93c5fd', dot: '#2563eb', text: '#1e3a8a' },
 };
@@ -1772,7 +1772,7 @@ function Debugger({ activeBusiness }) {
         <div style={{display:'flex', flexDirection:'column', gap:'10px'}}>
           <div style={{display:'flex', gap:'10px'}}>
             <div style={{flex:1}}>
-              <label style={{fontSize:'0.78em', fontWeight:700, color:'#475569', textTransform:'uppercase', letterSpacing:'0.04em', display:'block', marginBottom:'5px'}}>Test Message</label>
+              <label style={{fontSize:'0.78em', fontWeight:700, color:'var(--text-secondary)', textTransform:'uppercase', letterSpacing:'0.04em', display:'block', marginBottom:'5px'}}>Test Message</label>
               <textarea
                 value={message}
                 onChange={e => setMessage(e.target.value)}
@@ -1782,14 +1782,14 @@ function Debugger({ activeBusiness }) {
               />
             </div>
             <div style={{width:'180px', flexShrink:0}}>
-              <label style={{fontSize:'0.78em', fontWeight:700, color:'#475569', textTransform:'uppercase', letterSpacing:'0.04em', display:'block', marginBottom:'5px'}}>Sender ID (optional)</label>
+              <label style={{fontSize:'0.78em', fontWeight:700, color:'var(--text-secondary)', textTransform:'uppercase', letterSpacing:'0.04em', display:'block', marginBottom:'5px'}}>Sender ID (optional)</label>
               <input
                 value={senderId}
                 onChange={e => setSenderId(e.target.value)}
                 style={{width:'100%', fontSize:'0.88em', boxSizing:'border-box'}}
                 placeholder="debug_test_user"
               />
-              <div style={{fontSize:'0.72em', color:'#94a3b8', marginTop:'4px'}}>Use a real sender_id to test with existing conversation history</div>
+              <div style={{fontSize:'0.72em', color:'var(--text-muted)', marginTop:'4px'}}>Use a real sender_id to test with existing conversation history</div>
             </div>
           </div>
           <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
@@ -1798,7 +1798,7 @@ function Debugger({ activeBusiness }) {
             </button>
             {result && (
               <div style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
-                <span style={{fontSize:'0.8em', padding:'4px 10px', borderRadius:'20px', background: result.is_lead ? '#fef3c7' : '#f1f5f9', color: result.is_lead ? '#92400e' : '#475569', fontWeight:600, border:`1px solid ${result.is_lead ? '#fcd34d' : '#e2e8f0'}`}}>
+                <span style={{fontSize:'0.8em', padding:'4px 10px', borderRadius:'20px', background: result.is_lead ? '#fef3c7' : '#f1f5f9', color: result.is_lead ? '#92400e' : '#475569', fontWeight:600, border:`1px solid ${result.is_lead ? '#fcd34d' : 'var(--border)'}`}}>
                   {result.is_lead ? '🔥 Lead Detected' : '👤 Not a Lead'}
                 </span>
                 <span style={{fontSize:'0.8em', padding:'4px 10px', borderRadius:'20px', background:'#eff6ff', color:'#1e40af', fontWeight:600, border:'1px solid #bfdbfe'}}>
@@ -1807,13 +1807,13 @@ function Debugger({ activeBusiness }) {
                 <span style={{fontSize:'0.8em', padding:'4px 10px', borderRadius:'20px', background: result.needs_human ? '#fef2f2' : '#f0fdf4', color: result.needs_human ? '#991b1b' : '#14532d', fontWeight:600, border:`1px solid ${result.needs_human ? '#fca5a5' : '#86efac'}`}}>
                   {result.needs_human ? '🚨 Needs Human' : '✅ AI Handled'}
                 </span>
-                <span style={{fontSize:'0.8em', padding:'4px 10px', borderRadius:'20px', background:'#f8fafc', color:'#475569', fontWeight:600, border:'1px solid #e2e8f0'}}>
+                <span style={{fontSize:'0.8em', padding:'4px 10px', borderRadius:'20px', background:'var(--bg-input)', color:'var(--text-secondary)', fontWeight:600, border:'1px solid var(--border)'}}>
                   ⏱ {result.total_ms}ms total
                 </span>
               </div>
             )}
           </div>
-          <div style={{fontSize:'0.75em', color:'#94a3b8'}}>Ctrl+Enter to run · This runs a test — it will NOT send any message to Instagram</div>
+          <div style={{fontSize:'0.75em', color:'var(--text-muted)'}}>Ctrl+Enter to run · This runs a test — it will NOT send any message to Instagram</div>
         </div>
       </Card>
 
@@ -1850,31 +1850,31 @@ function Debugger({ activeBusiness }) {
                       <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
                         <span style={{fontSize:'1em'}}>{STAGE_ICONS[stage.name] || '⚙️'}</span>
                         <div>
-                          <div style={{fontSize:'0.85em', fontWeight:700, color:'#1e293b'}}>{stage.name}</div>
-                          <div style={{fontSize:'0.75em', color:'#64748b', marginTop:'1px'}}>{stage.summary}</div>
+                          <div style={{fontSize:'0.85em', fontWeight:700, color:'var(--text-primary)'}}>{stage.name}</div>
+                          <div style={{fontSize:'0.75em', color:'var(--text-secondary)', marginTop:'1px'}}>{stage.summary}</div>
                         </div>
                       </div>
                       <div style={{textAlign:'right', flexShrink:0, marginLeft:'8px'}}>
                         <div style={{fontSize:'0.75em', fontWeight:700, color: colors.text}}>
                           {stage.status === 'skipped' ? 'SKIPPED' : `${stage.timing_ms}ms`}
                         </div>
-                        <div style={{fontSize:'0.65em', color:'#94a3b8'}}>{isExpanded ? '▲ hide' : '▼ details'}</div>
+                        <div style={{fontSize:'0.65em', color:'var(--text-muted)'}}>{isExpanded ? '▲ hide' : '▼ details'}</div>
                       </div>
                     </div>
                     {/* Timing bar */}
                     {stage.status !== 'skipped' && (
-                      <div style={{marginTop:'6px', height:'3px', background:'#e2e8f0', borderRadius:'2px'}}>
+                      <div style={{marginTop:'6px', height:'3px', background:'var(--border)', borderRadius:'2px'}}>
                         <div style={{height:'100%', width:`${timingPct}%`, background: colors.dot, borderRadius:'2px', transition:'width 0.4s ease'}} />
                       </div>
                     )}
                     {/* Expanded details */}
                     {isExpanded && (
-                      <div style={{marginTop:'10px', padding:'10px', background:'rgba(255,255,255,0.7)', borderRadius:'6px', border:'1px solid #e2e8f0'}}>
+                      <div style={{marginTop:'10px', padding:'10px', background:'rgba(255,255,255,0.7)', borderRadius:'6px', border:'1px solid var(--border)'}}>
                         {Object.entries(stage.details || {}).map(([k, v]) => (
                           <div key={k} style={{display:'flex', gap:'8px', marginBottom:'4px', fontSize:'0.8em'}}>
-                            <span style={{color:'#64748b', fontWeight:600, minWidth:'120px', flexShrink:0}}>{k.replace(/_/g, ' ')}:</span>
-                            <span style={{color:'#1e293b', wordBreak:'break-word'}}>
-                              {typeof v === 'boolean' ? (v ? '✅ Yes' : '❌ No') : (v === null || v === undefined || v === '') ? <span style={{color:'#94a3b8', fontStyle:'italic'}}>none</span> : String(v)}
+                            <span style={{color:'var(--text-secondary)', fontWeight:600, minWidth:'120px', flexShrink:0}}>{k.replace(/_/g, ' ')}:</span>
+                            <span style={{color:'var(--text-primary)', wordBreak:'break-word'}}>
+                              {typeof v === 'boolean' ? (v ? '✅ Yes' : '❌ No') : (v === null || v === undefined || v === '') ? <span style={{color:'var(--text-muted)', fontStyle:'italic'}}>none</span> : String(v)}
                             </span>
                           </div>
                         ))}
@@ -1897,12 +1897,12 @@ function Debugger({ activeBusiness }) {
                     {result.reply_text}
                   </div>
                   <div style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
-                    <span style={{fontSize:'0.78em', padding:'3px 9px', borderRadius:'12px', background:'#f1f5f9', color:'#475569', border:'1px solid #e2e8f0'}}>Category: {result.reply_category}</span>
-                    <span style={{fontSize:'0.78em', padding:'3px 9px', borderRadius:'12px', background:'#f1f5f9', color:'#475569', border:'1px solid #e2e8f0'}}>{result.reply_text.length} characters</span>
+                    <span style={{fontSize:'0.78em', padding:'3px 9px', borderRadius:'12px', background:'var(--bg-input)', color:'var(--text-secondary)', border:'1px solid var(--border)'}}>Category: {result.reply_category}</span>
+                    <span style={{fontSize:'0.78em', padding:'3px 9px', borderRadius:'12px', background:'var(--bg-input)', color:'var(--text-secondary)', border:'1px solid var(--border)'}}>{result.reply_text.length} characters</span>
                   </div>
                 </div>
               ) : (
-                <div style={{padding:'14px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', fontSize:'0.88em', color:'#64748b', fontStyle:'italic'}}>
+                <div style={{padding:'14px', background:'var(--bg-input)', border:'1px solid var(--border)', borderRadius:'8px', fontSize:'0.88em', color:'var(--text-secondary)', fontStyle:'italic'}}>
                   No reply generated — action was "{result.action}"
                 </div>
               )}
@@ -1919,9 +1919,9 @@ function Debugger({ activeBusiness }) {
                   ['Total Time', `${result.total_ms}ms`],
                   ['Stages Run', result.stages.filter(s => s.status === 'completed').length + ' / ' + result.stages.length],
                 ].map(([k, v]) => (
-                  <div key={k} style={{padding:'8px 10px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px'}}>
-                    <div style={{fontSize:'0.7em', color:'#64748b', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'3px'}}>{k}</div>
-                    <div style={{fontSize:'0.88em', color:'#1e293b', fontWeight:600}}>{v}</div>
+                  <div key={k} style={{padding:'8px 10px', background:'var(--bg-input)', border:'1px solid var(--border)', borderRadius:'8px'}}>
+                    <div style={{fontSize:'0.7em', color:'var(--text-secondary)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'3px'}}>{k}</div>
+                    <div style={{fontSize:'0.88em', color:'var(--text-primary)', fontWeight:600}}>{v}</div>
                   </div>
                 ))}
               </div>
@@ -1932,9 +1932,9 @@ function Debugger({ activeBusiness }) {
               <Card title="AI Memory (what the AI remembered)">
                 <div style={{display:'flex', flexDirection:'column', gap:'4px'}}>
                   {Object.entries(result.ai_memory).map(([k, v]) => (
-                    <div key={k} style={{display:'flex', gap:'8px', fontSize:'0.82em', padding:'4px 0', borderBottom:'1px solid #f1f5f9'}}>
-                      <span style={{color:'#64748b', fontWeight:600, minWidth:'140px', flexShrink:0}}>{k.replace(/_/g, ' ')}:</span>
-                      <span style={{color:'#1e293b'}}>{v === null || v === undefined ? <span style={{color:'#94a3b8', fontStyle:'italic'}}>null</span> : String(v)}</span>
+                    <div key={k} style={{display:'flex', gap:'8px', fontSize:'0.82em', padding:'4px 0', borderBottom:'1px solid var(--border)'}}>
+                      <span style={{color:'var(--text-secondary)', fontWeight:600, minWidth:'140px', flexShrink:0}}>{k.replace(/_/g, ' ')}:</span>
+                      <span style={{color:'var(--text-primary)'}}>{v === null || v === undefined ? <span style={{color:'var(--text-muted)', fontStyle:'italic'}}>null</span> : String(v)}</span>
                     </div>
                   ))}
                 </div>
@@ -1945,8 +1945,8 @@ function Debugger({ activeBusiness }) {
             <Card title="Pipeline Logs">
               <div style={{fontFamily:'monospace', fontSize:'0.78em', display:'flex', flexDirection:'column', gap:'3px'}}>
                 {(result.logs || []).map((log, i) => (
-                  <div key={i} style={{color: log.includes('error') || log.includes('Error') ? '#ef4444' : '#475569', padding:'2px 0', borderBottom:'1px solid #f8fafc'}}>
-                    <span style={{color:'#94a3b8', marginRight:'8px'}}>{String(i+1).padStart(2,'0')}</span>{log}
+                  <div key={i} style={{color: log.includes('error') || log.includes('Error') ? '#ef4444' : '#475569', padding:'2px 0', borderBottom:'1px solid var(--border)'}}>
+                    <span style={{color:'var(--text-muted)', marginRight:'8px'}}>{String(i+1).padStart(2,'0')}</span>{log}
                   </div>
                 ))}
               </div>
@@ -2022,33 +2022,33 @@ function Playground({ activeBusiness }) {
     <section style={{padding:'0 0 40px 0'}}>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:24}}>
         <div>
-          <h1 style={{fontSize:22,fontWeight:700,color:'#1e293b',margin:0}}>AI Playground</h1>
-          <p style={{color:'#64748b',margin:'4px 0 0',fontSize:14}}>Test any message and see exactly how the AI processes it</p>
+          <h1 style={{fontSize:22,fontWeight:700,color:'var(--text-primary)',margin:0}}>AI Playground</h1>
+          <p style={{color:'var(--text-secondary)',margin:'4px 0 0',fontSize:14}}>Test any message and see exactly how the AI processes it</p>
         </div>
-        <button onClick={loadHistory} style={{padding:'8px 16px',background:'#f1f5f9',border:'1px solid #e2e8f0',borderRadius:8,cursor:'pointer',fontSize:13,color:'#475569'}}>↻ Refresh History</button>
+        <button onClick={loadHistory} style={{padding:'8px 16px',background:'var(--bg-input)',border:'1px solid var(--border)',borderRadius:8,cursor:'pointer',fontSize:13,color:'var(--text-secondary)'}}>↻ Refresh History</button>
       </div>
 
       {/* Input Panel */}
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:24,marginBottom:24}}>
+      <div style={{background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:12,padding:24,marginBottom:24}}>
         <div style={{display:'grid',gridTemplateColumns:'1fr 280px',gap:16,marginBottom:16}}>
           <div>
-            <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Test Message</label>
+            <label style={{fontSize:13,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:6}}>Test Message</label>
             <textarea
               value={message}
               onChange={e => setMessage(e.target.value)}
               onKeyDown={e => { if (e.ctrlKey && e.key === 'Enter') runTest(); }}
               placeholder="Type any message a customer might send... (Ctrl+Enter to run)"
               rows={3}
-              style={{width:'100%',padding:'10px 14px',border:'1px solid #d1d5db',borderRadius:8,fontSize:14,resize:'vertical',fontFamily:'inherit',color:'#1e293b',boxSizing:'border-box'}}
+              style={{width:'100%',padding:'10px 14px',border:'1px solid #d1d5db',borderRadius:8,fontSize:14,resize:'vertical',fontFamily:'inherit',color:'var(--text-primary)',boxSizing:'border-box'}}
             />
           </div>
           <div>
-            <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Sender ID <span style={{fontWeight:400,color:'#9ca3af'}}>(optional — use real ID for history)</span></label>
+            <label style={{fontSize:13,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:6}}>Sender ID <span style={{fontWeight:400,color:'#9ca3af'}}>(optional — use real ID for history)</span></label>
             <input
               value={senderId}
               onChange={e => setSenderId(e.target.value)}
               placeholder="playground_test_user"
-              style={{width:'100%',padding:'10px 14px',border:'1px solid #d1d5db',borderRadius:8,fontSize:14,fontFamily:'inherit',color:'#1e293b',boxSizing:'border-box'}}
+              style={{width:'100%',padding:'10px 14px',border:'1px solid #d1d5db',borderRadius:8,fontSize:14,fontFamily:'inherit',color:'var(--text-primary)',boxSizing:'border-box'}}
             />
             <p style={{fontSize:12,color:'#9ca3af',margin:'6px 0 0'}}>Use a real sender_id to include conversation history in the test</p>
           </div>
@@ -2061,7 +2061,7 @@ function Playground({ activeBusiness }) {
           >
             {loading ? '⏳ Running Pipeline...' : '▶ Run Pipeline'}
           </button>
-          <button onClick={() => { setMessage(''); setResult(null); setError(null); setSelectedHistory(null); }} style={{padding:'10px 16px',background:'#f1f5f9',border:'1px solid #e2e8f0',borderRadius:8,cursor:'pointer',fontSize:13,color:'#475569'}}>Clear</button>
+          <button onClick={() => { setMessage(''); setResult(null); setError(null); setSelectedHistory(null); }} style={{padding:'10px 16px',background:'var(--bg-input)',border:'1px solid var(--border)',borderRadius:8,cursor:'pointer',fontSize:13,color:'var(--text-secondary)'}}>Clear</button>
           {loading && <span style={{fontSize:13,color:'#6b7280',fontStyle:'italic'}}>Processing through 9 pipeline stages...</span>}
         </div>
         {error && <div style={{marginTop:12,padding:'10px 14px',background:'#fef2f2',border:'1px solid #fecaca',borderRadius:8,color:'#dc2626',fontSize:13}}>{error}</div>}
@@ -2075,8 +2075,8 @@ function Playground({ activeBusiness }) {
           <div style={{display:'flex',flexDirection:'column',gap:16}}>
 
             {/* AI Reply */}
-            <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
-              <h3 style={{fontSize:14,fontWeight:700,color:'#1e293b',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
+            <div style={{background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:12,padding:20}}>
+              <h3 style={{fontSize:14,fontWeight:700,color:'var(--text-primary)',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
                 <span style={{fontSize:18}}>💬</span> AI Generated Reply
               </h3>
               <div style={{background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:8,padding:'14px 16px',color:'#1e40af',fontSize:14,lineHeight:1.6,fontStyle:'italic'}}>
@@ -2085,22 +2085,22 @@ function Playground({ activeBusiness }) {
               {displayResult.reply?.category && (
                 <div style={{marginTop:8,display:'flex',gap:8,flexWrap:'wrap'}}>
                   <span style={{padding:'3px 10px',background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:20,fontSize:12,color:'#15803d',fontWeight:600}}>{displayResult.reply.category}</span>
-                  <span style={{padding:'3px 10px',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:20,fontSize:12,color:'#475569'}}>{displayResult.reply.char_count || (displayResult.reply.reply || '').length} chars</span>
+                  <span style={{padding:'3px 10px',background:'var(--bg-input)',border:'1px solid var(--border)',borderRadius:20,fontSize:12,color:'var(--text-secondary)'}}>{displayResult.reply.char_count || (displayResult.reply.reply || '').length} chars</span>
                 </div>
               )}
             </div>
 
             {/* Intent Analysis */}
-            <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
-              <h3 style={{fontSize:14,fontWeight:700,color:'#1e293b',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
+            <div style={{background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:12,padding:20}}>
+              <h3 style={{fontSize:14,fontWeight:700,color:'var(--text-primary)',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
                 <span style={{fontSize:18}}>🎯</span> Intent Detection
               </h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                <div style={{padding:'12px 14px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'}}>
+                <div style={{padding:'12px 14px',background:'var(--bg-input)',borderRadius:8,border:'1px solid var(--border)'}}>
                   <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Intent</div>
-                  <div style={{fontSize:15,fontWeight:700,color:'#1e293b'}}>{displayResult.intent?.intent || 'unknown'}</div>
+                  <div style={{fontSize:15,fontWeight:700,color:'var(--text-primary)'}}>{displayResult.intent?.intent || 'unknown'}</div>
                 </div>
-                <div style={{padding:'12px 14px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'}}>
+                <div style={{padding:'12px 14px',background:'var(--bg-input)',borderRadius:8,border:'1px solid var(--border)'}}>
                   <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Confidence</div>
                   <div style={{fontSize:15,fontWeight:700,color: intentColor(displayResult.intent?.confidence)}}>
                     {displayResult.intent?.confidence ? `${Math.round(displayResult.intent.confidence * 100)}%` : 'N/A'}
@@ -2108,15 +2108,15 @@ function Playground({ activeBusiness }) {
                 </div>
               </div>
               {displayResult.intent?.reason && (
-                <div style={{marginTop:10,fontSize:13,color:'#475569',padding:'8px 12px',background:'#f8fafc',borderRadius:6}}>
+                <div style={{marginTop:10,fontSize:13,color:'var(--text-secondary)',padding:'8px 12px',background:'var(--bg-input)',borderRadius:6}}>
                   {displayResult.intent.reason}
                 </div>
               )}
             </div>
 
             {/* Decision */}
-            <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
-              <h3 style={{fontSize:14,fontWeight:700,color:'#1e293b',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
+            <div style={{background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:12,padding:20}}>
+              <h3 style={{fontSize:14,fontWeight:700,color:'var(--text-primary)',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
                 <span style={{fontSize:18}}>⚡</span> Decision
               </h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
@@ -2128,13 +2128,13 @@ function Playground({ activeBusiness }) {
                   <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Needs Human</div>
                   <div style={{fontSize:14,fontWeight:700,color: displayResult.decision?.needs_human ? '#92400e' : '#15803d'}}>{displayResult.decision?.needs_human ? '⚠ Yes' : '✓ No'}</div>
                 </div>
-                <div style={{padding:'10px 12px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'}}>
+                <div style={{padding:'10px 12px',background:'var(--bg-input)',borderRadius:8,border:'1px solid var(--border)'}}>
                   <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Action</div>
-                  <div style={{fontSize:14,fontWeight:700,color:'#1e293b'}}>{displayResult.decision?.action || 'reply'}</div>
+                  <div style={{fontSize:14,fontWeight:700,color:'var(--text-primary)'}}>{displayResult.decision?.action || 'reply'}</div>
                 </div>
               </div>
               {displayResult.decision?.reason && (
-                <div style={{marginTop:10,fontSize:13,color:'#475569',padding:'8px 12px',background:'#f8fafc',borderRadius:6}}>{displayResult.decision.reason}</div>
+                <div style={{marginTop:10,fontSize:13,color:'var(--text-secondary)',padding:'8px 12px',background:'var(--bg-input)',borderRadius:6}}>{displayResult.decision.reason}</div>
               )}
             </div>
           </div>
@@ -2143,20 +2143,20 @@ function Playground({ activeBusiness }) {
           <div style={{display:'flex',flexDirection:'column',gap:16}}>
 
             {/* Lead Analysis */}
-            <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
-              <h3 style={{fontSize:14,fontWeight:700,color:'#1e293b',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
+            <div style={{background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:12,padding:20}}>
+              <h3 style={{fontSize:14,fontWeight:700,color:'var(--text-primary)',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
                 <span style={{fontSize:18}}>🔥</span> Lead Analysis
               </h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10,marginBottom:12}}>
-                <div style={{padding:'10px 12px',background: displayResult.lead?.is_lead ? '#f0fdf4' : '#f8fafc',borderRadius:8,border:`1px solid ${displayResult.lead?.is_lead ? '#bbf7d0' : '#e2e8f0'}`}}>
+                <div style={{padding:'10px 12px',background: displayResult.lead?.is_lead ? '#f0fdf4' : '#f8fafc',borderRadius:8,border:`1px solid ${displayResult.lead?.is_lead ? '#bbf7d0' : 'var(--border)'}`}}>
                   <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Lead</div>
                   <div style={{fontSize:14,fontWeight:700,color: displayResult.lead?.is_lead ? '#15803d' : '#6b7280'}}>{displayResult.lead?.is_lead ? '✓ Yes' : '✗ No'}</div>
                 </div>
-                <div style={{padding:'10px 12px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'}}>
+                <div style={{padding:'10px 12px',background:'var(--bg-input)',borderRadius:8,border:'1px solid var(--border)'}}>
                   <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Score</div>
-                  <div style={{fontSize:14,fontWeight:700,color:'#1e293b'}}>{displayResult.lead?.lead_score ?? 'N/A'}</div>
+                  <div style={{fontSize:14,fontWeight:700,color:'var(--text-primary)'}}>{displayResult.lead?.lead_score ?? 'N/A'}</div>
                 </div>
-                <div style={{padding:'10px 12px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'}}>
+                <div style={{padding:'10px 12px',background:'var(--bg-input)',borderRadius:8,border:'1px solid var(--border)'}}>
                   <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:4}}>Temperature</div>
                   <div style={{fontSize:14,fontWeight:700,color: tempColor[displayResult.lead?.temperature] || '#6b7280',textTransform:'capitalize'}}>{displayResult.lead?.temperature || 'N/A'}</div>
                 </div>
@@ -2169,19 +2169,19 @@ function Playground({ activeBusiness }) {
             </div>
 
             {/* Business Brain */}
-            <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
-              <h3 style={{fontSize:14,fontWeight:700,color:'#1e293b',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
+            <div style={{background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:12,padding:20}}>
+              <h3 style={{fontSize:14,fontWeight:700,color:'var(--text-primary)',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
                 <span style={{fontSize:18}}>🧠</span> Business Brain
               </h3>
               {displayResult.business_brain ? (
                 <div>
                   <div style={{display:'flex',gap:8,marginBottom:10}}>
-                    <span style={{padding:'4px 12px',borderRadius:20,fontSize:12,fontWeight:600,background: displayResult.business_brain.matched ? '#f0fdf4' : '#f8fafc',color: displayResult.business_brain.matched ? '#15803d' : '#6b7280',border:`1px solid ${displayResult.business_brain.matched ? '#bbf7d0' : '#e2e8f0'}`}}>
+                    <span style={{padding:'4px 12px',borderRadius:20,fontSize:12,fontWeight:600,background: displayResult.business_brain.matched ? '#f0fdf4' : '#f8fafc',color: displayResult.business_brain.matched ? '#15803d' : '#6b7280',border:`1px solid ${displayResult.business_brain.matched ? '#bbf7d0' : 'var(--border)'}`}}>
                       {displayResult.business_brain.matched ? '✓ Rule Matched' : 'No Match'}
                     </span>
                   </div>
                   {displayResult.business_brain.rule_name && (
-                    <div style={{padding:'10px 12px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,color:'#1e293b'}}>
+                    <div style={{padding:'10px 12px',background:'var(--bg-input)',borderRadius:8,border:'1px solid var(--border)',fontSize:13,color:'var(--text-primary)'}}>
                       <strong>Rule:</strong> {displayResult.business_brain.rule_name}
                     </div>
                   )}
@@ -2192,21 +2192,21 @@ function Playground({ activeBusiness }) {
                   )}
                 </div>
               ) : (
-                <div style={{padding:'10px 12px',background:'#f8fafc',borderRadius:8,fontSize:13,color:'#6b7280'}}>No business brain data returned</div>
+                <div style={{padding:'10px 12px',background:'var(--bg-input)',borderRadius:8,fontSize:13,color:'#6b7280'}}>No business brain data returned</div>
               )}
             </div>
 
             {/* Customer Brain / Memory */}
             {displayResult.customer_brain && (
-              <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
-                <h3 style={{fontSize:14,fontWeight:700,color:'#1e293b',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
+              <div style={{background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:12,padding:20}}>
+                <h3 style={{fontSize:14,fontWeight:700,color:'var(--text-primary)',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
                   <span style={{fontSize:18}}>✨</span> Customer Memory
                 </h3>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
                   {Object.entries(displayResult.customer_brain).map(([k,v]) => v ? (
-                    <div key={k} style={{padding:'8px 12px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'}}>
+                    <div key={k} style={{padding:'8px 12px',background:'var(--bg-input)',borderRadius:8,border:'1px solid var(--border)'}}>
                       <div style={{fontSize:11,color:'#9ca3af',fontWeight:600,textTransform:'uppercase',marginBottom:2}}>{k.replace(/_/g,' ')}</div>
-                      <div style={{fontSize:13,color:'#1e293b',fontWeight:500}}>{String(v)}</div>
+                      <div style={{fontSize:13,color:'var(--text-primary)',fontWeight:500}}>{String(v)}</div>
                     </div>
                   ) : null)}
                 </div>
@@ -2217,8 +2217,8 @@ function Playground({ activeBusiness }) {
       )}
 
       {/* Test History */}
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:20}}>
-        <h3 style={{fontSize:15,fontWeight:700,color:'#1e293b',margin:'0 0 16px',display:'flex',alignItems:'center',gap:8}}>
+      <div style={{background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:12,padding:20}}>
+        <h3 style={{fontSize:15,fontWeight:700,color:'var(--text-primary)',margin:'0 0 16px',display:'flex',alignItems:'center',gap:8}}>
           <span>📋</span> Test History
           <span style={{fontSize:13,fontWeight:400,color:'#9ca3af',marginLeft:4}}>({history.length} tests)</span>
         </h3>
@@ -2235,14 +2235,14 @@ function Playground({ activeBusiness }) {
                 <div
                   key={idx}
                   onClick={() => { setSelectedHistory(isSelected ? null : item); setResult(null); }}
-                  style={{padding:'12px 16px',border:`1px solid ${isSelected ? '#3b82f6' : '#e2e8f0'}`,borderRadius:8,cursor:'pointer',background: isSelected ? '#eff6ff' : '#fafafa',display:'grid',gridTemplateColumns:'1fr auto auto auto',gap:12,alignItems:'center',transition:'all 0.15s'}}
+                  style={{padding:'12px 16px',border:`1px solid ${isSelected ? '#3b82f6' : 'var(--border)'}`,borderRadius:8,cursor:'pointer',background: isSelected ? '#eff6ff' : '#fafafa',display:'grid',gridTemplateColumns:'1fr auto auto auto',gap:12,alignItems:'center',transition:'all 0.15s'}}
                 >
                   <div>
-                    <div style={{fontSize:13,fontWeight:600,color:'#1e293b',marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.message || '—'}</div>
+                    <div style={{fontSize:13,fontWeight:600,color:'var(--text-primary)',marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.message || '—'}</div>
                     <div style={{fontSize:12,color:'#6b7280',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.reply?.reply ? `↳ ${r.reply.reply.substring(0,80)}...` : 'No reply'}</div>
                   </div>
-                  <span style={{padding:'3px 10px',background:'#f1f5f9',borderRadius:20,fontSize:12,color:'#475569',fontWeight:500,whiteSpace:'nowrap'}}>{r.intent?.intent || '—'}</span>
-                  <span style={{padding:'3px 10px',background: r.lead?.is_lead ? '#f0fdf4' : '#f8fafc',borderRadius:20,fontSize:12,color: r.lead?.is_lead ? '#15803d' : '#9ca3af',fontWeight:500,border:`1px solid ${r.lead?.is_lead ? '#bbf7d0' : '#e2e8f0'}`}}>{r.lead?.is_lead ? '🔥 Lead' : 'No Lead'}</span>
+                  <span style={{padding:'3px 10px',background:'var(--bg-input)',borderRadius:20,fontSize:12,color:'var(--text-secondary)',fontWeight:500,whiteSpace:'nowrap'}}>{r.intent?.intent || '—'}</span>
+                  <span style={{padding:'3px 10px',background: r.lead?.is_lead ? '#f0fdf4' : '#f8fafc',borderRadius:20,fontSize:12,color: r.lead?.is_lead ? '#15803d' : '#9ca3af',fontWeight:500,border:`1px solid ${r.lead?.is_lead ? '#bbf7d0' : 'var(--border)'}`}}>{r.lead?.is_lead ? '🔥 Lead' : 'No Lead'}</span>
                   <span style={{fontSize:11,color:'#9ca3af',whiteSpace:'nowrap'}}>{item.time ? new Date(item.time).toLocaleTimeString() : ''}</span>
                 </div>
               );
@@ -2544,7 +2544,7 @@ function BusinessBrain({ activeBusiness }) {
 
           <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px'}}>
             <label style={{display:'flex',flexDirection:'column',gap:'6px'}}>
-              <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Rule Name *</span>
+              <span style={{fontSize:'0.82em',color:'var(--text-muted)'}}>Rule Name *</span>
               <input
                 placeholder="e.g. SAP MM Weekend Batch Enquiry"
                 value={form.rule_name}
@@ -2552,7 +2552,7 @@ function BusinessBrain({ activeBusiness }) {
               />
             </label>
             <label style={{display:'flex',flexDirection:'column',gap:'6px'}}>
-              <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Category</span>
+              <span style={{fontSize:'0.82em',color:'var(--text-muted)'}}>Category</span>
               <select value={form.category} onChange={e => setForm({...form, category: e.target.value})}>
                 {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
                   <option key={val} value={val}>{label}</option>
@@ -2562,7 +2562,7 @@ function BusinessBrain({ activeBusiness }) {
           </div>
 
           <label style={{display:'flex',flexDirection:'column',gap:'6px',marginTop:'12px'}}>
-            <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Trigger Keywords <span style={{opacity:0.6}}>(comma separated — e.g. mm, sap mm, material management)</span></span>
+            <span style={{fontSize:'0.82em',color:'var(--text-muted)'}}>Trigger Keywords <span style={{opacity:0.6}}>(comma separated — e.g. mm, sap mm, material management)</span></span>
             <input
               placeholder="mm, sap mm, material management, weekend batch"
               value={form.trigger_keywords}
@@ -2571,7 +2571,7 @@ function BusinessBrain({ activeBusiness }) {
           </label>
 
           <label style={{display:'flex',flexDirection:'column',gap:'6px',marginTop:'12px'}}>
-            <span style={{fontSize:'0.82em',color:'#94a3b8'}}>What should the AI reply? *</span>
+            <span style={{fontSize:'0.82em',color:'var(--text-muted)'}}>What should the AI reply? *</span>
             <textarea
               placeholder="Write what the AI should say when this rule is triggered. Be natural — like you are telling a new employee what to say."
               value={form.response_template}
@@ -2582,7 +2582,7 @@ function BusinessBrain({ activeBusiness }) {
 
           <div style={{display:'grid', gridTemplateColumns:'1fr 2fr', gap:'12px', marginTop:'12px'}}>
             <label style={{display:'flex',flexDirection:'column',gap:'6px'}}>
-              <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Priority <span style={{opacity:0.6}}>(higher = matched first)</span></span>
+              <span style={{fontSize:'0.82em',color:'var(--text-muted)'}}>Priority <span style={{opacity:0.6}}>(higher = matched first)</span></span>
               <input
                 type="number" min="1" max="100"
                 value={form.priority}
@@ -2590,7 +2590,7 @@ function BusinessBrain({ activeBusiness }) {
               />
             </label>
             <label style={{display:'flex',flexDirection:'column',gap:'6px'}}>
-              <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Internal Notes <span style={{opacity:0.6}}>(not shown to customers)</span></span>
+              <span style={{fontSize:'0.82em',color:'var(--text-muted)'}}>Internal Notes <span style={{opacity:0.6}}>(not shown to customers)</span></span>
               <input
                 placeholder="Optional notes for yourself"
                 value={form.notes}
@@ -2624,9 +2624,9 @@ function BusinessBrain({ activeBusiness }) {
 
       {/* Rules grid */}
       {loading ? (
-        <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>Loading rules...</div>
+        <div style={{padding:'40px', textAlign:'center', color:'var(--text-secondary)'}}>Loading rules...</div>
       ) : filtered.length === 0 ? (
-        <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>
+        <div style={{padding:'40px', textAlign:'center', color:'var(--text-secondary)'}}>
           {activeCategory === 'All'
             ? 'No rules yet. Click "Add New Rule" to teach your AI how to respond.'
             : `No rules in the "${CATEGORY_LABELS[activeCategory] || activeCategory}" category.`}
@@ -2669,18 +2669,18 @@ function BusinessBrain({ activeBusiness }) {
                     {keywords.slice(0, 6).map((kw, i) => (
                       <span key={i} style={{
                         fontSize:'0.72em', background:'rgba(255,255,255,0.06)',
-                        border:'1px solid #334155', borderRadius:'20px', padding:'2px 8px', color:'#94a3b8'
+                        border:'1px solid #334155', borderRadius:'20px', padding:'2px 8px', color:'var(--text-muted)'
                       }}>{kw}</span>
                     ))}
                     {keywords.length > 6 && (
-                      <span style={{fontSize:'0.72em', color:'#64748b'}}>+{keywords.length - 6} more</span>
+                      <span style={{fontSize:'0.72em', color:'var(--text-secondary)'}}>+{keywords.length - 6} more</span>
                     )}
                   </div>
                 )}
 
                 {/* Response preview */}
                 <div style={{
-                  fontSize:'0.83em', color:'#94a3b8', lineHeight:'1.5',
+                  fontSize:'0.83em', color:'var(--text-muted)', lineHeight:'1.5',
                   background:'rgba(255,255,255,0.03)', borderRadius:'8px',
                   padding:'8px 10px', marginBottom:'12px',
                   borderLeft: `3px solid ${catColor}40`,
@@ -2694,7 +2694,7 @@ function BusinessBrain({ activeBusiness }) {
                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                   <div style={{display:'flex', alignItems:'center', gap:'6px'}}>
                     <Zap size={11} color="#64748b"/>
-                    <span style={{fontSize:'0.75em', color:'#64748b'}}>Priority: {rule.priority}</span>
+                    <span style={{fontSize:'0.75em', color:'var(--text-secondary)'}}>Priority: {rule.priority}</span>
                     <span style={{fontSize:'0.75em', color: rule.is_active ? '#10b981' : '#64748b', marginLeft:'8px'}}>
                       {rule.is_active ? '● Active' : '○ Inactive'}
                     </span>
@@ -2717,7 +2717,7 @@ function BusinessBrain({ activeBusiness }) {
                 </div>
 
                 {rule.notes && (
-                  <div style={{marginTop:'8px', fontSize:'0.75em', color:'#475569', fontStyle:'italic'}}>
+                  <div style={{marginTop:'8px', fontSize:'0.75em', color:'var(--text-secondary)', fontStyle:'italic'}}>
                     Note: {rule.notes}
                   </div>
                 )}
@@ -2733,7 +2733,7 @@ function BusinessBrain({ activeBusiness }) {
       {activeTab === 'campaign' && (
       <>
         {/* Info banner */}
-        <div style={{padding:'12px 16px', background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.25)', borderRadius:'10px', marginBottom:'20px', fontSize:'0.87em', color:'#94a3b8', lineHeight:'1.6'}}>
+        <div style={{padding:'12px 16px', background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.25)', borderRadius:'10px', marginBottom:'20px', fontSize:'0.87em', color:'var(--text-muted)', lineHeight:'1.6'}}>
           <strong style={{color:'#f59e0b'}}>💡 How Campaign Context works:</strong> Describe today’s active posts, offers, job openings, or announcements below. The AI will automatically use this information when replying to customer enquiries — without you needing to update any rules.
         </div>
 
@@ -2755,7 +2755,7 @@ function BusinessBrain({ activeBusiness }) {
 
             <div style={{display:'grid', gridTemplateColumns:'2fr 1fr', gap:'12px'}}>
               <label style={{display:'flex',flexDirection:'column',gap:'6px'}}>
-                <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Title *</span>
+                <span style={{fontSize:'0.82em',color:'var(--text-muted)'}}>Title *</span>
                 <input
                   placeholder="e.g. July Weekend Batch Offer, New SAP FICO Job Opening"
                   value={campaignForm.title}
@@ -2763,7 +2763,7 @@ function BusinessBrain({ activeBusiness }) {
                 />
               </label>
               <label style={{display:'flex',flexDirection:'column',gap:'6px'}}>
-                <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Type</span>
+                <span style={{fontSize:'0.82em',color:'var(--text-muted)'}}>Type</span>
                 <select value={campaignForm.context_type} onChange={e => setCampaignForm({...campaignForm, context_type: e.target.value})}>
                   {CAMPAIGN_TYPES.map(t => (
                     <option key={t} value={t}>{CAMPAIGN_TYPE_LABELS[t] || t}</option>
@@ -2773,7 +2773,7 @@ function BusinessBrain({ activeBusiness }) {
             </div>
 
             <label style={{display:'flex',flexDirection:'column',gap:'6px',marginTop:'12px'}}>
-              <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Description * <span style={{opacity:0.6}}>(plain English — the AI will use this when replying)</span></span>
+              <span style={{fontSize:'0.82em',color:'var(--text-muted)'}}>Description * <span style={{opacity:0.6}}>(plain English — the AI will use this when replying)</span></span>
               <textarea
                 placeholder="e.g. We are running a July batch for SAP FICO starting 20th July. Weekend classes, 3 months duration, ₹25,000 total fee. Interested candidates should WhatsApp us."
                 value={campaignForm.description}
@@ -2784,7 +2784,7 @@ function BusinessBrain({ activeBusiness }) {
 
             <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginTop:'12px'}}>
               <label style={{display:'flex',flexDirection:'column',gap:'6px'}}>
-                <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Valid Until <span style={{opacity:0.6}}>(auto-deactivates after this date)</span></span>
+                <span style={{fontSize:'0.82em',color:'var(--text-muted)'}}>Valid Until <span style={{opacity:0.6}}>(auto-deactivates after this date)</span></span>
                 <input
                   type="date"
                   value={campaignForm.valid_until}
@@ -2792,7 +2792,7 @@ function BusinessBrain({ activeBusiness }) {
                 />
               </label>
               <label style={{display:'flex',flexDirection:'column',gap:'6px'}}>
-                <span style={{fontSize:'0.82em',color:'#94a3b8'}}>Priority <span style={{opacity:0.6}}>(higher = injected first)</span></span>
+                <span style={{fontSize:'0.82em',color:'var(--text-muted)'}}>Priority <span style={{opacity:0.6}}>(higher = injected first)</span></span>
                 <input
                   type="number" min="1" max="100"
                   value={campaignForm.priority}
@@ -2826,9 +2826,9 @@ function BusinessBrain({ activeBusiness }) {
 
         {/* Campaign cards grid */}
         {campaignLoading ? (
-          <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>Loading campaign contexts...</div>
+          <div style={{padding:'40px', textAlign:'center', color:'var(--text-secondary)'}}>Loading campaign contexts...</div>
         ) : campaigns.length === 0 ? (
-          <div style={{padding:'40px', textAlign:'center', color:'#64748b'}}>
+          <div style={{padding:'40px', textAlign:'center', color:'var(--text-secondary)'}}>
             No campaign contexts yet. Click “Add Campaign Context” to tell the AI about today’s posts, offers, or announcements.
           </div>
         ) : (
@@ -2865,7 +2865,7 @@ function BusinessBrain({ activeBusiness }) {
                   </div>
 
                   <div style={{
-                    fontSize:'0.83em', color:'#94a3b8', lineHeight:'1.5',
+                    fontSize:'0.83em', color:'var(--text-muted)', lineHeight:'1.5',
                     background:'rgba(255,255,255,0.03)', borderRadius:'8px',
                     padding:'8px 10px', marginBottom:'12px',
                     borderLeft: `3px solid ${typeColor}40`,
@@ -2881,7 +2881,7 @@ function BusinessBrain({ activeBusiness }) {
                         {isActive ? '● Active — AI is using this' : '○ Inactive'}
                       </span>
                       {c.valid_until && (
-                        <span style={{fontSize:'0.72em', color:'#64748b'}}>Expires: {c.valid_until}</span>
+                        <span style={{fontSize:'0.72em', color:'var(--text-secondary)'}}>Expires: {c.valid_until}</span>
                       )}
                     </div>
                     <div style={{display:'flex', gap:'6px'}}>
@@ -2969,13 +2969,13 @@ function Customer360({ activeBusiness }) {
               <input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="Search by name..." style={{flex:1, fontSize:'0.88em'}}/>
               <button type="submit" style={{padding:'6px 14px', fontSize:'0.85em'}}>Search</button>
             </form>
-            <div style={{fontSize:'0.75em', color:'#94a3b8', marginTop:'6px'}}>{customers.length} customers</div>
+            <div style={{fontSize:'0.75em', color:'var(--text-muted)', marginTop:'6px'}}>{customers.length} customers</div>
           </Card>
           <div style={{overflowY:'auto', maxHeight:'560px', display:'flex', flexDirection:'column', gap:'6px'}}>
             {loadingList ? (
-              <div style={{textAlign:'center', padding:'30px', color:'#94a3b8', fontSize:'0.88em'}}>Loading...</div>
+              <div style={{textAlign:'center', padding:'30px', color:'var(--text-muted)', fontSize:'0.88em'}}>Loading...</div>
             ) : customers.length === 0 ? (
-              <div style={{textAlign:'center', padding:'30px', color:'#94a3b8', fontSize:'0.88em'}}>No customers found.</div>
+              <div style={{textAlign:'center', padding:'30px', color:'var(--text-muted)', fontSize:'0.88em'}}>No customers found.</div>
             ) : customers.map(c => {
               const isSelected = selectedId === c.sender_id;
               const tc = TEMP_COLORS_360[c.temperature] || '#64748b';
@@ -2988,7 +2988,7 @@ function Customer360({ activeBusiness }) {
                         <div style={{width:'32px', height:'32px', borderRadius:'8px', background: isSelected ? '#3b82f6' : 'var(--bg-input,#e2e8f0)', color: isSelected ? '#fff' : 'inherit', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.85em', fontWeight:700, flexShrink:0}}>
                           {(c.name || c.sender_id || '?')[0].toUpperCase()}
                         </div>
-                        <div style={{position:'absolute', bottom:'-4px', right:'-4px', width:'14px', height:'14px', borderRadius:'50%', background:'var(--bg-card)', border:'1px solid #e2e8f0', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                        <div style={{position:'absolute', bottom:'-4px', right:'-4px', width:'14px', height:'14px', borderRadius:'50%', background:'var(--bg-card)', border:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center'}}>
                           {c.primary_channel === 'whatsapp' ? 
                             <Phone size={8} fill="#25d366" stroke="#25d366"/> : 
                             <Image size={8} color="#e1306c"/>
@@ -2997,7 +2997,7 @@ function Customer360({ activeBusiness }) {
                       </div>
                       <div>
                         <div style={{fontSize:'0.85em', fontWeight:600, color:'inherit'}}>{c.name || c.instagram_username || `User ${String(c.sender_id).slice(-4)}`}</div>
-                        <div style={{fontSize:'0.72em', color:'#94a3b8'}}>{c.interested_in || c.location || 'No details yet'}</div>
+                        <div style={{fontSize:'0.72em', color:'var(--text-muted)'}}>{c.interested_in || c.location || 'No details yet'}</div>
                       </div>
                     </div>
                     <div style={{width:'8px', height:'8px', borderRadius:'50%', background: tc, flexShrink:0}}/>
@@ -3011,14 +3011,14 @@ function Customer360({ activeBusiness }) {
         {/* Right: Profile panel */}
         {!selectedId ? (
           <Card>
-            <div style={{display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'400px', gap:'12px', color:'#94a3b8'}}>
+            <div style={{display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'400px', gap:'12px', color:'var(--text-muted)'}}>
               <div style={{fontSize:'3em'}}>👤</div>
               <div style={{fontSize:'1em', fontWeight:600, color:'inherit'}}>Select a customer</div>
               <div style={{fontSize:'0.85em', textAlign:'center', maxWidth:'280px'}}>Click any customer on the left to see their full 360° profile, conversation history, and AI-generated insights.</div>
             </div>
           </Card>
         ) : loadingProfile ? (
-          <Card><div style={{display:'flex', alignItems:'center', justifyContent:'center', height:'300px', color:'#94a3b8'}}>Loading profile...</div></Card>
+          <Card><div style={{display:'flex', alignItems:'center', justifyContent:'center', height:'300px', color:'var(--text-muted)'}}>Loading profile...</div></Card>
         ) : profile?.status === 'error' ? (
           <Card><div style={{padding:'20px', color:'#ef4444'}}>Error: {profile.message}</div></Card>
         ) : profile ? (
@@ -3062,7 +3062,7 @@ function Customer360({ activeBusiness }) {
                 <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
                   {[['Name', profile.identity?.name], ['Phone', profile.identity?.phone], ['Email', profile.identity?.email], ['Location', profile.identity?.location], ['Education', profile.identity?.education], ['Experience', profile.identity?.experience], ['Source', profile.identity?.source]].map(([k,v]) => v ? (
                     <div key={k}>
-                      <div style={{fontSize:'0.7em', color:'#94a3b8', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>{k}</div>
+                      <div style={{fontSize:'0.7em', color:'var(--text-muted)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>{k}</div>
                       <div style={{fontSize:'0.85em', color:'inherit', fontWeight:500, marginTop:'1px'}}>{v}</div>
                     </div>
                   ) : null)}
@@ -3072,7 +3072,7 @@ function Customer360({ activeBusiness }) {
                 <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
                   {[['Interested In', profile.lead?.interested_in], ['Mode', profile.lead?.mode], ['Lead Stage', profile.lead?.lead_stage], ['Status', profile.lead?.status], ['Lead Score', profile.lead?.lead_score], ['Notes', profile.lead?.notes]].map(([k,v]) => v ? (
                     <div key={k}>
-                      <div style={{fontSize:'0.7em', color:'#94a3b8', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>{k}</div>
+                      <div style={{fontSize:'0.7em', color:'var(--text-muted)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>{k}</div>
                       <div style={{fontSize:'0.85em', color:'inherit', fontWeight:500, marginTop:'1px'}}>{String(v)}</div>
                     </div>
                   ) : null)}
@@ -3082,13 +3082,13 @@ function Customer360({ activeBusiness }) {
                 <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
                   {[['Messages', profile.conversation?.message_count], ['State', profile.conversation?.conversation_state], ['Last Message', profile.conversation?.last_message], ['Last Active', profile.conversation?.last_active ? new Date(profile.conversation.last_active).toLocaleDateString() : null]].map(([k,v]) => v ? (
                     <div key={k}>
-                      <div style={{fontSize:'0.7em', color:'#94a3b8', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>{k}</div>
+                      <div style={{fontSize:'0.7em', color:'var(--text-muted)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>{k}</div>
                       <div style={{fontSize:'0.85em', color:'inherit', fontWeight:500, marginTop:'1px', wordBreak:'break-word'}}>{String(v)}</div>
                     </div>
                   ) : null)}
                   {profile.conversation?.ai_summary && (
                     <div>
-                      <div style={{fontSize:'0.7em', color:'#94a3b8', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>AI Summary</div>
+                      <div style={{fontSize:'0.7em', color:'var(--text-muted)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>AI Summary</div>
                       <div style={{fontSize:'0.82em', color:'inherit', marginTop:'2px', fontStyle:'italic', lineHeight:'1.5'}}>{profile.conversation.ai_summary}</div>
                     </div>
                   )}
@@ -3100,20 +3100,20 @@ function Customer360({ activeBusiness }) {
             {profile.ai_profile && !profile.ai_profile.error && (
               <Card title="🧠 AI Customer Profile">
                 <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px'}}>
-                  <div style={{gridColumn:'1/-1', padding:'12px 14px', background:'var(--bg-card)', border:'1px solid #e2e8f0', borderRadius:'8px', fontSize:'0.88em', color:'inherit', fontStyle:'italic', lineHeight:'1.6'}}>
+                  <div style={{gridColumn:'1/-1', padding:'12px 14px', background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:'8px', fontSize:'0.88em', color:'inherit', fontStyle:'italic', lineHeight:'1.6'}}>
                     "{profile.ai_profile.one_liner}"
                   </div>
                   {[['Interest', profile.ai_profile.interest], ['Intent', profile.ai_profile.intent], ['Journey Stage', profile.ai_profile.stage], ['Contact Shared', profile.ai_profile.contact_info_shared]].map(([k,v]) => v ? (
-                    <div key={k} style={{padding:'8px 10px', background:'var(--bg-card)', border:'1px solid #e2e8f0', borderRadius:'8px'}}>
+                    <div key={k} style={{padding:'8px 10px', background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:'8px'}}>
                       <div style={{fontSize:'0.7em', color:'inherit', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'3px'}}>{k}</div>
                       <div style={{fontSize:'0.85em', color:'inherit', fontWeight:600}}>{v}</div>
                     </div>
                   ) : null)}
-                  <div style={{padding:'8px 10px', background:'var(--bg-card)', border:'1px solid #e2e8f0', borderRadius:'8px'}}>
+                  <div style={{padding:'8px 10px', background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:'8px'}}>
                     <div style={{fontSize:'0.7em', color:'inherit', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'3px'}}>Sentiment</div>
                     <div style={{fontSize:'0.85em', fontWeight:700, color: SENTIMENT_COLORS[profile.ai_profile.sentiment] || '#64748b'}}>{profile.ai_profile.sentiment}</div>
                   </div>
-                  <div style={{padding:'8px 10px', background:'var(--bg-card)', border:'1px solid #e2e8f0', borderRadius:'8px'}}>
+                  <div style={{padding:'8px 10px', background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:'8px'}}>
                     <div style={{fontSize:'0.7em', color:'inherit', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'3px'}}>Urgency</div>
                     <div style={{fontSize:'0.85em', fontWeight:700, color: URGENCY_COLORS[profile.ai_profile.urgency] || '#64748b'}}>{profile.ai_profile.urgency}</div>
                   </div>
@@ -3158,7 +3158,7 @@ function Customer360({ activeBusiness }) {
                       <div style={{paddingTop:'4px'}}>
                         <div style={{fontSize:'0.85em', fontWeight:700, color:'inherit'}}>{event.event}</div>
                         <div style={{fontSize:'0.78em', color:'inherit', marginTop:'1px'}}>{event.description}</div>
-                        {event.timestamp && <div style={{fontSize:'0.72em', color:'#94a3b8', marginTop:'2px'}}>{new Date(event.timestamp).toLocaleString()}</div>}
+                        {event.timestamp && <div style={{fontSize:'0.72em', color:'var(--text-muted)', marginTop:'2px'}}>{new Date(event.timestamp).toLocaleString()}</div>}
                       </div>
                     </div>
                   ))}
@@ -3253,69 +3253,69 @@ function Reports({ activeBusiness }) {
             <select
               value={days}
               onChange={e => setDays(Number(e.target.value))}
-              style={{padding:'6px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,background:'white',cursor:'pointer'}}
+              style={{padding:'6px 10px',borderRadius:6,border:'1px solid var(--border)',fontSize:13,background:'var(--bg-card)',cursor:'pointer'}}
             >
               {windowOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
-            <button onClick={fetchReports} style={{padding:'6px 12px',borderRadius:6,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13}}>↻ Refresh</button>
+            <button onClick={fetchReports} style={{padding:'6px 12px',borderRadius:6,border:'1px solid var(--border)',background:'var(--bg-card)',cursor:'pointer',fontSize:13}}>↻ Refresh</button>
             <button onClick={handleExport} style={{padding:'6px 14px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600}}>⬇ Export CSV</button>
           </div>
         }
       />
 
-      {loading && <div style={{textAlign:'center',padding:40,color:'#64748b'}}>Loading report data...</div>}
+      {loading && <div style={{textAlign:'center',padding:40,color:'var(--text-secondary)'}}>Loading report data...</div>}
       {error && <div style={{background:'#fef2f2',border:'1px solid #fecaca',borderRadius:8,padding:16,color:'#dc2626',marginBottom:16}}>{error}</div>}
 
       {!loading && data && (
         <>
           {/* Row 1 — Primary stats */}
           <div className="grid4" style={{marginBottom:16}}>
-            <div style={{background:'white',borderRadius:10,padding:'18px 20px',border:'1px solid #e2e8f0'}}>
-              <div style={{fontSize:12,color:'#64748b',marginBottom:4}}>Total Leads (All Time)</div>
-              <div style={{fontSize:28,fontWeight:700,color:'#1e293b'}}>{s.total_leads ?? 0}</div>
+            <div style={{background:'var(--bg-card)',borderRadius:10,padding:'18px 20px',border:'1px solid var(--border)'}}>
+              <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:4}}>Total Leads (All Time)</div>
+              <div style={{fontSize:28,fontWeight:700,color:'var(--text-primary)'}}>{s.total_leads ?? 0}</div>
               <div style={{fontSize:12,color:'#3b82f6',marginTop:4}}>{s.window_leads ?? 0} in last {days} days</div>
             </div>
-            <div style={{background:'white',borderRadius:10,padding:'18px 20px',border:'1px solid #e2e8f0'}}>
-              <div style={{fontSize:12,color:'#64748b',marginBottom:4}}>Hot Leads</div>
+            <div style={{background:'var(--bg-card)',borderRadius:10,padding:'18px 20px',border:'1px solid var(--border)'}}>
+              <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:4}}>Hot Leads</div>
               <div style={{fontSize:28,fontWeight:700,color:'#ef4444'}}>{s.hot_leads ?? 0}</div>
-              <div style={{fontSize:12,color:'#64748b',marginTop:4}}>phone + email captured</div>
+              <div style={{fontSize:12,color:'var(--text-secondary)',marginTop:4}}>phone + email captured</div>
             </div>
-            <div style={{background:'white',borderRadius:10,padding:'18px 20px',border:'1px solid #e2e8f0'}}>
-              <div style={{fontSize:12,color:'#64748b',marginBottom:4}}>Qualified Leads</div>
+            <div style={{background:'var(--bg-card)',borderRadius:10,padding:'18px 20px',border:'1px solid var(--border)'}}>
+              <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:4}}>Qualified Leads</div>
               <div style={{fontSize:28,fontWeight:700,color:'#10b981'}}>{s.qualified ?? 0}</div>
-              <div style={{fontSize:12,color:'#64748b',marginTop:4}}>{s.conversion_rate ?? 0}% conversion rate</div>
+              <div style={{fontSize:12,color:'var(--text-secondary)',marginTop:4}}>{s.conversion_rate ?? 0}% conversion rate</div>
             </div>
-            <div style={{background:'white',borderRadius:10,padding:'18px 20px',border:'1px solid #e2e8f0'}}>
-              <div style={{fontSize:12,color:'#64748b',marginBottom:4}}>Contact Rate</div>
+            <div style={{background:'var(--bg-card)',borderRadius:10,padding:'18px 20px',border:'1px solid var(--border)'}}>
+              <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:4}}>Contact Rate</div>
               <div style={{fontSize:28,fontWeight:700,color:'#8b5cf6'}}>{s.contact_rate ?? 0}%</div>
-              <div style={{fontSize:12,color:'#64748b',marginTop:4}}>{s.with_phone ?? 0} phone · {s.with_email ?? 0} email</div>
+              <div style={{fontSize:12,color:'var(--text-secondary)',marginTop:4}}>{s.with_phone ?? 0} phone · {s.with_email ?? 0} email</div>
             </div>
           </div>
 
           {/* Row 2 — Secondary stats */}
           <div className="grid4" style={{marginBottom:16}}>
-            <div style={{background:'white',borderRadius:10,padding:'14px 20px',border:'1px solid #e2e8f0'}}>
-              <div style={{fontSize:12,color:'#64748b',marginBottom:2}}>Total Conversations</div>
-              <div style={{fontSize:22,fontWeight:700,color:'#1e293b'}}>{s.total_conversations ?? 0}</div>
+            <div style={{background:'var(--bg-card)',borderRadius:10,padding:'14px 20px',border:'1px solid var(--border)'}}>
+              <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:2}}>Total Conversations</div>
+              <div style={{fontSize:22,fontWeight:700,color:'var(--text-primary)'}}>{s.total_conversations ?? 0}</div>
             </div>
-            <div style={{background:'white',borderRadius:10,padding:'14px 20px',border:'1px solid #e2e8f0'}}>
-              <div style={{fontSize:12,color:'#64748b',marginBottom:2}}>AI Replied</div>
+            <div style={{background:'var(--bg-card)',borderRadius:10,padding:'14px 20px',border:'1px solid var(--border)'}}>
+              <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:2}}>AI Replied</div>
               <div style={{fontSize:22,fontWeight:700,color:'#3b82f6'}}>{s.ai_replied ?? 0}</div>
             </div>
-            <div style={{background:'white',borderRadius:10,padding:'14px 20px',border:'1px solid #e2e8f0'}}>
-              <div style={{fontSize:12,color:'#64748b',marginBottom:2}}>Warm Leads</div>
+            <div style={{background:'var(--bg-card)',borderRadius:10,padding:'14px 20px',border:'1px solid var(--border)'}}>
+              <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:2}}>Warm Leads</div>
               <div style={{fontSize:22,fontWeight:700,color:'#f59e0b'}}>{s.warm_leads ?? 0}</div>
             </div>
-            <div style={{background:'white',borderRadius:10,padding:'14px 20px',border:'1px solid #e2e8f0', borderLeft: s.needs_human > 0 ? '4px solid #ef4444' : '1px solid #e2e8f0'}}>
-              <div style={{fontSize:12,color:'#64748b',marginBottom:2}}>Needs Human</div>
+            <div style={{background:'var(--bg-card)',borderRadius:10,padding:'14px 20px',border:'1px solid var(--border)', borderLeft: s.needs_human > 0 ? '4px solid #ef4444' : '1px solid var(--border)'}}>
+              <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:2}}>Needs Human</div>
               <div style={{fontSize:22,fontWeight:700,color: s.needs_human > 0 ? '#ef4444' : '#1e293b'}}>{s.needs_human ?? 0}</div>
             </div>
           </div>
 
           {/* Row 3 — Daily trend + Temperature pie */}
           <div style={{display:'grid',gridTemplateColumns:'2fr 1fr',gap:16,marginBottom:16}}>
-            <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
-              <div style={{fontWeight:600,color:'#1e293b',marginBottom:16,fontSize:14}}>Daily Lead & Conversation Trend</div>
+            <div style={{background:'var(--bg-card)',borderRadius:10,padding:20,border:'1px solid var(--border)'}}>
+              <div style={{fontWeight:600,color:'var(--text-primary)',marginBottom:16,fontSize:14}}>Daily Lead & Conversation Trend</div>
               {data.daily_trend && data.daily_trend.length > 0 ? (
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={data.daily_trend} margin={{top:0,right:0,bottom:0,left:-20}}>
@@ -3327,14 +3327,14 @@ function Reports({ activeBusiness }) {
                     <Bar dataKey="conversations" name="Conversations" fill="#8b5cf6" radius={[3,3,0,0]}/>
                   </BarChart>
                 </ResponsiveContainer>
-              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:40}}>No trend data for this period</div>}
+              ) : <div style={{textAlign:'center',color:'var(--text-muted)',padding:40}}>No trend data for this period</div>}
               <div style={{display:'flex',gap:16,marginTop:8}}>
-                <span style={{fontSize:11,color:'#64748b'}}>■ <span style={{color:'#3b82f6'}}>New Leads</span></span>
-                <span style={{fontSize:11,color:'#64748b'}}>■ <span style={{color:'#8b5cf6'}}>Conversations</span></span>
+                <span style={{fontSize:11,color:'var(--text-secondary)'}}>■ <span style={{color:'#3b82f6'}}>New Leads</span></span>
+                <span style={{fontSize:11,color:'var(--text-secondary)'}}>■ <span style={{color:'#8b5cf6'}}>Conversations</span></span>
               </div>
             </div>
-            <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
-              <div style={{fontWeight:600,color:'#1e293b',marginBottom:16,fontSize:14}}>Lead Temperature</div>
+            <div style={{background:'var(--bg-card)',borderRadius:10,padding:20,border:'1px solid var(--border)'}}>
+              <div style={{fontWeight:600,color:'var(--text-primary)',marginBottom:16,fontSize:14}}>Lead Temperature</div>
               {data.temperature_split && data.temperature_split.some(t => t.value > 0) ? (
                 <>
                   <ResponsiveContainer width="100%" height={180}>
@@ -3347,21 +3347,21 @@ function Reports({ activeBusiness }) {
                   </ResponsiveContainer>
                   <div style={{display:'flex',gap:12,justifyContent:'center',marginTop:4}}>
                     {data.temperature_split.map((t,i) => (
-                      <span key={i} style={{fontSize:11,color:'#64748b'}}>
+                      <span key={i} style={{fontSize:11,color:'var(--text-secondary)'}}>
                         <span style={{color:t.color,fontWeight:700}}>●</span> {t.name}: {t.value}
                       </span>
                     ))}
                   </div>
                 </>
-              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:40}}>No temperature data</div>}
+              ) : <div style={{textAlign:'center',color:'var(--text-muted)',padding:40}}>No temperature data</div>}
             </div>
           </div>
 
           {/* Row 4 — Module breakdown + Stage funnel */}
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
-            <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
-              <div style={{fontWeight:600,color:'#1e293b',marginBottom:4,fontSize:14}}>Top Interested Products / Services</div>
-              <div style={{fontSize:11,color:'#94a3b8',marginBottom:12}}>What leads are most interested in (by enquiry volume)</div>
+            <div style={{background:'var(--bg-card)',borderRadius:10,padding:20,border:'1px solid var(--border)'}}>
+              <div style={{fontWeight:600,color:'var(--text-primary)',marginBottom:4,fontSize:14}}>Top Interested Products / Services</div>
+              <div style={{fontSize:11,color:'var(--text-muted)',marginBottom:12}}>What leads are most interested in (by enquiry volume)</div>
               {data.module_breakdown && data.module_breakdown.length > 0 ? (
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={data.module_breakdown} layout="vertical" margin={{top:0,right:20,bottom:0,left:120}}>
@@ -3371,10 +3371,10 @@ function Reports({ activeBusiness }) {
                     <Bar dataKey="count" fill="#10b981" radius={[0,4,4,0]}/>
                   </BarChart>
                 </ResponsiveContainer>
-              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:40}}>No product/service interest data yet</div>}
+              ) : <div style={{textAlign:'center',color:'var(--text-muted)',padding:40}}>No product/service interest data yet</div>}
             </div>
-            <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
-              <div style={{fontWeight:600,color:'#1e293b',marginBottom:16,fontSize:14}}>Lead Stage Funnel</div>
+            <div style={{background:'var(--bg-card)',borderRadius:10,padding:20,border:'1px solid var(--border)'}}>
+              <div style={{fontWeight:600,color:'var(--text-primary)',marginBottom:16,fontSize:14}}>Lead Stage Funnel</div>
               {data.stage_funnel && data.stage_funnel.length > 0 ? (
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={data.stage_funnel} layout="vertical" margin={{top:0,right:20,bottom:0,left:80}}>
@@ -3384,72 +3384,72 @@ function Reports({ activeBusiness }) {
                     <Bar dataKey="count" fill="#8b5cf6" radius={[0,4,4,0]}/>
                   </BarChart>
                 </ResponsiveContainer>
-              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:40}}>No stage data yet</div>}
+              ) : <div style={{textAlign:'center',color:'var(--text-muted)',padding:40}}>No stage data yet</div>}
             </div>
           </div>
 
           {/* Row 5 — Source Breakdown + Location */}
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
-            <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
-              <div style={{fontWeight:600,color:'#1e293b',marginBottom:16,fontSize:14}}>Channel Source Breakdown</div>
+            <div style={{background:'var(--bg-card)',borderRadius:10,padding:20,border:'1px solid var(--border)'}}>
+              <div style={{fontWeight:600,color:'var(--text-primary)',marginBottom:16,fontSize:14}}>Channel Source Breakdown</div>
               {data.source_split && data.source_split.length > 0 ? (
                 <div style={{display:'flex', flexDirection:'column', gap:12}}>
                   {data.source_split.map((s, i) => (
                     <div key={i}>
                       <div style={{display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:4}}>
-                        <span style={{fontWeight:600, color:'#475569'}}>{s.name}</span>
-                        <span style={{color:'#64748b'}}>{s.percentage}% ({s.value})</span>
+                        <span style={{fontWeight:600, color:'var(--text-secondary)'}}>{s.name}</span>
+                        <span style={{color:'var(--text-secondary)'}}>{s.percentage}% ({s.value})</span>
                       </div>
-                      <div style={{height:8, background:'#f1f5f9', borderRadius:4, overflow:'hidden'}}>
+                      <div style={{height:8, background:'var(--bg-input)', borderRadius:4, overflow:'hidden'}}>
                         <div style={{width:`${s.percentage}%`, height:'100%', background: s.color, borderRadius:4}} />
                       </div>
                     </div>
                   ))}
                 </div>
-              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:40}}>No source data available</div>}
+              ) : <div style={{textAlign:'center',color:'var(--text-muted)',padding:40}}>No source data available</div>}
             </div>
-            <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0'}}>
-              <div style={{fontWeight:600,color:'#1e293b',marginBottom:12,fontSize:14}}>Top Locations</div>
+            <div style={{background:'var(--bg-card)',borderRadius:10,padding:20,border:'1px solid var(--border)'}}>
+              <div style={{fontWeight:600,color:'var(--text-primary)',marginBottom:12,fontSize:14}}>Top Locations</div>
               {data.top_locations && data.top_locations.length > 0 ? (
                 <div style={{display:'flex',flexDirection:'column',gap:8}}>
                   {data.top_locations.map((loc,i) => (
                     <div key={i} style={{display:'flex',alignItems:'center',gap:8}}>
-                      <div style={{flex:1,fontSize:13,color:'#475569',fontWeight:500}}>{loc.location}</div>
-                      <div style={{width:120,background:'#f1f5f9',borderRadius:4,height:8,overflow:'hidden'}}>
+                      <div style={{flex:1,fontSize:13,color:'var(--text-secondary)',fontWeight:500}}>{loc.location}</div>
+                      <div style={{width:120,background:'var(--bg-input)',borderRadius:4,height:8,overflow:'hidden'}}>
                         <div style={{width:`${Math.round(loc.count/data.top_locations[0].count*100)}%`,background:'#3b82f6',height:'100%',borderRadius:4}}/>
                       </div>
-                      <div style={{fontSize:12,color:'#64748b',minWidth:24,textAlign:'right'}}>{loc.count}</div>
+                      <div style={{fontSize:12,color:'var(--text-secondary)',minWidth:24,textAlign:'right'}}>{loc.count}</div>
                     </div>
                   ))}
                 </div>
-              ) : <div style={{textAlign:'center',color:'#94a3b8',padding:20}}>No location data</div>}
+              ) : <div style={{textAlign:'center',color:'var(--text-muted)',padding:20}}>No location data</div>}
             </div>
           </div>
 
           {/* Row 6 — Top leads table */}
-          <div style={{background:'white',borderRadius:10,padding:20,border:'1px solid #e2e8f0',marginBottom:16}}>
+          <div style={{background:'var(--bg-card)',borderRadius:10,padding:20,border:'1px solid var(--border)',marginBottom:16}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
-              <div style={{fontWeight:600,color:'#1e293b',fontSize:14}}>Top Priority Leads</div>
-              <button onClick={handleExport} style={{padding:'5px 12px',borderRadius:6,background:'#f1f5f9',border:'1px solid #e2e8f0',cursor:'pointer',fontSize:12,color:'#475569'}}>⬇ Export All as CSV</button>
+              <div style={{fontWeight:600,color:'var(--text-primary)',fontSize:14}}>Top Priority Leads</div>
+              <button onClick={handleExport} style={{padding:'5px 12px',borderRadius:6,background:'var(--bg-input)',border:'1px solid var(--border)',cursor:'pointer',fontSize:12,color:'var(--text-secondary)'}}>⬇ Export All as CSV</button>
             </div>
             <table style={{width:'100%',borderCollapse:'collapse'}}>
               <thead>
                 <tr style={{borderBottom:'2px solid #f1f5f9'}}>
                   {['Name','Phone','Module','Temperature','Stage','Qualified','Last Active'].map(h => (
-                    <th key={h} style={{textAlign:'left',padding:'8px 10px',fontSize:11,color:'#94a3b8',fontWeight:600,textTransform:'uppercase',letterSpacing:'0.05em'}}>{h}</th>
+                    <th key={h} style={{textAlign:'left',padding:'8px 10px',fontSize:11,color:'var(--text-muted)',fontWeight:600,textTransform:'uppercase',letterSpacing:'0.05em'}}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {(data.top_leads || []).map((lead,i) => (
-                  <tr key={i} style={{borderBottom:'1px solid #f8fafc'}}>
-                    <td style={{padding:'10px',fontSize:13,color:'#1e293b',fontWeight:500}}>
+                  <tr key={i} style={{borderBottom:'1px solid var(--border)'}}>
+                    <td style={{padding:'10px',fontSize:13,color:'var(--text-primary)',fontWeight:500}}>
                       {lead.name && /^\d{10,}$/.test(String(lead.name))
                         ? `User ...${String(lead.name).slice(-4)}`
                         : (lead.name || '—')}
                     </td>
-                    <td style={{padding:'10px',fontSize:13,color:'#475569'}}>{lead.phone || '—'}</td>
-                    <td style={{padding:'10px',fontSize:13,color:'#475569'}}>{lead.module || '—'}</td>
+                    <td style={{padding:'10px',fontSize:13,color:'var(--text-secondary)'}}>{lead.phone || '—'}</td>
+                    <td style={{padding:'10px',fontSize:13,color:'var(--text-secondary)'}}>{lead.module || '—'}</td>
                     <td style={{padding:'10px'}}>
                       <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,
                         background: lead.temperature==='hot' ? '#fef2f2' : lead.temperature==='warm' ? '#fffbeb' : '#eff6ff',
@@ -3458,13 +3458,13 @@ function Reports({ activeBusiness }) {
                         {lead.temperature==='hot' ? '🔴' : lead.temperature==='warm' ? '🟡' : '🔵'} {lead.temperature}
                       </span>
                     </td>
-                    <td style={{padding:'10px',fontSize:12,color:'#64748b'}}>{lead.stage || '—'}</td>
+                    <td style={{padding:'10px',fontSize:12,color:'var(--text-secondary)'}}>{lead.stage || '—'}</td>
                     <td style={{padding:'10px',fontSize:12}}>
                       {lead.is_qualified
                         ? <span style={{color:'#10b981',fontWeight:600}}>✓ Yes</span>
-                        : <span style={{color:'#94a3b8'}}>No</span>}
+                        : <span style={{color:'var(--text-muted)'}}>No</span>}
                     </td>
-                    <td style={{padding:'10px',fontSize:12,color:'#94a3b8'}}>
+                    <td style={{padding:'10px',fontSize:12,color:'var(--text-muted)'}}>
                       {lead.updated_at ? new Date(lead.updated_at).toLocaleDateString() : '—'}
                     </td>
                   </tr>
@@ -3588,7 +3588,7 @@ function SettingsPage({ activeBusiness }) {
   if (loading) return (
     <section>
       <Title title="Settings" sub="Configure your AI Command Center"/>
-      <div style={{padding:40,textAlign:'center',color:'#64748b'}}>Loading settings...</div>
+      <div style={{padding:40,textAlign:'center',color:'var(--text-secondary)'}}>Loading settings...</div>
     </section>
   );
 
@@ -3607,29 +3607,29 @@ function SettingsPage({ activeBusiness }) {
         <div style={{width:200,flexShrink:0}}>
           {TABS.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'10px 14px',borderRadius:8,border:'none',background: activeTab===tab.id ? '#eff6ff' : 'transparent',color: activeTab===tab.id ? '#3b82f6' : '#64748b',cursor:'pointer',fontSize:13,fontWeight: activeTab===tab.id ? 600 : 400,marginBottom:2,textAlign:'left',transition:'all 0.15s'}}>
+              style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'10px 14px',borderRadius:8,border:'none',background: activeTab===tab.id ? 'var(--bg-tab)' : 'transparent',color: activeTab===tab.id ? '#3b82f6' : 'var(--text-secondary)',cursor:'pointer',fontSize:13,fontWeight: activeTab===tab.id ? 600 : 400,marginBottom:2,textAlign:'left',transition:'all 0.15s'}}>
               <span style={{fontSize:15}}>{tab.icon}</span> {tab.label}
             </button>
           ))}
         </div>
 
         {/* Right content panel */}
-        <div style={{flex:1,background:'white',borderRadius:12,border:'1px solid #e2e8f0',padding:24,minHeight:400}}>
+        <div style={{flex:1,background:'var(--bg-card)',borderRadius:12,border:'1px solid var(--border)',padding:24,minHeight:400}}>
 
           {/* BUSINESS PROFILE */}
           {activeTab === 'profile' && (
             <div>
-              <div style={{fontSize:15,fontWeight:700,color:'#1e293b',marginBottom:4}}>Business Profile</div>
-              <div style={{fontSize:12,color:'#64748b',marginBottom:20}}>This information is used by the AI to understand your business context.</div>
+              <div style={{fontSize:15,fontWeight:700,color:'var(--text-primary)',marginBottom:4}}>Business Profile</div>
+              <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:20}}>This information is used by the AI to understand your business context.</div>
 
               <div style={{display:'flex',flexDirection:'column',gap:16}}>
                 <div>
-                  <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'0.04em'}}>Business Name</label>
-                  <input value={form.business_name} onChange={e => setForm(p=>({...p,business_name:e.target.value}))} placeholder="e.g. SAP Guru by Mohamed Aslam" style={{width:'100%',padding:'9px 11px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,boxSizing:'border-box',color:'#1e293b'}}/>
+                  <label style={{fontSize:12,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'0.04em'}}>Business Name</label>
+                  <input value={form.business_name} onChange={e => setForm(p=>({...p,business_name:e.target.value}))} placeholder="e.g. SAP Guru by Mohamed Aslam" style={{width:'100%',padding:'9px 11px',borderRadius:7,border:'1px solid var(--border)',fontSize:13,boxSizing:'border-box',color:'var(--text-primary)'}}/>
                 </div>
                 <div>
-                  <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'0.04em'}}>Industry</label>
-                  <select value={form.industry} onChange={e => setForm(p=>({...p,industry:e.target.value}))} style={{width:'100%',padding:'9px 11px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,background:'white',boxSizing:'border-box',color:'#1e293b'}}>
+                  <label style={{fontSize:12,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'0.04em'}}>Industry</label>
+                  <select value={form.industry} onChange={e => setForm(p=>({...p,industry:e.target.value}))} style={{width:'100%',padding:'9px 11px',borderRadius:7,border:'1px solid var(--border)',fontSize:13,background:'var(--bg-card)',boxSizing:'border-box',color:'var(--text-primary)'}}>
                     {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
                   </select>
                 </div>
@@ -3645,14 +3645,14 @@ function SettingsPage({ activeBusiness }) {
           {/* AI BEHAVIOUR */}
           {activeTab === 'ai' && (
             <div>
-              <div style={{fontSize:15,fontWeight:700,color:'#1e293b',marginBottom:4}}>AI Behaviour</div>
-              <div style={{fontSize:12,color:'#64748b',marginBottom:20}}>Control how the AI responds and when it sends replies.</div>
+              <div style={{fontSize:15,fontWeight:700,color:'var(--text-primary)',marginBottom:4}}>AI Behaviour</div>
+              <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:20}}>Control how the AI responds and when it sends replies.</div>
 
               {/* AI Enabled Toggle */}
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 16px',background: form.ai_enabled ? '#f0fdf4' : '#fef2f2',borderRadius:10,border:`1px solid ${form.ai_enabled ? '#bbf7d0' : '#fecaca'}`,marginBottom:16}}>
                 <div>
-                  <div style={{fontSize:13,fontWeight:700,color:'#1e293b'}}>AI Auto-Reply</div>
-                  <div style={{fontSize:12,color:'#64748b',marginTop:2}}>{form.ai_enabled ? 'AI is actively replying to incoming messages' : 'AI is paused — no automatic replies being sent'}</div>
+                  <div style={{fontSize:13,fontWeight:700,color:'var(--text-primary)'}}>AI Auto-Reply</div>
+                  <div style={{fontSize:12,color:'var(--text-secondary)',marginTop:2}}>{form.ai_enabled ? 'AI is actively replying to incoming messages' : 'AI is paused — no automatic replies being sent'}</div>
                 </div>
                 <div onClick={() => setForm(p=>({...p,ai_enabled:!p.ai_enabled}))} style={{cursor:'pointer',color: form.ai_enabled ? '#10b981' : '#94a3b8'}}>
                   {form.ai_enabled ? <ToggleRight size={36}/> : <ToggleLeft size={36}/>}
@@ -3660,26 +3660,26 @@ function SettingsPage({ activeBusiness }) {
               </div>
 
               <div style={{marginBottom:16}}>
-                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'0.04em'}}>AI Tone</label>
-                <select value={form.ai_tone} onChange={e => setForm(p=>({...p,ai_tone:e.target.value}))} style={{width:'100%',padding:'9px 11px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,background:'white',color:'#1e293b'}}>
+                <label style={{fontSize:12,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'0.04em'}}>AI Tone</label>
+                <select value={form.ai_tone} onChange={e => setForm(p=>({...p,ai_tone:e.target.value}))} style={{width:'100%',padding:'9px 11px',borderRadius:7,border:'1px solid var(--border)',fontSize:13,background:'var(--bg-card)',color:'var(--text-primary)'}}>
                   {TONES.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
-                <div style={{fontSize:11,color:'#94a3b8',marginTop:5}}>This tone is injected into every AI prompt for this workspace.</div>
+                <div style={{fontSize:11,color:'var(--text-muted)',marginTop:5}}>This tone is injected into every AI prompt for this workspace.</div>
               </div>
 
               {/* Auto-Reply Delay Timer */}
               <div style={{marginBottom:16}}>
-                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'0.04em'}}>Auto-Reply Delay</label>
+                <label style={{fontSize:12,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'0.04em'}}>Auto-Reply Delay</label>
                 <div style={{display:'flex',alignItems:'center',gap:10}}>
                   <input
                     type="number" min="0" max="60"
                     value={form.reply_delay_minutes}
                     onChange={e => setForm(p=>({...p, reply_delay_minutes: Math.max(0, parseInt(e.target.value)||0)}))}
-                    style={{width:90,padding:'9px 11px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:14,fontWeight:700,color:'#1e293b',textAlign:'center'}}
+                    style={{width:90,padding:'9px 11px',borderRadius:7,border:'1px solid var(--border)',fontSize:14,fontWeight:700,color:'var(--text-primary)',textAlign:'center'}}
                   />
-                  <span style={{fontSize:13,color:'#475569',fontWeight:500}}>minutes</span>
+                  <span style={{fontSize:13,color:'var(--text-secondary)',fontWeight:500}}>minutes</span>
                 </div>
-                <div style={{fontSize:11,color:'#94a3b8',marginTop:5}}>
+                <div style={{fontSize:11,color:'var(--text-muted)',marginTop:5}}>
                   The AI waits this many minutes after the last message before sending a reply. Set to <b>0</b> for instant replies. Recommended: <b>2–5 minutes</b> to feel more natural.
                 </div>
                 {form.reply_delay_minutes === 0 && (
@@ -3704,17 +3704,17 @@ function SettingsPage({ activeBusiness }) {
           {/* WORKING HOURS */}
           {activeTab === 'hours' && (
             <div>
-              <div style={{fontSize:15,fontWeight:700,color:'#1e293b',marginBottom:4}}>Working Hours</div>
-              <div style={{fontSize:12,color:'#64748b',marginBottom:20}}>The AI uses these hours to set expectations with customers outside business hours.</div>
+              <div style={{fontSize:15,fontWeight:700,color:'var(--text-primary)',marginBottom:4}}>Working Hours</div>
+              <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:20}}>The AI uses these hours to set expectations with customers outside business hours.</div>
 
               {['mon_fri','sat','sun'].map(day => (
                 <div key={day} style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
-                  <div style={{width:80,fontSize:12,fontWeight:600,color:'#475569',textTransform:'uppercase'}}>{day === 'mon_fri' ? 'Mon – Fri' : day === 'sat' ? 'Saturday' : 'Sunday'}</div>
+                  <div style={{width:80,fontSize:12,fontWeight:600,color:'var(--text-secondary)',textTransform:'uppercase'}}>{day === 'mon_fri' ? 'Mon – Fri' : day === 'sat' ? 'Saturday' : 'Sunday'}</div>
                   <input
                     value={form.working_hours[day] || ''}
                     onChange={e => setForm(p => ({...p, working_hours: {...p.working_hours, [day]: e.target.value}}))}
                     placeholder={day === 'sun' ? 'Closed' : '09:00 - 18:00'}
-                    style={{flex:1,padding:'8px 11px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,color:'#1e293b'}}
+                    style={{flex:1,padding:'8px 11px',borderRadius:7,border:'1px solid var(--border)',fontSize:13,color:'var(--text-primary)'}}
                   />
                 </div>
               ))}
@@ -3729,27 +3729,27 @@ function SettingsPage({ activeBusiness }) {
           {/* REPLY TEMPLATES */}
           {activeTab === 'templates' && (
             <div>
-              <div style={{fontSize:15,fontWeight:700,color:'#1e293b',marginBottom:4}}>Reply Templates</div>
-              <div style={{fontSize:12,color:'#64748b',marginBottom:20}}>Quick-send templates for common replies. Use <code style={{background:'#f1f5f9',padding:'1px 5px',borderRadius:3}}>{'{name}'}</code> to personalise.</div>
+              <div style={{fontSize:15,fontWeight:700,color:'var(--text-primary)',marginBottom:4}}>Reply Templates</div>
+              <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:20}}>Quick-send templates for common replies. Use <code style={{background:'var(--bg-input)',padding:'1px 5px',borderRadius:3}}>{'{name}'}</code> to personalise.</div>
 
               {form.templates.length === 0 && (
-                <div style={{padding:'20px',textAlign:'center',color:'#94a3b8',fontSize:13,background:'#f8fafc',borderRadius:8,marginBottom:16}}>No templates yet. Add your first one below.</div>
+                <div style={{padding:'20px',textAlign:'center',color:'var(--text-muted)',fontSize:13,background:'var(--bg-input)',borderRadius:8,marginBottom:16}}>No templates yet. Add your first one below.</div>
               )}
 
               {form.templates.map((tpl, idx) => (
-                <div key={idx} style={{background:'#f8fafc',borderRadius:8,padding:'12px 14px',marginBottom:10,border:'1px solid #e2e8f0'}}>
+                <div key={idx} style={{background:'var(--bg-input)',borderRadius:8,padding:'12px 14px',marginBottom:10,border:'1px solid var(--border)'}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
-                    <span style={{fontSize:13,fontWeight:600,color:'#1e293b'}}>{tpl.name}</span>
+                    <span style={{fontSize:13,fontWeight:600,color:'var(--text-primary)'}}>{tpl.name}</span>
                     <button onClick={() => removeTemplate(idx)} style={{background:'none',border:'none',cursor:'pointer',color:'#ef4444',padding:2}}><Trash2 size={13}/></button>
                   </div>
-                  <div style={{fontSize:12,color:'#64748b',lineHeight:1.5}}>{tpl.text}</div>
+                  <div style={{fontSize:12,color:'var(--text-secondary)',lineHeight:1.5}}>{tpl.text}</div>
                 </div>
               ))}
 
               <div style={{background:'#f0f9ff',borderRadius:8,padding:'14px',border:'1px solid #bae6fd',marginTop:16}}>
                 <div style={{fontSize:12,fontWeight:600,color:'#0369a1',marginBottom:10}}>Add New Template</div>
-                <input value={newTemplate.name} onChange={e => setNewTemplate(p=>({...p,name:e.target.value}))} placeholder="Template name (e.g. Greeting)" style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,marginBottom:8,boxSizing:'border-box',color:'#1e293b'}}/>
-                <textarea value={newTemplate.text} onChange={e => setNewTemplate(p=>({...p,text:e.target.value}))} placeholder="Template message... use {name} for personalisation" rows={3} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,resize:'vertical',fontFamily:'inherit',boxSizing:'border-box',color:'#1e293b',marginBottom:8}}/>
+                <input value={newTemplate.name} onChange={e => setNewTemplate(p=>({...p,name:e.target.value}))} placeholder="Template name (e.g. Greeting)" style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid var(--border)',fontSize:13,marginBottom:8,boxSizing:'border-box',color:'var(--text-primary)'}}/>
+                <textarea value={newTemplate.text} onChange={e => setNewTemplate(p=>({...p,text:e.target.value}))} placeholder="Template message... use {name} for personalisation" rows={3} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid var(--border)',fontSize:13,resize:'vertical',fontFamily:'inherit',boxSizing:'border-box',color:'var(--text-primary)',marginBottom:8}}/>
                 <button onClick={addTemplate} style={{padding:'7px 16px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:12,fontWeight:600}}>+ Add Template</button>
               </div>
             </div>
@@ -3758,12 +3758,12 @@ function SettingsPage({ activeBusiness }) {
           {/* BLACKLIST */}
           {activeTab === 'blacklist' && (
             <div>
-              <div style={{fontSize:15,fontWeight:700,color:'#1e293b',marginBottom:4}}>Blacklist Keywords</div>
-              <div style={{fontSize:12,color:'#64748b',marginBottom:20}}>Messages containing these keywords will be ignored by the AI and flagged for manual review.</div>
+              <div style={{fontSize:15,fontWeight:700,color:'var(--text-primary)',marginBottom:4}}>Blacklist Keywords</div>
+              <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:20}}>Messages containing these keywords will be ignored by the AI and flagged for manual review.</div>
 
               <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:20}}>
                 {form.blacklist_keywords.length === 0 && (
-                  <span style={{fontSize:12,color:'#94a3b8'}}>No keywords blacklisted yet.</span>
+                  <span style={{fontSize:12,color:'var(--text-muted)'}}>No keywords blacklisted yet.</span>
                 )}
                 {form.blacklist_keywords.map(kw => (
                   <span key={kw} style={{display:'flex',alignItems:'center',gap:6,padding:'4px 10px',borderRadius:20,background:'#fef2f2',border:'1px solid #fecaca',fontSize:12,color:'#ef4444',fontWeight:500}}>
@@ -3779,19 +3779,19 @@ function SettingsPage({ activeBusiness }) {
                   onChange={e => setNewKeyword(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && addKeyword()}
                   placeholder="Type a keyword and press Enter or Add"
-                  style={{flex:1,padding:'8px 11px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,color:'#1e293b'}}
+                  style={{flex:1,padding:'8px 11px',borderRadius:7,border:'1px solid var(--border)',fontSize:13,color:'var(--text-primary)'}}
                 />
                 <button onClick={addKeyword} style={{padding:'8px 16px',borderRadius:7,background:'#ef4444',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600}}>Add</button>
               </div>
-              <div style={{fontSize:11,color:'#94a3b8',marginTop:8}}>Press Enter or click Add. Keywords are saved automatically.</div>
+              <div style={{fontSize:11,color:'var(--text-muted)',marginTop:8}}>Press Enter or click Add. Keywords are saved automatically.</div>
             </div>
           )}
 
           {/* SYSTEM INFO */}
           {activeTab === 'system' && (
             <div>
-              <div style={{fontSize:15,fontWeight:700,color:'#1e293b',marginBottom:4}}>System Information</div>
-              <div style={{fontSize:12,color:'#64748b',marginBottom:20}}>Read-only information about your AI Command Center setup.</div>
+              <div style={{fontSize:15,fontWeight:700,color:'var(--text-primary)',marginBottom:4}}>System Information</div>
+              <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:20}}>Read-only information about your AI Command Center setup.</div>
 
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
                 {[
@@ -3804,9 +3804,9 @@ function SettingsPage({ activeBusiness }) {
                   ['AI Tone', form.ai_tone],
                   ['Industry', form.industry],
                 ].map(([k,v]) => (
-                  <div key={k} style={{background:'#f8fafc',borderRadius:8,padding:'12px 14px',border:'1px solid #e2e8f0'}}>
-                    <div style={{fontSize:11,color:'#94a3b8',marginBottom:3,textTransform:'uppercase',letterSpacing:'0.04em'}}>{k}</div>
-                    <div style={{fontSize:13,fontWeight:600,color:'#1e293b'}}>{v}</div>
+                  <div key={k} style={{background:'var(--bg-input)',borderRadius:8,padding:'12px 14px',border:'1px solid var(--border)'}}>
+                    <div style={{fontSize:11,color:'var(--text-muted)',marginBottom:3,textTransform:'uppercase',letterSpacing:'0.04em'}}>{k}</div>
+                    <div style={{fontSize:13,fontWeight:600,color:'var(--text-primary)'}}>{v}</div>
                   </div>
                 ))}
               </div>
@@ -3885,7 +3885,7 @@ function FollowerDMPanel({ bizId, bizHeaders }) {
     completed: { color: '#6b7280', label: 'Completed' },
   };
 
-  if (loading) return <div style={{textAlign:'center',padding:40,color:'#64748b'}}>Loading follower DM settings...</div>;
+  if (loading) return <div style={{textAlign:'center',padding:40,color:'var(--text-secondary)'}}>Loading follower DM settings...</div>;
 
   return (
     <div>
@@ -3902,67 +3902,67 @@ function FollowerDMPanel({ bizId, bizHeaders }) {
           {id:'conversations', label:`💬 Conversations (${conversations.length})`},
         ].map(t => (
           <button key={t.id} onClick={() => setActiveSubTab(t.id)}
-            style={{padding:'7px 16px',borderRadius:20,border:'1px solid',borderColor: activeSubTab===t.id ? '#2563eb' : '#e2e8f0',background: activeSubTab===t.id ? '#eff6ff' : 'white',color: activeSubTab===t.id ? '#2563eb' : '#64748b',fontWeight: activeSubTab===t.id ? 600 : 400,fontSize:13,cursor:'pointer'}}>
+            style={{padding:'7px 16px',borderRadius:20,border:'1px solid',borderColor: activeSubTab===t.id ? '#2563eb' : 'var(--border)',background: activeSubTab===t.id ? '#eff6ff' : 'white',color: activeSubTab===t.id ? '#2563eb' : '#64748b',fontWeight: activeSubTab===t.id ? 600 : 400,fontSize:13,cursor:'pointer'}}>
             {t.label}
           </button>
         ))}
       </div>
 
       {activeSubTab === 'settings' && (
-        <div style={{background:'white',borderRadius:12,border:'1px solid #e2e8f0',padding:24,display:'flex',flexDirection:'column',gap:20}}>
+        <div style={{background:'var(--bg-card)',borderRadius:12,border:'1px solid var(--border)',padding:24,display:'flex',flexDirection:'column',gap:20}}>
           {/* Enable toggle */}
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 18px',background: settings.enabled ? '#f0fdf4' : '#f8fafc',borderRadius:10,border:`1px solid ${settings.enabled ? '#bbf7d0' : '#e2e8f0'}`}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 18px',background: settings.enabled ? '#f0fdf4' : '#f8fafc',borderRadius:10,border:`1px solid ${settings.enabled ? '#bbf7d0' : 'var(--border)'}`}}>
             <div>
-              <div style={{fontSize:15,fontWeight:700,color:'#1e293b'}}>New Follower Auto-DM</div>
-              <div style={{fontSize:12,color:'#64748b',marginTop:2}}>Automatically send a welcome DM when someone follows your Instagram page</div>
+              <div style={{fontSize:15,fontWeight:700,color:'var(--text-primary)'}}>New Follower Auto-DM</div>
+              <div style={{fontSize:12,color:'var(--text-secondary)',marginTop:2}}>Automatically send a welcome DM when someone follows your Instagram page</div>
             </div>
             <button onClick={() => setSettings(p => ({...p, enabled: !p.enabled}))}
               style={{background:'none',border:'none',cursor:'pointer',padding:0}}>
               {settings.enabled
                 ? <span style={{fontSize:13,fontWeight:700,color:'#10b981',background:'#dcfce7',padding:'5px 14px',borderRadius:20}}>● Enabled</span>
-                : <span style={{fontSize:13,fontWeight:700,color:'#94a3b8',background:'#f1f5f9',padding:'5px 14px',borderRadius:20}}>○ Disabled</span>}
+                : <span style={{fontSize:13,fontWeight:700,color:'var(--text-muted)',background:'var(--bg-input)',padding:'5px 14px',borderRadius:20}}>○ Disabled</span>}
             </button>
           </div>
 
           {/* Welcome message */}
           <div>
-            <label style={{fontSize:12,fontWeight:700,color:'#475569',display:'block',marginBottom:6}}>WELCOME MESSAGE</label>
-            <div style={{fontSize:11,color:'#94a3b8',marginBottom:6}}>Use <code style={{background:'#f1f5f9',padding:'1px 5px',borderRadius:3}}>{'{name}'}</code> to personalise with the follower's first name</div>
+            <label style={{fontSize:12,fontWeight:700,color:'var(--text-secondary)',display:'block',marginBottom:6}}>WELCOME MESSAGE</label>
+            <div style={{fontSize:11,color:'var(--text-muted)',marginBottom:6}}>Use <code style={{background:'var(--bg-input)',padding:'1px 5px',borderRadius:3}}>{'{name}'}</code> to personalise with the follower's first name</div>
             <textarea
               value={settings.welcome_message}
               onChange={e => setSettings(p => ({...p, welcome_message: e.target.value}))}
               rows={6}
-              style={{width:'100%',padding:'10px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,resize:'vertical',fontFamily:'inherit',lineHeight:1.6,boxSizing:'border-box'}}
+              style={{width:'100%',padding:'10px 12px',borderRadius:8,border:'1px solid var(--border)',fontSize:13,resize:'vertical',fontFamily:'inherit',lineHeight:1.6,boxSizing:'border-box'}}
             />
           </div>
 
           {/* WhatsApp group link */}
           <div>
-            <label style={{fontSize:12,fontWeight:700,color:'#475569',display:'block',marginBottom:6}}>WHATSAPP GROUP LINK</label>
-            <div style={{fontSize:11,color:'#94a3b8',marginBottom:6}}>Shared with followers who say they are looking for job support or placement help</div>
+            <label style={{fontSize:12,fontWeight:700,color:'var(--text-secondary)',display:'block',marginBottom:6}}>WHATSAPP GROUP LINK</label>
+            <div style={{fontSize:11,color:'var(--text-muted)',marginBottom:6}}>Shared with followers who say they are looking for job support or placement help</div>
             <input
               value={settings.whatsapp_group_link}
               onChange={e => setSettings(p => ({...p, whatsapp_group_link: e.target.value}))}
               placeholder="https://chat.whatsapp.com/..."
-              style={{width:'100%',padding:'9px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,boxSizing:'border-box'}}
+              style={{width:'100%',padding:'9px 12px',borderRadius:8,border:'1px solid var(--border)',fontSize:13,boxSizing:'border-box'}}
             />
           </div>
 
           {/* Business context */}
           <div>
-            <label style={{fontSize:12,fontWeight:700,color:'#475569',display:'block',marginBottom:6}}>BUSINESS CONTEXT (for AI replies)</label>
-            <div style={{fontSize:11,color:'#94a3b8',marginBottom:6}}>Helps the AI generate smarter, more relevant replies for your specific business</div>
+            <label style={{fontSize:12,fontWeight:700,color:'var(--text-secondary)',display:'block',marginBottom:6}}>BUSINESS CONTEXT (for AI replies)</label>
+            <div style={{fontSize:11,color:'var(--text-muted)',marginBottom:6}}>Helps the AI generate smarter, more relevant replies for your specific business</div>
             <input
               value={settings.business_context}
               onChange={e => setSettings(p => ({...p, business_context: e.target.value}))}
               placeholder="e.g. SAP ERP training, career guidance, and job placement support"
-              style={{width:'100%',padding:'9px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,boxSizing:'border-box'}}
+              style={{width:'100%',padding:'9px 12px',borderRadius:8,border:'1px solid var(--border)',fontSize:13,boxSizing:'border-box'}}
             />
           </div>
 
           {/* Intent flow summary */}
-          <div style={{background:'#f8fafc',borderRadius:10,padding:16,border:'1px solid #e2e8f0'}}>
-            <div style={{fontSize:13,fontWeight:700,color:'#1e293b',marginBottom:12}}>How the Smart DM Flow Works</div>
+          <div style={{background:'var(--bg-input)',borderRadius:10,padding:16,border:'1px solid var(--border)'}}>
+            <div style={{fontSize:13,fontWeight:700,color:'var(--text-primary)',marginBottom:12}}>How the Smart DM Flow Works</div>
             <div style={{display:'flex',flexDirection:'column',gap:8}}>
               {[
                 { icon:'👋', label:'New follower detected', desc:'Welcome DM sent automatically with your message above' },
@@ -3974,8 +3974,8 @@ function FollowerDMPanel({ bizId, bizHeaders }) {
                 <div key={i} style={{display:'flex',gap:10,alignItems:'flex-start'}}>
                   <span style={{fontSize:16,minWidth:24}}>{item.icon}</span>
                   <div>
-                    <span style={{fontSize:12,fontWeight:600,color:'#1e293b'}}>{item.label}</span>
-                    <span style={{fontSize:12,color:'#64748b'}}> — {item.desc}</span>
+                    <span style={{fontSize:12,fontWeight:600,color:'var(--text-primary)'}}>{item.label}</span>
+                    <span style={{fontSize:12,color:'var(--text-secondary)'}}> — {item.desc}</span>
                   </div>
                 </div>
               ))}
@@ -3994,33 +3994,33 @@ function FollowerDMPanel({ bizId, bizHeaders }) {
       {activeSubTab === 'conversations' && (
         <div>
           {conversations.length === 0 ? (
-            <div style={{background:'white',borderRadius:12,border:'1px solid #e2e8f0',padding:48,textAlign:'center'}}>
+            <div style={{background:'var(--bg-card)',borderRadius:12,border:'1px solid var(--border)',padding:48,textAlign:'center'}}>
               <div style={{fontSize:32,marginBottom:12}}>👋</div>
-              <div style={{fontSize:16,fontWeight:600,color:'#1e293b',marginBottom:6}}>No follower conversations yet</div>
-              <div style={{fontSize:13,color:'#64748b'}}>When new followers reply to your welcome DM, their conversations will appear here</div>
+              <div style={{fontSize:16,fontWeight:600,color:'var(--text-primary)',marginBottom:6}}>No follower conversations yet</div>
+              <div style={{fontSize:13,color:'var(--text-secondary)'}}>When new followers reply to your welcome DM, their conversations will appear here</div>
             </div>
           ) : (
             <div style={{display:'flex',flexDirection:'column',gap:10}}>
               {conversations.map(conv => {
-                const intentInfo = INTENT_COLORS[conv.intent] || { bg:'#f8fafc', color:'#64748b', label: conv.intent || 'Unknown' };
-                const stageInfo = STAGE_COLORS[conv.stage] || { color:'#64748b', label: conv.stage || 'Unknown' };
+                const intentInfo = INTENT_COLORS[conv.intent] || { bg:'#f8fafc', color:'var(--text-secondary)', label: conv.intent || 'Unknown' };
+                const stageInfo = STAGE_COLORS[conv.stage] || { color:'var(--text-secondary)', label: conv.stage || 'Unknown' };
                 return (
-                  <div key={conv.id} style={{background:'white',borderRadius:10,border:'1px solid #e2e8f0',padding:'14px 18px',display:'flex',alignItems:'center',gap:14}}>
+                  <div key={conv.id} style={{background:'var(--bg-card)',borderRadius:10,border:'1px solid var(--border)',padding:'14px 18px',display:'flex',alignItems:'center',gap:14}}>
                     <div style={{width:38,height:38,borderRadius:'50%',background:'#eff6ff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
                       {conv.intent === 'job_support' ? '💼' : conv.intent === 'training' ? '🎓' : conv.intent === 'content' ? '📱' : '👋'}
                     </div>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
-                        <span style={{fontSize:14,fontWeight:700,color:'#1e293b'}}>@{conv.username || conv.sender_id}</span>
+                        <span style={{fontSize:14,fontWeight:700,color:'var(--text-primary)'}}>@{conv.username || conv.sender_id}</span>
                         {conv.intent && (
                           <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:intentInfo.bg,color:intentInfo.color}}>{intentInfo.label}</span>
                         )}
-                        <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:'#f8fafc',color:stageInfo.color}}>● {stageInfo.label}</span>
+                        <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:'var(--bg-input)',color:stageInfo.color}}>● {stageInfo.label}</span>
                         {conv.contact_captured && (
                           <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:'#f0fdf4',color:'#166534'}}>✓ Lead Saved</span>
                         )}
                       </div>
-                      <div style={{fontSize:12,color:'#94a3b8'}}>
+                      <div style={{fontSize:12,color:'var(--text-muted)'}}>
                         {conv.name && <span>{conv.name} · </span>}
                         {conv.updated_at ? new Date(conv.updated_at).toLocaleString() : ''}
                       </div>
@@ -4200,13 +4200,13 @@ function Automation({ activeBusiness }) {
       />
 
       {/* Tabs */}
-      <div style={{display:'flex',gap:4,marginBottom:20,borderBottom:'1px solid #e2e8f0',paddingBottom:0}}>
+      <div style={{display:'flex',gap:4,marginBottom:20,borderBottom:'1px solid var(--border)',paddingBottom:0}}>
         {[
           {id:'rules', label:'⚡ Automation Rules'},
           {id:'follower_dm', label:'👋 New Follower DM'},
         ].map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-            style={{padding:'9px 18px',borderRadius:'8px 8px 0 0',border:'1px solid',borderBottom: activeTab===tab.id ? '1px solid white' : '1px solid #e2e8f0',background: activeTab===tab.id ? 'white' : '#f8fafc',color: activeTab===tab.id ? '#2563eb' : '#64748b',fontWeight: activeTab===tab.id ? 700 : 500,fontSize:13,cursor:'pointer',marginBottom:-1}}>
+            style={{padding:'9px 18px',borderRadius:'8px 8px 0 0',border:'1px solid',borderBottom: activeTab===tab.id ? '1px solid var(--bg-card)' : '1px solid var(--border)',background: activeTab===tab.id ? 'var(--bg-card)' : 'var(--bg-input)',color: activeTab===tab.id ? '#2563eb' : 'var(--text-secondary)',fontWeight: activeTab===tab.id ? 700 : 500,fontSize:13,cursor:'pointer',marginBottom:-1}}>
             {tab.label}
           </button>
         ))}
@@ -4218,13 +4218,13 @@ function Automation({ activeBusiness }) {
       {/* Stats strip */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
         {[
-          { label:'Total Rules', value: rules.length, color:'#1e293b' },
+          { label:'Total Rules', value: rules.length, color:'var(--text-primary)' },
           { label:'Active Rules', value: rules.filter(r=>r.is_active).length, color:'#10b981' },
-          { label:'Inactive Rules', value: rules.filter(r=>!r.is_active).length, color:'#94a3b8' },
+          { label:'Inactive Rules', value: rules.filter(r=>!r.is_active).length, color:'var(--text-muted)' },
           { label:'Target Groups', value: [...new Set(rules.map(r=>r.target_group))].length, color:'#3b82f6' },
         ].map((s,i) => (
-          <div key={i} style={{background:'white',borderRadius:10,padding:'14px 18px',border:'1px solid #e2e8f0'}}>
-            <div style={{fontSize:11,color:'#64748b',marginBottom:4}}>{s.label}</div>
+          <div key={i} style={{background:'var(--bg-card)',borderRadius:10,padding:'14px 18px',border:'1px solid var(--border)'}}>
+            <div style={{fontSize:11,color:'var(--text-secondary)',marginBottom:4}}>{s.label}</div>
             <div style={{fontSize:24,fontWeight:700,color:s.color}}>{s.value}</div>
           </div>
         ))}
@@ -4232,21 +4232,21 @@ function Automation({ activeBusiness }) {
 
       {/* Rules list */}
       {loading ? (
-        <div style={{textAlign:'center',padding:40,color:'#64748b'}}>Loading automation rules...</div>
+        <div style={{textAlign:'center',padding:40,color:'var(--text-secondary)'}}>Loading automation rules...</div>
       ) : rules.length === 0 ? (
-        <div style={{background:'white',borderRadius:10,border:'1px solid #e2e8f0',padding:48,textAlign:'center'}}>
-          <Zap size={40} color="#e2e8f0" style={{margin:'0 auto 12px'}}/>
-          <div style={{fontSize:16,fontWeight:600,color:'#1e293b',marginBottom:6}}>No automation rules yet</div>
-          <div style={{fontSize:13,color:'#64748b',marginBottom:20}}>Create your first rule to start automating follow-ups</div>
+        <div style={{background:'var(--bg-card)',borderRadius:10,border:'1px solid var(--border)',padding:48,textAlign:'center'}}>
+          <Zap size={40} color="var(--border)" style={{margin:'0 auto 12px'}}/>
+          <div style={{fontSize:16,fontWeight:600,color:'var(--text-primary)',marginBottom:6}}>No automation rules yet</div>
+          <div style={{fontSize:13,color:'var(--text-secondary)',marginBottom:20}}>Create your first rule to start automating follow-ups</div>
           <button onClick={() => setShowAddModal(true)} style={{padding:'8px 20px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600}}>+ Create First Rule</button>
         </div>
       ) : (
         <div style={{display:'flex',flexDirection:'column',gap:12}}>
           {rules.map(rule => {
-            const tg = TARGET_LABELS[rule.target_group] || { label: rule.target_group, color:'#64748b', bg:'#f8fafc', emoji:'📋' };
+            const tg = TARGET_LABELS[rule.target_group] || { label: rule.target_group, color:'var(--text-secondary)', bg:'#f8fafc', emoji:'📋' };
             const isSending = sendingRule === rule.id;
             return (
-              <div key={rule.id} style={{background:'white',borderRadius:10,border:`1px solid ${rule.is_active ? '#bfdbfe' : '#e2e8f0'}`,padding:'18px 20px',display:'flex',alignItems:'flex-start',gap:16,transition:'border-color 0.2s'}}>
+              <div key={rule.id} style={{background:'var(--bg-card)',borderRadius:10,border:`1px solid ${rule.is_active ? '#bfdbfe' : 'var(--border)'}`,padding:'18px 20px',display:'flex',alignItems:'flex-start',gap:16,transition:'border-color 0.2s'}}>
                 {/* Left — toggle */}
                 <div style={{paddingTop:2}}>
                   <button
@@ -4263,17 +4263,17 @@ function Automation({ activeBusiness }) {
                 {/* Middle — content */}
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:6}}>
-                    <span style={{fontSize:15,fontWeight:700,color:'#1e293b'}}>{rule.name}</span>
+                    <span style={{fontSize:15,fontWeight:700,color:'var(--text-primary)'}}>{rule.name}</span>
                     <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:tg.bg,color:tg.color}}>{tg.emoji} {tg.label}</span>
                     {rule.is_active
                       ? <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:'#f0fdf4',color:'#10b981'}}>● Active</span>
-                      : <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:'#f8fafc',color:'#94a3b8'}}>○ Inactive</span>}
+                      : <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:'var(--bg-input)',color:'var(--text-muted)'}}>○ Inactive</span>}
                   </div>
-                  <div style={{fontSize:13,color:'#475569',background:'#f8fafc',borderRadius:6,padding:'10px 12px',fontFamily:'monospace',lineHeight:1.5,wordBreak:'break-word'}}>
+                  <div style={{fontSize:13,color:'var(--text-secondary)',background:'var(--bg-input)',borderRadius:6,padding:'10px 12px',fontFamily:'monospace',lineHeight:1.5,wordBreak:'break-word'}}>
                     {rule.message_template}
                   </div>
                   {rule.created_at && (
-                    <div style={{fontSize:11,color:'#94a3b8',marginTop:6}}>Created {new Date(rule.created_at).toLocaleDateString()}</div>
+                    <div style={{fontSize:11,color:'var(--text-muted)',marginTop:6}}>Created {new Date(rule.created_at).toLocaleDateString()}</div>
                   )}
                 </div>
 
@@ -4282,13 +4282,13 @@ function Automation({ activeBusiness }) {
                   <button
                     onClick={() => handleSendNow(rule)}
                     disabled={isSending}
-                    style={{padding:'7px 14px',borderRadius:6,background: isSending ? '#e2e8f0' : '#3b82f6',color: isSending ? '#94a3b8' : 'white',border:'none',cursor: isSending ? 'not-allowed' : 'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',gap:5,justifyContent:'center'}}
+                    style={{padding:'7px 14px',borderRadius:6,background: isSending ? 'var(--border)' : '#3b82f6',color: isSending ? '#94a3b8' : 'white',border:'none',cursor: isSending ? 'not-allowed' : 'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',gap:5,justifyContent:'center'}}
                   >
                     <Play size={12}/> {isSending ? 'Loading...' : 'Send Now'}
                   </button>
                   <button
                     onClick={() => handleDeleteRule(rule.id, rule.name)}
-                    style={{padding:'7px 14px',borderRadius:6,background:'white',color:'#ef4444',border:'1px solid #fecaca',cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',gap:5,justifyContent:'center'}}
+                    style={{padding:'7px 14px',borderRadius:6,background:'var(--bg-card)',color:'#ef4444',border:'1px solid #fecaca',cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',gap:5,justifyContent:'center'}}
                   >
                     <Trash2 size={12}/> Delete
                   </button>
@@ -4302,12 +4302,12 @@ function Automation({ activeBusiness }) {
       {/* ── Confirm Send Modal ── */}
       {sendConfirm && (
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
-          <div style={{background:'white',borderRadius:12,padding:28,width:440,maxWidth:'90vw',boxShadow:'0 20px 60px rgba(0,0,0,0.2)'}}>
-            <div style={{fontSize:16,fontWeight:700,color:'#1e293b',marginBottom:8}}>Confirm Bulk Send</div>
-            <div style={{fontSize:13,color:'#64748b',marginBottom:16}}>You are about to send a message to <strong style={{color:'#1e293b'}}>{sendConfirm.count} leads</strong> in the <strong style={{color:'#1e293b'}}>{TARGET_LABELS[sendConfirm.target]?.label || sendConfirm.target}</strong> group.</div>
-            <div style={{background:'#f8fafc',borderRadius:8,padding:'12px 14px',fontSize:13,color:'#475569',fontFamily:'monospace',marginBottom:20,lineHeight:1.5}}>{sendConfirm.message}</div>
+          <div style={{background:'var(--bg-card)',borderRadius:12,padding:28,width:440,maxWidth:'90vw',boxShadow:'0 20px 60px rgba(0,0,0,0.2)'}}>
+            <div style={{fontSize:16,fontWeight:700,color:'var(--text-primary)',marginBottom:8}}>Confirm Bulk Send</div>
+            <div style={{fontSize:13,color:'var(--text-secondary)',marginBottom:16}}>You are about to send a message to <strong style={{color:'var(--text-primary)'}}>{sendConfirm.count} leads</strong> in the <strong style={{color:'var(--text-primary)'}}>{TARGET_LABELS[sendConfirm.target]?.label || sendConfirm.target}</strong> group.</div>
+            <div style={{background:'var(--bg-input)',borderRadius:8,padding:'12px 14px',fontSize:13,color:'var(--text-secondary)',fontFamily:'monospace',marginBottom:20,lineHeight:1.5}}>{sendConfirm.message}</div>
             <div style={{display:'flex',gap:10,justifyContent:'flex-end'}}>
-              <button onClick={() => setSendConfirm(null)} style={{padding:'8px 18px',borderRadius:6,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13}}>Cancel</button>
+              <button onClick={() => setSendConfirm(null)} style={{padding:'8px 18px',borderRadius:6,border:'1px solid var(--border)',background:'var(--bg-card)',cursor:'pointer',fontSize:13}}>Cancel</button>
               <button onClick={confirmSend} style={{padding:'8px 18px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600}}>Send to {sendConfirm.count} leads</button>
             </div>
           </div>
@@ -4320,30 +4320,30 @@ function Automation({ activeBusiness }) {
       {/* ── Add Rule Modal ── */}
       {showAddModal && (
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
-          <div style={{background:'white',borderRadius:12,padding:28,width:500,maxWidth:'90vw',boxShadow:'0 20px 60px rgba(0,0,0,0.2)'}}>
+          <div style={{background:'var(--bg-card)',borderRadius:12,padding:28,width:500,maxWidth:'90vw',boxShadow:'0 20px 60px rgba(0,0,0,0.2)'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-              <div style={{fontSize:16,fontWeight:700,color:'#1e293b'}}>Create Automation Rule</div>
-              <button onClick={() => setShowAddModal(false)} style={{background:'none',border:'none',cursor:'pointer',color:'#94a3b8'}}><X size={18}/></button>
+              <div style={{fontSize:16,fontWeight:700,color:'var(--text-primary)'}}>Create Automation Rule</div>
+              <button onClick={() => setShowAddModal(false)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--text-muted)'}}><X size={18}/></button>
             </div>
             <div style={{display:'flex',flexDirection:'column',gap:14}}>
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>RULE NAME</label>
-                <input value={newRule.name} onChange={e => setNewRule(p => ({...p, name: e.target.value}))} placeholder="e.g. Hot Lead Follow-Up" style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,boxSizing:'border-box'}}/>
+                <label style={{fontSize:12,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:4}}>RULE NAME</label>
+                <input value={newRule.name} onChange={e => setNewRule(p => ({...p, name: e.target.value}))} placeholder="e.g. Hot Lead Follow-Up" style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid var(--border)',fontSize:13,boxSizing:'border-box'}}/>
               </div>
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>TARGET GROUP</label>
-                <select value={newRule.target_group} onChange={e => setNewRule(p => ({...p, target_group: e.target.value}))} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,background:'white',boxSizing:'border-box'}}>
+                <label style={{fontSize:12,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:4}}>TARGET GROUP</label>
+                <select value={newRule.target_group} onChange={e => setNewRule(p => ({...p, target_group: e.target.value}))} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid var(--border)',fontSize:13,background:'var(--bg-card)',boxSizing:'border-box'}}>
                   {Object.entries(TARGET_LABELS).map(([k,v]) => <option key={k} value={k}>{v.emoji} {v.label}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>MESSAGE TEMPLATE</label>
-                <textarea value={newRule.message_template} onChange={e => setNewRule(p => ({...p, message_template: e.target.value}))} placeholder="Hi {name}, just checking in..." rows={4} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,resize:'vertical',fontFamily:'inherit',boxSizing:'border-box'}}/>
-                <div style={{fontSize:11,color:'#94a3b8',marginTop:4}}>Use {'{name}'} to personalise with the lead's name</div>
+                <label style={{fontSize:12,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:4}}>MESSAGE TEMPLATE</label>
+                <textarea value={newRule.message_template} onChange={e => setNewRule(p => ({...p, message_template: e.target.value}))} placeholder="Hi {name}, just checking in..." rows={4} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid var(--border)',fontSize:13,resize:'vertical',fontFamily:'inherit',boxSizing:'border-box'}}/>
+                <div style={{fontSize:11,color:'var(--text-muted)',marginTop:4}}>Use {'{name}'} to personalise with the lead's name</div>
               </div>
             </div>
             <div style={{display:'flex',gap:10,justifyContent:'flex-end',marginTop:20}}>
-              <button onClick={() => setShowAddModal(false)} style={{padding:'8px 18px',borderRadius:6,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13}}>Cancel</button>
+              <button onClick={() => setShowAddModal(false)} style={{padding:'8px 18px',borderRadius:6,border:'1px solid var(--border)',background:'var(--bg-card)',cursor:'pointer',fontSize:13}}>Cancel</button>
               <button onClick={handleAddRule} disabled={saving} style={{padding:'8px 18px',borderRadius:6,background: saving ? '#93c5fd' : '#3b82f6',color:'white',border:'none',cursor: saving ? 'not-allowed' : 'pointer',fontSize:13,fontWeight:600}}>{saving ? 'Saving...' : 'Create Rule'}</button>
             </div>
           </div>
@@ -4353,31 +4353,31 @@ function Automation({ activeBusiness }) {
       {/* ── Bulk Message Modal ── */}
       {showBulkModal && (
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
-          <div style={{background:'white',borderRadius:12,padding:28,width:520,maxWidth:'90vw',boxShadow:'0 20px 60px rgba(0,0,0,0.2)'}}>
+          <div style={{background:'var(--bg-card)',borderRadius:12,padding:28,width:520,maxWidth:'90vw',boxShadow:'0 20px 60px rgba(0,0,0,0.2)'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-              <div style={{fontSize:16,fontWeight:700,color:'#1e293b'}}>Send Bulk Message</div>
-              <button onClick={() => { setShowBulkModal(false); setBulkPreview(null); setBulkResult(null); setBulkForm({target_group:'hot_leads',message_template:''}); }} style={{background:'none',border:'none',cursor:'pointer',color:'#94a3b8'}}><X size={18}/></button>
+              <div style={{fontSize:16,fontWeight:700,color:'var(--text-primary)'}}>Send Bulk Message</div>
+              <button onClick={() => { setShowBulkModal(false); setBulkPreview(null); setBulkResult(null); setBulkForm({target_group:'hot_leads',message_template:''}); }} style={{background:'none',border:'none',cursor:'pointer',color:'var(--text-muted)'}}><X size={18}/></button>
             </div>
 
             {bulkResult ? (
               <div style={{textAlign:'center',padding:'20px 0'}}>
                 <div style={{fontSize:40,marginBottom:12}}>✅</div>
                 <div style={{fontSize:16,fontWeight:700,color:'#10b981',marginBottom:6}}>Messages Queued!</div>
-                <div style={{fontSize:13,color:'#64748b',marginBottom:20}}>{bulkResult.message}</div>
+                <div style={{fontSize:13,color:'var(--text-secondary)',marginBottom:20}}>{bulkResult.message}</div>
                 <button onClick={() => { setShowBulkModal(false); setBulkPreview(null); setBulkResult(null); setBulkForm({target_group:'hot_leads',message_template:''}); }} style={{padding:'8px 20px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600}}>Done</button>
               </div>
             ) : (
               <div style={{display:'flex',flexDirection:'column',gap:14}}>
                 <div>
-                  <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>TARGET GROUP</label>
-                  <select value={bulkForm.target_group} onChange={e => { setBulkForm(p => ({...p, target_group: e.target.value})); setBulkPreview(null); }} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,background:'white',boxSizing:'border-box'}}>
+                  <label style={{fontSize:12,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:4}}>TARGET GROUP</label>
+                  <select value={bulkForm.target_group} onChange={e => { setBulkForm(p => ({...p, target_group: e.target.value})); setBulkPreview(null); }} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid var(--border)',fontSize:13,background:'var(--bg-card)',boxSizing:'border-box'}}>
                     {Object.entries(TARGET_LABELS).map(([k,v]) => <option key={k} value={k}>{v.emoji} {v.label}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>MESSAGE</label>
-                  <textarea value={bulkForm.message_template} onChange={e => { setBulkForm(p => ({...p, message_template: e.target.value})); setBulkPreview(null); }} placeholder="Hi {name}, just checking in..." rows={4} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,resize:'vertical',fontFamily:'inherit',boxSizing:'border-box'}}/>
-                  <div style={{fontSize:11,color:'#94a3b8',marginTop:4}}>Use {'{name}'} to personalise with the lead's name</div>
+                  <label style={{fontSize:12,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:4}}>MESSAGE</label>
+                  <textarea value={bulkForm.message_template} onChange={e => { setBulkForm(p => ({...p, message_template: e.target.value})); setBulkPreview(null); }} placeholder="Hi {name}, just checking in..." rows={4} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid var(--border)',fontSize:13,resize:'vertical',fontFamily:'inherit',boxSizing:'border-box'}}/>
+                  <div style={{fontSize:11,color:'var(--text-muted)',marginTop:4}}>Use {'{name}'} to personalise with the lead's name</div>
                 </div>
 
                 {bulkPreview !== null && (
@@ -4387,7 +4387,7 @@ function Automation({ activeBusiness }) {
                 )}
 
                 <div style={{display:'flex',gap:10,justifyContent:'flex-end',marginTop:4}}>
-                  <button onClick={handleBulkPreview} style={{padding:'8px 16px',borderRadius:6,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13}}>Preview Audience</button>
+                  <button onClick={handleBulkPreview} style={{padding:'8px 16px',borderRadius:6,border:'1px solid var(--border)',background:'var(--bg-card)',cursor:'pointer',fontSize:13}}>Preview Audience</button>
                   <button onClick={handleBulkSend} disabled={bulkSending || bulkPreview === 0} style={{padding:'8px 18px',borderRadius:6,background: bulkSending ? '#93c5fd' : '#3b82f6',color:'white',border:'none',cursor: bulkSending ? 'not-allowed' : 'pointer',fontSize:13,fontWeight:600}}>
                     {bulkSending ? 'Sending...' : bulkPreview !== null ? `Send to ${bulkPreview} leads` : 'Send'}
                   </button>
@@ -4483,13 +4483,13 @@ function BusinessesAdmin({ activeBusiness, setPage }) {
       {/* Platform stats */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
         {[
-          { label:'Total Workspaces', value: businesses.length, color:'#1e293b' },
+          { label:'Total Workspaces', value: businesses.length, color:'var(--text-primary)' },
           { label:'Active', value: businesses.filter(b=>b.is_active).length, color:'#10b981' },
           { label:'Industries', value: [...new Set(businesses.map(b=>b.industry).filter(Boolean))].length, color:'#3b82f6' },
           { label:'Current Workspace', value: activeBusiness?.name || '—', color:'#8b5cf6', small: true },
         ].map((s,i) => (
-          <div key={i} style={{background:'white',borderRadius:10,padding:'14px 18px',border:'1px solid #e2e8f0'}}>
-            <div style={{fontSize:11,color:'#64748b',marginBottom:4}}>{s.label}</div>
+          <div key={i} style={{background:'var(--bg-card)',borderRadius:10,padding:'14px 18px',border:'1px solid var(--border)'}}>
+            <div style={{fontSize:11,color:'var(--text-secondary)',marginBottom:4}}>{s.label}</div>
             <div style={{fontSize: s.small ? 14 : 24,fontWeight:700,color:s.color,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.value}</div>
           </div>
         ))}
@@ -4497,12 +4497,12 @@ function BusinessesAdmin({ activeBusiness, setPage }) {
 
       {/* Business cards grid */}
       {loading ? (
-        <div style={{textAlign:'center',padding:40,color:'#64748b'}}>Loading workspaces...</div>
+        <div style={{textAlign:'center',padding:40,color:'var(--text-secondary)'}}>Loading workspaces...</div>
       ) : businesses.length === 0 ? (
-        <div style={{background:'white',borderRadius:10,border:'1px solid #e2e8f0',padding:48,textAlign:'center'}}>
-          <Building2 size={40} color="#e2e8f0" style={{margin:'0 auto 12px'}}/>
-          <div style={{fontSize:16,fontWeight:600,color:'#1e293b',marginBottom:6}}>No business workspaces yet</div>
-          <div style={{fontSize:13,color:'#64748b',marginBottom:20}}>Your first workspace will be created when you run the SQL migration</div>
+        <div style={{background:'var(--bg-card)',borderRadius:10,border:'1px solid var(--border)',padding:48,textAlign:'center'}}>
+          <Building2 size={40} color="var(--border)" style={{margin:'0 auto 12px'}}/>
+          <div style={{fontSize:16,fontWeight:600,color:'var(--text-primary)',marginBottom:6}}>No business workspaces yet</div>
+          <div style={{fontSize:13,color:'var(--text-secondary)',marginBottom:20}}>Your first workspace will be created when you run the SQL migration</div>
           <button onClick={() => setShowAddModal(true)} style={{padding:'8px 20px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:13,fontWeight:600}}>+ Add First Business</button>
         </div>
       ) : (
@@ -4511,7 +4511,7 @@ function BusinessesAdmin({ activeBusiness, setPage }) {
             const isActive = activeBusiness?.id === biz.id;
             const color = INDUSTRY_COLORS[biz.industry] || '#64748b';
             return (
-              <div key={biz.id} style={{background:'white',borderRadius:12,border: isActive ? '2px solid #3b82f6' : '1px solid #e2e8f0',padding:20,position:'relative',transition:'border-color 0.2s'}}>
+              <div key={biz.id} style={{background:'var(--bg-card)',borderRadius:12,border: isActive ? '2px solid #3b82f6' : '1px solid var(--border)',padding:20,position:'relative',transition:'border-color 0.2s'}}>
                 {isActive && (
                   <div style={{position:'absolute',top:12,right:12,background:'#eff6ff',color:'#3b82f6',fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:10,textTransform:'uppercase',letterSpacing:'0.05em'}}>Active</div>
                 )}
@@ -4520,13 +4520,13 @@ function BusinessesAdmin({ activeBusiness, setPage }) {
                     {(biz.name||'?')[0].toUpperCase()}
                   </div>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:15,fontWeight:700,color:'#1e293b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{biz.name}</div>
-                    <div style={{fontSize:11,color:'#64748b',marginTop:2}}>{biz.industry || 'Business'}</div>
+                    <div style={{fontSize:15,fontWeight:700,color:'var(--text-primary)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{biz.name}</div>
+                    <div style={{fontSize:11,color:'var(--text-secondary)',marginTop:2}}>{biz.industry || 'Business'}</div>
                   </div>
                 </div>
 
                 {biz.description && (
-                  <div style={{fontSize:12,color:'#64748b',marginBottom:12,lineHeight:1.5,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{biz.description}</div>
+                  <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:12,lineHeight:1.5,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{biz.description}</div>
                 )}
 
                 <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:14}}>
@@ -4567,33 +4567,33 @@ function BusinessesAdmin({ activeBusiness, setPage }) {
       {/* Add Business Modal */}
       {showAddModal && (
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
-          <div style={{background:'white',borderRadius:12,padding:28,width:500,maxWidth:'90vw',boxShadow:'0 20px 60px rgba(0,0,0,0.2)'}}>
+          <div style={{background:'var(--bg-card)',borderRadius:12,padding:28,width:500,maxWidth:'90vw',boxShadow:'0 20px 60px rgba(0,0,0,0.2)'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-              <div style={{fontSize:16,fontWeight:700,color:'#1e293b'}}>Add New Business Workspace</div>
-              <button onClick={() => setShowAddModal(false)} style={{background:'none',border:'none',cursor:'pointer',color:'#94a3b8'}}><X size={18}/></button>
+              <div style={{fontSize:16,fontWeight:700,color:'var(--text-primary)'}}>Add New Business Workspace</div>
+              <button onClick={() => setShowAddModal(false)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--text-muted)'}}><X size={18}/></button>
             </div>
             <div style={{display:'flex',flexDirection:'column',gap:14}}>
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>BUSINESS NAME *</label>
-                <input value={form.name} onChange={e => setForm(p=>({...p,name:e.target.value}))} placeholder="e.g. Archon Solutions" style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,boxSizing:'border-box'}}/>
+                <label style={{fontSize:12,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:4}}>BUSINESS NAME *</label>
+                <input value={form.name} onChange={e => setForm(p=>({...p,name:e.target.value}))} placeholder="e.g. Archon Solutions" style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid var(--border)',fontSize:13,boxSizing:'border-box'}}/>
               </div>
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>INDUSTRY</label>
-                <select value={form.industry} onChange={e => setForm(p=>({...p,industry:e.target.value}))} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,background:'white',boxSizing:'border-box'}}>
+                <label style={{fontSize:12,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:4}}>INDUSTRY</label>
+                <select value={form.industry} onChange={e => setForm(p=>({...p,industry:e.target.value}))} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid var(--border)',fontSize:13,background:'var(--bg-card)',boxSizing:'border-box'}}>
                   {INDUSTRIES.map(ind => <option key={ind} value={ind}>{ind}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>INSTAGRAM HANDLE</label>
-                <input value={form.instagram_handle} onChange={e => setForm(p=>({...p,instagram_handle:e.target.value}))} placeholder="@yourbusiness" style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,boxSizing:'border-box'}}/>
+                <label style={{fontSize:12,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:4}}>INSTAGRAM HANDLE</label>
+                <input value={form.instagram_handle} onChange={e => setForm(p=>({...p,instagram_handle:e.target.value}))} placeholder="@yourbusiness" style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid var(--border)',fontSize:13,boxSizing:'border-box'}}/>
               </div>
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>DESCRIPTION</label>
-                <textarea value={form.description} onChange={e => setForm(p=>({...p,description:e.target.value}))} placeholder="Brief description of the business..." rows={3} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid #e2e8f0',fontSize:13,resize:'vertical',fontFamily:'inherit',boxSizing:'border-box'}}/>
+                <label style={{fontSize:12,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:4}}>DESCRIPTION</label>
+                <textarea value={form.description} onChange={e => setForm(p=>({...p,description:e.target.value}))} placeholder="Brief description of the business..." rows={3} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid var(--border)',fontSize:13,resize:'vertical',fontFamily:'inherit',boxSizing:'border-box'}}/>
               </div>
             </div>
             <div style={{display:'flex',gap:10,justifyContent:'flex-end',marginTop:20}}>
-              <button onClick={() => setShowAddModal(false)} style={{padding:'8px 18px',borderRadius:6,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13}}>Cancel</button>
+              <button onClick={() => setShowAddModal(false)} style={{padding:'8px 18px',borderRadius:6,border:'1px solid var(--border)',background:'var(--bg-card)',cursor:'pointer',fontSize:13}}>Cancel</button>
               <button onClick={handleAdd} disabled={saving} style={{padding:'8px 18px',borderRadius:6,background: saving ? '#93c5fd' : '#3b82f6',color:'white',border:'none',cursor: saving ? 'not-allowed' : 'pointer',fontSize:13,fontWeight:600}}>{saving ? 'Creating...' : 'Create Workspace'}</button>
             </div>
           </div>
@@ -4872,21 +4872,21 @@ function IntegrationsPage({ activeBusiness }) {
           <button
             key={cat}
             onClick={() => setFilter(cat)}
-            style={{padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor: filter===cat ? '#3b82f6' : '#e2e8f0',background: filter===cat ? '#eff6ff' : 'white',color: filter===cat ? '#3b82f6' : '#64748b',fontSize:12,fontWeight: filter===cat ? 600 : 400,cursor:'pointer',transition:'all 0.15s'}}
+            style={{padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor: filter===cat ? '#3b82f6' : 'var(--border)',background: filter===cat ? '#eff6ff' : 'white',color: filter===cat ? '#3b82f6' : '#64748b',fontSize:12,fontWeight: filter===cat ? 600 : 400,cursor:'pointer',transition:'all 0.15s'}}
           >{cat}</button>
         ))}
       </div>
 
       {/* Integration cards grid */}
       {loading ? (
-        <div style={{textAlign:'center',padding:40,color:'#64748b'}}>Loading integrations...</div>
+        <div style={{textAlign:'center',padding:40,color:'var(--text-secondary)'}}>Loading integrations...</div>
       ) : (
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(340px,1fr))',gap:16}}>
           {filtered.map(integ => {
             const status = integrations[integ.id] || {};
             const isConnected = status.is_connected || false;
             return (
-              <div key={integ.id} style={{background:'white',borderRadius:12,border: isConnected ? `2px solid ${integ.color}30` : '1px solid #e2e8f0',padding:20,display:'flex',flexDirection:'column',gap:14,transition:'border-color 0.2s'}}>
+              <div key={integ.id} style={{background:'var(--bg-card)',borderRadius:12,border: isConnected ? `2px solid ${integ.color}30` : '1px solid var(--border)',padding:20,display:'flex',flexDirection:'column',gap:14,transition:'border-color 0.2s'}}>
                 {/* Header */}
                 <div style={{display:'flex',alignItems:'flex-start',gap:12}}>
                   <div style={{width:46,height:46,borderRadius:10,background:integ.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>
@@ -4894,17 +4894,17 @@ function IntegrationsPage({ activeBusiness }) {
                   </div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:2}}>
-                      <span style={{fontSize:15,fontWeight:700,color:'#1e293b'}}>{integ.name}</span>
-                      <span style={{fontSize:10,fontWeight:600,padding:'2px 7px',borderRadius:10,background: isConnected ? '#f0fdf4' : '#f8fafc',color: isConnected ? '#16a34a' : '#94a3b8',border:`1px solid ${isConnected ? '#bbf7d0' : '#e2e8f0'}`}}>
+                      <span style={{fontSize:15,fontWeight:700,color:'var(--text-primary)'}}>{integ.name}</span>
+                      <span style={{fontSize:10,fontWeight:600,padding:'2px 7px',borderRadius:10,background: isConnected ? '#f0fdf4' : '#f8fafc',color: isConnected ? '#16a34a' : '#94a3b8',border:`1px solid ${isConnected ? '#bbf7d0' : 'var(--border)'}`}}>
                         {isConnected ? '● Connected' : '○ Not connected'}
                       </span>
                     </div>
-                    <span style={{fontSize:10,padding:'1px 7px',borderRadius:8,background:'#f1f5f9',color:'#64748b',fontWeight:500}}>{integ.category}</span>
+                    <span style={{fontSize:10,padding:'1px 7px',borderRadius:8,background:'var(--bg-input)',color:'var(--text-secondary)',fontWeight:500}}>{integ.category}</span>
                   </div>
                 </div>
 
                 {/* Description */}
-                <div style={{fontSize:12,color:'#64748b',lineHeight:1.6}}>{integ.description}</div>
+                <div style={{fontSize:12,color:'var(--text-secondary)',lineHeight:1.6}}>{integ.description}</div>
 
                 {/* Status note */}
                 <div style={{fontSize:11,color: isConnected ? '#16a34a' : '#94a3b8',background: isConnected ? '#f0fdf4' : '#f8fafc',borderRadius:6,padding:'6px 10px',display:'flex',alignItems:'center',gap:6}}>
@@ -4914,27 +4914,27 @@ function IntegrationsPage({ activeBusiness }) {
 
                 {/* Last synced */}
                 {isConnected && status.last_synced && (
-                  <div style={{fontSize:11,color:'#94a3b8'}}>Last updated: {new Date(status.last_synced).toLocaleString()}</div>
+                  <div style={{fontSize:11,color:'var(--text-muted)'}}>Last updated: {new Date(status.last_synced).toLocaleString()}</div>
                 )}
 
                 {/* Actions */}
                 <div style={{display:'flex',gap:8,marginTop:'auto'}}>
                   <button
                     onClick={() => openModal(integ)}
-                    style={{flex:1,padding:'8px',borderRadius:6,background: isConnected ? '#f8fafc' : integ.bg,color: isConnected ? '#475569' : integ.color,border:`1px solid ${isConnected ? '#e2e8f0' : integ.color+'40'}`,cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}
+                    style={{flex:1,padding:'8px',borderRadius:6,background: isConnected ? '#f8fafc' : integ.bg,color: isConnected ? '#475569' : integ.color,border:`1px solid ${isConnected ? 'var(--border)' : integ.color+'40'}`,cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}
                   >
                     <Key size={12}/> {isConnected ? 'Update Credentials' : 'Connect'}
                   </button>
                   {isConnected && (
                     <button
                       onClick={() => handleDisconnect(integ.id, integ.name)}
-                      style={{padding:'8px 12px',borderRadius:6,background:'white',color:'#ef4444',border:'1px solid #fecaca',cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',gap:5}}
+                      style={{padding:'8px 12px',borderRadius:6,background:'var(--bg-card)',color:'#ef4444',border:'1px solid #fecaca',cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',gap:5}}
                     >
                       <WifiOff size={12}/> Disconnect
                     </button>
                   )}
                   {integ.docs_url && (
-                    <a href={integ.docs_url} target="_blank" rel="noreferrer" style={{padding:'8px 10px',borderRadius:6,background:'white',color:'#94a3b8',border:'1px solid #e2e8f0',cursor:'pointer',fontSize:12,display:'flex',alignItems:'center',textDecoration:'none'}}>
+                    <a href={integ.docs_url} target="_blank" rel="noreferrer" style={{padding:'8px 10px',borderRadius:6,background:'var(--bg-card)',color:'var(--text-muted)',border:'1px solid var(--border)',cursor:'pointer',fontSize:12,display:'flex',alignItems:'center',textDecoration:'none'}}>
                       <ExternalLink size={12}/>
                     </a>
                   )}
@@ -4958,16 +4958,16 @@ function IntegrationsPage({ activeBusiness }) {
       {/* ── Credentials Modal ── */}
       {activeModal && (
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
-          <div style={{background:'white',borderRadius:14,padding:28,width:520,maxWidth:'92vw',boxShadow:'0 24px 64px rgba(0,0,0,0.2)',maxHeight:'90vh',overflowY:'auto'}}>
+          <div style={{background:'var(--bg-card)',borderRadius:14,padding:28,width:520,maxWidth:'92vw',boxShadow:'0 24px 64px rgba(0,0,0,0.2)',maxHeight:'90vh',overflowY:'auto'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
               <div style={{display:'flex',alignItems:'center',gap:10}}>
                 <div style={{width:36,height:36,borderRadius:8,background:activeModal.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18}}>{activeModal.icon}</div>
                 <div>
-                  <div style={{fontSize:15,fontWeight:700,color:'#1e293b'}}>Connect {activeModal.name}</div>
-                  <div style={{fontSize:11,color:'#94a3b8'}}>{activeModal.category}</div>
+                  <div style={{fontSize:15,fontWeight:700,color:'var(--text-primary)'}}>Connect {activeModal.name}</div>
+                  <div style={{fontSize:11,color:'var(--text-muted)'}}>{activeModal.category}</div>
                 </div>
               </div>
-              <button onClick={() => setActiveModal(null)} style={{background:'none',border:'none',cursor:'pointer',color:'#94a3b8',padding:4}}><X size={18}/></button>
+              <button onClick={() => setActiveModal(null)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--text-muted)',padding:4}}><X size={18}/></button>
             </div>
 
             <div style={{background:'#fffbeb',border:'1px solid #fde68a',borderRadius:8,padding:'10px 14px',fontSize:12,color:'#92400e',marginBottom:18,display:'flex',gap:8,alignItems:'flex-start'}}>
@@ -4978,13 +4978,13 @@ function IntegrationsPage({ activeBusiness }) {
             <div style={{display:'flex',flexDirection:'column',gap:14}}>
               {activeModal.fields.map(field => (
                 <div key={field.key}>
-                  <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4,textTransform:'uppercase',letterSpacing:'0.04em'}}>{field.label}</label>
+                  <label style={{fontSize:12,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:4,textTransform:'uppercase',letterSpacing:'0.04em'}}>{field.label}</label>
                   <input
                     type={field.type}
                     value={formValues[field.key] || ''}
                     onChange={e => setFormValues(p => ({...p, [field.key]: e.target.value}))}
                     placeholder={field.placeholder}
-                    style={{width:'100%',padding:'9px 11px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,fontFamily: field.type==='password' ? 'monospace' : 'inherit',boxSizing:'border-box',color:'#1e293b'}}
+                    style={{width:'100%',padding:'9px 11px',borderRadius:7,border:'1px solid var(--border)',fontSize:13,fontFamily: field.type==='password' ? 'monospace' : 'inherit',boxSizing:'border-box',color:'var(--text-primary)'}}
                   />
                 </div>
               ))}
@@ -5001,12 +5001,12 @@ function IntegrationsPage({ activeBusiness }) {
                 onClick={() => {
                   alert(`Testing connection to ${activeModal.name}... Success! API responded with status 200 OK.`);
                 }} 
-                style={{padding:'9px 18px',borderRadius:7,border:'1px solid #e2e8f0',background:'#f8fafc',cursor:'pointer',fontSize:13,color:'#475569',fontWeight:600}}
+                style={{padding:'9px 18px',borderRadius:7,border:'1px solid var(--border)',background:'var(--bg-input)',cursor:'pointer',fontSize:13,color:'var(--text-secondary)',fontWeight:600}}
               >
                 Test Connection
               </button>
               <div style={{flex:1}}/>
-              <button onClick={() => setActiveModal(null)} style={{padding:'9px 18px',borderRadius:7,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13}}>Cancel</button>
+              <button onClick={() => setActiveModal(null)} style={{padding:'9px 18px',borderRadius:7,border:'1px solid var(--border)',background:'var(--bg-card)',cursor:'pointer',fontSize:13}}>Cancel</button>
               <button
                 onClick={handleSave}
                 disabled={saving}
@@ -5186,7 +5186,7 @@ function PublisherPage({ activeBusiness, setPage }) {
 
             {/* Platform toggles */}
             <div className="card" style={{padding:'16px'}}>
-              <div style={{fontSize:'0.8em', color:'#64748b', fontWeight:700, marginBottom:'12px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Select Platforms</div>
+              <div style={{fontSize:'0.8em', color:'var(--text-secondary)', fontWeight:700, marginBottom:'12px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Select Platforms</div>
               <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
                 {PLATFORMS.map(p => {
                   const active = selectedPlatforms.includes(p.id);
@@ -5209,8 +5209,8 @@ function PublisherPage({ activeBusiness, setPage }) {
                       <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
                         <span style={{fontSize:'1.3em'}}>{p.icon}</span>
                         <div>
-                          <div style={{fontWeight:700, color: active ? p.color : '#e2e8f0', fontSize:'0.9em'}}>{p.label}</div>
-                          <div style={{fontSize:'0.72em', color:'#64748b'}}>{p.desc}</div>
+                          <div style={{fontWeight:700, color: active ? p.color : 'var(--border)', fontSize:'0.9em'}}>{p.label}</div>
+                          <div style={{fontSize:'0.72em', color:'var(--text-secondary)'}}>{p.desc}</div>
                         </div>
                       </div>
                       <div style={{
@@ -5227,7 +5227,7 @@ function PublisherPage({ activeBusiness, setPage }) {
                 })}
                 {Object.keys(integrations).filter(k => integrations[k]?.is_connected).length === 0 && (
                   <div style={{padding:'20px', textAlign:'center', background:'rgba(255,255,255,0.02)', borderRadius:'10px', border:'1px dashed #334155'}}>
-                    <div style={{fontSize:'0.82em', color:'#64748b', marginBottom:'8px'}}>No platforms connected yet.</div>
+                    <div style={{fontSize:'0.82em', color:'var(--text-secondary)', marginBottom:'8px'}}>No platforms connected yet.</div>
                     <button onClick={() => setPage('Integrations')} style={{fontSize:'0.8em', color:'#3b82f6', background:'none', border:'none', cursor:'pointer', textDecoration:'underline', fontWeight:600}}>Go to Integrations</button>
                   </div>
                 )}
@@ -5237,7 +5237,7 @@ function PublisherPage({ activeBusiness, setPage }) {
             {/* Caption */}
             <div className="card" style={{padding:'16px'}}>
               <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px'}}>
-                <div style={{fontSize:'0.8em', color:'#64748b', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em'}}>Caption</div>
+                <div style={{fontSize:'0.8em', color:'var(--text-secondary)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em'}}>Caption</div>
                 <div style={{display:'flex', gap:'10px'}}>
                   {selectedPlatforms.map(pid => (
                     <span key={pid} style={{fontSize:'0.72em', color: caption.length > (CHAR_LIMITS[pid] || 2200) ? '#ef4444' : '#64748b'}}>
@@ -5256,7 +5256,7 @@ function PublisherPage({ activeBusiness, setPage }) {
 
             {/* Media URL */}
             <div className="card" style={{padding:'16px'}}>
-              <div style={{fontSize:'0.8em', color:'#64748b', fontWeight:700, marginBottom:'10px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Media</div>
+              <div style={{fontSize:'0.8em', color:'var(--text-secondary)', fontWeight:700, marginBottom:'10px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Media</div>
               <div style={{display:'flex', gap:'8px', marginBottom:'10px'}}>
                 {[['image','🖼️ Image'],['video','🎬 Video'],['none','📝 Text Only']].map(([val, label]) => (
                   <button
@@ -5302,7 +5302,7 @@ function PublisherPage({ activeBusiness, setPage }) {
                       <div style={{height:'4px', background:'#1e293b', borderRadius:'2px', overflow:'hidden'}}>
                         <div style={{height:'100%', width:`${uploadProgress}%`, background:'#2563eb', transition:'width 0.3s', borderRadius:'2px'}}/>
                       </div>
-                      <div style={{fontSize:'0.72em', color:'#64748b', marginTop:'3px'}}>Uploading... {uploadProgress}%</div>
+                      <div style={{fontSize:'0.72em', color:'var(--text-secondary)', marginTop:'3px'}}>Uploading... {uploadProgress}%</div>
                     </div>
                   )}
 
@@ -5314,17 +5314,17 @@ function PublisherPage({ activeBusiness, setPage }) {
                       )}
                       <div style={{flex:1, overflow:'hidden'}}>
                         <div style={{fontSize:'0.8em', color:'#10b981', fontWeight:600}}>✓ Uploaded successfully</div>
-                        <div style={{fontSize:'0.72em', color:'#64748b', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{uploadedPreview.name}</div>
+                        <div style={{fontSize:'0.72em', color:'var(--text-secondary)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{uploadedPreview.name}</div>
                       </div>
                       <button
                         onClick={() => { setUploadedPreview(null); setMediaUrl(''); }}
-                        style={{background:'none', border:'none', color:'#64748b', cursor:'pointer', padding:'2px', flexShrink:0}}
+                        style={{background:'none', border:'none', color:'var(--text-secondary)', cursor:'pointer', padding:'2px', flexShrink:0}}
                       ><X size={14}/></button>
                     </div>
                   )}
 
                   {/* Manual URL fallback */}
-                  <div style={{fontSize:'0.72em', color:'#64748b', marginBottom:'5px'}}>Or paste a public URL directly:</div>
+                  <div style={{fontSize:'0.72em', color:'var(--text-secondary)', marginBottom:'5px'}}>Or paste a public URL directly:</div>
                   <input
                     type="url"
                     placeholder={mediaType === 'video' ? 'https://... (public MP4 URL)' : 'https://... (public image URL)'}
@@ -5341,8 +5341,8 @@ function PublisherPage({ activeBusiness, setPage }) {
             <div className="card" style={{padding:'16px'}}>
               <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: scheduleEnabled ? '12px' : 0}}>
                 <div>
-                  <div style={{fontSize:'0.9em', fontWeight:600, color:'#e2e8f0'}}>Schedule Post</div>
-                  <div style={{fontSize:'0.75em', color:'#64748b'}}>Post at a specific date and time</div>
+                  <div style={{fontSize:'0.9em', fontWeight:600, color:'var(--border)'}}>Schedule Post</div>
+                  <div style={{fontSize:'0.75em', color:'var(--text-secondary)'}}>Post at a specific date and time</div>
                 </div>
                 <div
                   onClick={() => setScheduleEnabled(!scheduleEnabled)}
@@ -5354,7 +5354,7 @@ function PublisherPage({ activeBusiness, setPage }) {
                 >
                   <div style={{
                     position:'absolute', top:3, left: scheduleEnabled ? 23 : 3,
-                    width:18, height:18, borderRadius:'50%', background:'#fff',
+                    width:18, height:18, borderRadius:'50%', background:'var(--bg-card)',
                     transition:'left 0.2s',
                   }}/>
                 </div>
@@ -5423,18 +5423,18 @@ function PublisherPage({ activeBusiness, setPage }) {
 
             {/* Live preview */}
             <div className="card" style={{padding:'16px'}}>
-              <div style={{fontSize:'0.8em', color:'#64748b', fontWeight:700, marginBottom:'12px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Post Preview</div>
+              <div style={{fontSize:'0.8em', color:'var(--text-secondary)', fontWeight:700, marginBottom:'12px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Post Preview</div>
               <div style={{background:'rgba(255,255,255,0.03)', border:'1px solid #1e293b', borderRadius:'10px', padding:'14px'}}>
                 {mediaUrl && mediaType === 'image' && (
                   <img src={mediaUrl} alt="preview" style={{width:'100%', maxHeight:'200px', objectFit:'cover', borderRadius:'8px', marginBottom:'10px'}} onError={e => e.target.style.display='none'}/>
                 )}
                 {mediaUrl && mediaType === 'video' && (
-                  <div style={{background:'#0f172a', borderRadius:'8px', padding:'20px', textAlign:'center', marginBottom:'10px', color:'#64748b', fontSize:'0.85em'}}>
+                  <div style={{background:'#0f172a', borderRadius:'8px', padding:'20px', textAlign:'center', marginBottom:'10px', color:'var(--text-secondary)', fontSize:'0.85em'}}>
                     🎬 Video: {mediaUrl.split('/').pop()}
                   </div>
                 )}
-                <div style={{fontSize:'0.88em', color:'#e2e8f0', lineHeight:'1.6', whiteSpace:'pre-wrap'}}>
-                  {caption || <span style={{color:'#475569', fontStyle:'italic'}}>Your caption will appear here...</span>}
+                <div style={{fontSize:'0.88em', color:'var(--border)', lineHeight:'1.6', whiteSpace:'pre-wrap'}}>
+                  {caption || <span style={{color:'var(--text-secondary)', fontStyle:'italic'}}>Your caption will appear here...</span>}
                 </div>
                 {caption && (
                   <div style={{marginTop:'10px', display:'flex', gap:'6px', flexWrap:'wrap'}}>
@@ -5449,15 +5449,15 @@ function PublisherPage({ activeBusiness, setPage }) {
 
             {/* Tips */}
             <div className="card" style={{padding:'16px'}}>
-              <div style={{fontSize:'0.8em', color:'#64748b', fontWeight:700, marginBottom:'10px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Platform Tips</div>
+              <div style={{fontSize:'0.8em', color:'var(--text-secondary)', fontWeight:700, marginBottom:'10px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Platform Tips</div>
               <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
-                <div style={{fontSize:'0.8em', color:'#94a3b8', padding:'8px 10px', background:'rgba(225,48,108,0.05)', borderRadius:'7px', borderLeft:'3px solid #e1306c'}}>
+                <div style={{fontSize:'0.8em', color:'var(--text-muted)', padding:'8px 10px', background:'rgba(225,48,108,0.05)', borderRadius:'7px', borderLeft:'3px solid #e1306c'}}>
                   <strong style={{color:'#e1306c'}}>📸 Instagram</strong> — Requires image or video. Use square (1:1) or portrait (4:5) for best reach.
                 </div>
-                <div style={{fontSize:'0.8em', color:'#94a3b8', padding:'8px 10px', background:'rgba(24,119,242,0.05)', borderRadius:'7px', borderLeft:'3px solid #1877f2'}}>
+                <div style={{fontSize:'0.8em', color:'var(--text-muted)', padding:'8px 10px', background:'rgba(24,119,242,0.05)', borderRadius:'7px', borderLeft:'3px solid #1877f2'}}>
                   <strong style={{color:'#1877f2'}}>📘 Facebook</strong> — Text-only posts work. Add <code>FACEBOOK_PAGE_ID</code> in Render env vars.
                 </div>
-                <div style={{fontSize:'0.8em', color:'#94a3b8', padding:'8px 10px', background:'rgba(37,211,102,0.05)', borderRadius:'7px', borderLeft:'3px solid #25d366'}}>
+                <div style={{fontSize:'0.8em', color:'var(--text-muted)', padding:'8px 10px', background:'rgba(37,211,102,0.05)', borderRadius:'7px', borderLeft:'3px solid #25d366'}}>
                   <strong style={{color:'#25d366'}}>💬 WhatsApp</strong> — Requires approved message templates in Meta Business Manager. Token needed after number verification.
                 </div>
               </div>
@@ -5465,7 +5465,7 @@ function PublisherPage({ activeBusiness, setPage }) {
 
             {/* Env vars checklist */}
             <div className="card" style={{padding:'16px'}}>
-              <div style={{fontSize:'0.8em', color:'#64748b', fontWeight:700, marginBottom:'10px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Required Env Variables</div>
+              <div style={{fontSize:'0.8em', color:'var(--text-secondary)', fontWeight:700, marginBottom:'10px', textTransform:'uppercase', letterSpacing:'0.05em'}}>Required Env Variables</div>
               <div style={{display:'flex', flexDirection:'column', gap:'6px'}}>
                 {[
                   ['META_PAGE_ACCESS_TOKEN', 'All platforms'],
@@ -5475,7 +5475,7 @@ function PublisherPage({ activeBusiness, setPage }) {
                 ].map(([key, scope]) => (
                   <div key={key} style={{display:'flex', justifyContent:'space-between', fontSize:'0.78em', padding:'5px 8px', background:'rgba(255,255,255,0.02)', borderRadius:'5px'}}>
                     <code style={{color:'#93c5fd'}}>{key}</code>
-                    <span style={{color:'#64748b'}}>{scope}</span>
+                    <span style={{color:'var(--text-secondary)'}}>{scope}</span>
                   </div>
                 ))}
               </div>
@@ -5486,13 +5486,13 @@ function PublisherPage({ activeBusiness, setPage }) {
         /* POST HISTORY */
         <div>
           <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'16px'}}>
-            <div style={{fontSize:'0.85em', color:'#64748b'}}>{history.length} posts in history</div>
+            <div style={{fontSize:'0.85em', color:'var(--text-secondary)'}}>{history.length} posts in history</div>
             <button className="ghost" onClick={fetchHistory} style={{padding:'5px 12px', fontSize:'0.82em'}}>↻ Refresh</button>
           </div>
           {histLoading ? (
-            <div style={{textAlign:'center', color:'#64748b', padding:'40px'}}>Loading history...</div>
+            <div style={{textAlign:'center', color:'var(--text-secondary)', padding:'40px'}}>Loading history...</div>
           ) : history.length === 0 ? (
-            <div style={{textAlign:'center', color:'#64748b', padding:'60px'}}>
+            <div style={{textAlign:'center', color:'var(--text-secondary)', padding:'60px'}}>
               <Radio size={32} style={{opacity:0.3, marginBottom:12}}/>
               <div>No posts yet — compose your first post above.</div>
             </div>
@@ -5512,14 +5512,14 @@ function PublisherPage({ activeBusiness, setPage }) {
                       </div>
                       <div style={{display:'flex', alignItems:'center', gap:'6px', flexShrink:0}}>
                         <span style={{fontSize:'0.78em', color:statusColor, fontWeight:700}}>{statusIcon} {post.status}</span>
-                        <span style={{fontSize:'0.72em', color:'#475569'}}>{post.created_at ? new Date(post.created_at).toLocaleString() : ''}</span>
+                        <span style={{fontSize:'0.72em', color:'var(--text-secondary)'}}>{post.created_at ? new Date(post.created_at).toLocaleString() : ''}</span>
                       </div>
                     </div>
-                    <div style={{fontSize:'0.85em', color:'#94a3b8', overflow:'hidden', textOverflow:'ellipsis', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical'}}>
+                    <div style={{fontSize:'0.85em', color:'var(--text-muted)', overflow:'hidden', textOverflow:'ellipsis', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical'}}>
                       {post.text || <span style={{fontStyle:'italic'}}>No caption</span>}
                     </div>
                     {post.media_url && (
-                      <div style={{marginTop:'6px', fontSize:'0.75em', color:'#475569'}}>📎 {post.media_url.split('/').pop()}</div>
+                      <div style={{marginTop:'6px', fontSize:'0.75em', color:'var(--text-secondary)'}}>📎 {post.media_url.split('/').pop()}</div>
                     )}
                   </div>
                 );
@@ -5664,7 +5664,7 @@ function LeadImportExport({ activeBusiness }) {
       <div style={{display:'flex',gap:8,marginBottom:24}}>
         {[['import','⬆️ Import Leads'],['export','⬇️ Export Leads']].map(([k,l]) => (
           <button key={k} onClick={() => setTab(k)}
-            style={{padding:'10px 24px',borderRadius:8,border:'1px solid',borderColor:tab===k?'#3b82f6':'#e2e8f0',background:tab===k?'#eff6ff':'white',color:tab===k?'#3b82f6':'#64748b',fontWeight:tab===k?700:400,fontSize:14,cursor:'pointer'}}>
+            style={{padding:'10px 24px',borderRadius:8,border:'1px solid',borderColor:tab===k?'#3b82f6':'var(--border)',background:tab===k?'#eff6ff':'white',color:tab===k?'#3b82f6':'#64748b',fontWeight:tab===k?700:400,fontSize:14,cursor:'pointer'}}>
             {l}
           </button>
         ))}
@@ -5698,13 +5698,13 @@ function LeadImportExport({ activeBusiness }) {
             <div style={{fontSize:36,marginBottom:8}}>📂</div>
             {file ? (
               <div>
-                <div style={{fontWeight:700,color:'#1e293b',fontSize:15}}>{file.name}</div>
-                <div style={{fontSize:12,color:'#64748b',marginTop:4}}>{(file.size/1024).toFixed(1)} KB — click to change</div>
+                <div style={{fontWeight:700,color:'var(--text-primary)',fontSize:15}}>{file.name}</div>
+                <div style={{fontSize:12,color:'var(--text-secondary)',marginTop:4}}>{(file.size/1024).toFixed(1)} KB — click to change</div>
               </div>
             ) : (
               <div>
-                <div style={{fontWeight:600,color:'#475569',fontSize:15}}>Drag & drop your CSV or Excel file here</div>
-                <div style={{fontSize:12,color:'#94a3b8',marginTop:4}}>or click to browse — supports .csv, .xlsx, .xls</div>
+                <div style={{fontWeight:600,color:'var(--text-secondary)',fontSize:15}}>Drag & drop your CSV or Excel file here</div>
+                <div style={{fontSize:12,color:'var(--text-muted)',marginTop:4}}>or click to browse — supports .csv, .xlsx, .xls</div>
               </div>
             )}
           </div>
@@ -5712,7 +5712,7 @@ function LeadImportExport({ activeBusiness }) {
           {/* Options + preview button */}
           {file && !preview && (
             <div style={{display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
-              <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13,color:'#475569',cursor:'pointer'}}>
+              <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13,color:'var(--text-secondary)',cursor:'pointer'}}>
                 <input type="checkbox" checked={skipDuplicates} onChange={e => setSkipDuplicates(e.target.checked)}/>
                 Skip duplicate phone/email entries
               </label>
@@ -5736,7 +5736,7 @@ function LeadImportExport({ activeBusiness }) {
                   { label: 'Unmapped Columns', value: preview.unmapped_columns?.length || 0, color: '#f59e0b' },
                 ].map(s => (
                   <div key={s.label} className="card" style={{padding:'14px 18px',textAlign:'center'}}>
-                    <div style={{fontSize:11,color:'#94a3b8',textTransform:'uppercase',fontWeight:600}}>{s.label}</div>
+                    <div style={{fontSize:11,color:'var(--text-muted)',textTransform:'uppercase',fontWeight:600}}>{s.label}</div>
                     <div style={{fontSize:28,fontWeight:700,color:s.color,lineHeight:1.3}}>{s.value}</div>
                   </div>
                 ))}
@@ -5755,7 +5755,7 @@ function LeadImportExport({ activeBusiness }) {
 
               {/* Column mapping */}
               <div className="card" style={{padding:'16px 20px'}}>
-                <div style={{fontWeight:700,fontSize:13,color:'#1e293b',marginBottom:10}}>Column Mapping Detected</div>
+                <div style={{fontWeight:700,fontSize:13,color:'var(--text-primary)',marginBottom:10}}>Column Mapping Detected</div>
                 <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
                   {Object.entries(preview.mapping).map(([csv,db]) => (
                     <div key={csv} style={{padding:'4px 12px',borderRadius:20,background:'#f0fdf4',border:'1px solid #bbf7d0',fontSize:12,color:'#166534'}}>
@@ -5763,7 +5763,7 @@ function LeadImportExport({ activeBusiness }) {
                     </div>
                   ))}
                   {(preview.unmapped_columns||[]).map(col => (
-                    <div key={col} style={{padding:'4px 12px',borderRadius:20,background:'#f8fafc',border:'1px solid #e2e8f0',fontSize:12,color:'#94a3b8'}}>
+                    <div key={col} style={{padding:'4px 12px',borderRadius:20,background:'var(--bg-input)',border:'1px solid var(--border)',fontSize:12,color:'var(--text-muted)'}}>
                       {col} (ignored)
                     </div>
                   ))}
@@ -5772,35 +5772,35 @@ function LeadImportExport({ activeBusiness }) {
 
               {/* Preview table */}
               <div className="card" style={{padding:'16px 20px',overflowX:'auto'}}>
-                <div style={{fontWeight:700,fontSize:13,color:'#1e293b',marginBottom:10}}>Preview (first {preview.preview?.length} rows)</div>
+                <div style={{fontWeight:700,fontSize:13,color:'var(--text-primary)',marginBottom:10}}>Preview (first {preview.preview?.length} rows)</div>
                 <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
                   <thead>
-                    <tr style={{background:'#f1f5f9'}}>
+                    <tr style={{background:'var(--bg-input)'}}>
                       {['Name','Phone','Email','Module','Temperature','Stage','Source'].map(h => (
-                        <th key={h} style={{padding:'8px 12px',textAlign:'left',fontWeight:600,color:'#475569',whiteSpace:'nowrap'}}>{h}</th>
+                        <th key={h} style={{padding:'8px 12px',textAlign:'left',fontWeight:600,color:'var(--text-secondary)',whiteSpace:'nowrap'}}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {(preview.preview||[]).map((row,i) => (
-                      <tr key={i} style={{borderTop:'1px solid #f1f5f9'}}>
-                        <td style={{padding:'7px 12px',color:'#1e293b'}}>{row.name||'—'}</td>
-                        <td style={{padding:'7px 12px',color:'#475569'}}>{row.phone||'—'}</td>
-                        <td style={{padding:'7px 12px',color:'#475569'}}>{row.email||'—'}</td>
-                        <td style={{padding:'7px 12px',color:'#475569'}}>{row.interested_module||'—'}</td>
+                      <tr key={i} style={{borderTop:'1px solid var(--border)'}}>
+                        <td style={{padding:'7px 12px',color:'var(--text-primary)'}}>{row.name||'—'}</td>
+                        <td style={{padding:'7px 12px',color:'var(--text-secondary)'}}>{row.phone||'—'}</td>
+                        <td style={{padding:'7px 12px',color:'var(--text-secondary)'}}>{row.email||'—'}</td>
+                        <td style={{padding:'7px 12px',color:'var(--text-secondary)'}}>{row.interested_module||'—'}</td>
                         <td style={{padding:'7px 12px'}}>
                           <span style={{padding:'2px 8px',borderRadius:10,fontSize:11,fontWeight:600,background:row.temperature==='hot'?'#fef2f2':row.temperature==='warm'?'#fffbeb':'#f0f9ff',color:row.temperature==='hot'?'#ef4444':row.temperature==='warm'?'#d97706':'#0369a1'}}>
                             {row.temperature||'cold'}
                           </span>
                         </td>
-                        <td style={{padding:'7px 12px',color:'#475569'}}>{row.lead_stage||'new'}</td>
-                        <td style={{padding:'7px 12px',color:'#475569'}}>{row.source||'—'}</td>
+                        <td style={{padding:'7px 12px',color:'var(--text-secondary)'}}>{row.lead_stage||'new'}</td>
+                        <td style={{padding:'7px 12px',color:'var(--text-secondary)'}}>{row.source||'—'}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
                 {preview.total_rows > 10 && (
-                  <div style={{fontSize:12,color:'#94a3b8',marginTop:8}}>Showing 10 of {preview.total_rows} rows — all rows will be imported.</div>
+                  <div style={{fontSize:12,color:'var(--text-muted)',marginTop:8}}>Showing 10 of {preview.total_rows} rows — all rows will be imported.</div>
                 )}
               </div>
 
@@ -5821,7 +5821,7 @@ function LeadImportExport({ activeBusiness }) {
                 </div>
               ) : (
                 <div style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}}>
-                  <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13,color:'#475569',cursor:'pointer'}}>
+                  <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13,color:'var(--text-secondary)',cursor:'pointer'}}>
                     <input type="checkbox" checked={skipDuplicates} onChange={e => setSkipDuplicates(e.target.checked)}/>
                     Skip duplicate phone/email entries
                   </label>
@@ -5831,7 +5831,7 @@ function LeadImportExport({ activeBusiness }) {
                     {importing ? `Importing ${preview.total_rows} leads...` : `Import All ${preview.total_rows} Leads`}
                   </button>
                   <button onClick={() => { setFile(null); setPreview(null); }}
-                    style={{padding:'10px 16px',borderRadius:8,border:'1px solid #e2e8f0',background:'white',color:'#64748b',fontSize:13,cursor:'pointer'}}>
+                    style={{padding:'10px 16px',borderRadius:8,border:'1px solid var(--border)',background:'var(--bg-card)',color:'var(--text-secondary)',fontSize:13,cursor:'pointer'}}>
                     Cancel
                   </button>
                 </div>
@@ -5845,17 +5845,17 @@ function LeadImportExport({ activeBusiness }) {
       {tab === 'export' && (
         <div style={{display:'flex',flexDirection:'column',gap:20,maxWidth:600}}>
           <div className="card" style={{padding:'24px 28px'}}>
-            <h3 style={{marginBottom:6,fontSize:16,fontWeight:700,color:'#1e293b'}}>Export Lead Database</h3>
-            <p style={{fontSize:13,color:'#64748b',marginBottom:20}}>Download your leads as CSV or Excel. Apply filters to export a specific segment.</p>
+            <h3 style={{marginBottom:6,fontSize:16,fontWeight:700,color:'var(--text-primary)'}}>Export Lead Database</h3>
+            <p style={{fontSize:13,color:'var(--text-secondary)',marginBottom:20}}>Download your leads as CSV or Excel. Apply filters to export a specific segment.</p>
 
             <div style={{display:'flex',flexDirection:'column',gap:16}}>
               {/* Format selector */}
               <div>
-                <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:8}}>Export Format</label>
+                <label style={{fontSize:13,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:8}}>Export Format</label>
                 <div style={{display:'flex',gap:8}}>
                   {[['csv','📄 CSV'],['excel','📊 Excel (.xlsx)']].map(([k,l]) => (
                     <button key={k} onClick={() => setExpFormat(k)}
-                      style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid',borderColor:expFormat===k?'#3b82f6':'#e2e8f0',background:expFormat===k?'#eff6ff':'white',color:expFormat===k?'#3b82f6':'#64748b',fontWeight:expFormat===k?700:400,fontSize:13,cursor:'pointer'}}>
+                      style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid',borderColor:expFormat===k?'#3b82f6':'var(--border)',background:expFormat===k?'#eff6ff':'white',color:expFormat===k?'#3b82f6':'#64748b',fontWeight:expFormat===k?700:400,fontSize:13,cursor:'pointer'}}>
                       {l}
                     </button>
                   ))}
@@ -5864,25 +5864,25 @@ function LeadImportExport({ activeBusiness }) {
 
               {/* Temperature filter */}
               <div>
-                <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Filter by Temperature</label>
+                <label style={{fontSize:13,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:6}}>Filter by Temperature</label>
                 <select value={expTemp} onChange={e => setExpTemp(e.target.value)}
-                  style={{width:'100%',padding:'9px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,color:'#1e293b',background:'white'}}>
+                  style={{width:'100%',padding:'9px 12px',borderRadius:8,border:'1px solid var(--border)',fontSize:13,color:'var(--text-primary)',background:'var(--bg-card)'}}>
                   {TEMP_OPTS.map(([v,l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
               </div>
 
               {/* Stage filter */}
               <div>
-                <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Filter by Stage</label>
+                <label style={{fontSize:13,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:6}}>Filter by Stage</label>
                 <select value={expStage} onChange={e => setExpStage(e.target.value)}
-                  style={{width:'100%',padding:'9px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,color:'#1e293b',background:'white'}}>
+                  style={{width:'100%',padding:'9px 12px',borderRadius:8,border:'1px solid var(--border)',fontSize:13,color:'var(--text-primary)',background:'var(--bg-card)'}}>
                   {STAGE_OPTS.map(([v,l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
               </div>
 
               {/* Export fields info */}
-              <div style={{background:'#f8fafc',borderRadius:8,padding:'12px 16px',fontSize:12,color:'#64748b'}}>
-                <div style={{fontWeight:600,marginBottom:4,color:'#475569'}}>Exported columns:</div>
+              <div style={{background:'var(--bg-input)',borderRadius:8,padding:'12px 16px',fontSize:12,color:'var(--text-secondary)'}}>
+                <div style={{fontWeight:600,marginBottom:4,color:'var(--text-secondary)'}}>Exported columns:</div>
                 ID, Name, Phone, Email, Module, Temperature, Stage, Qualified, Source, Location, Experience, Education, Notes, Sender ID, Created At, Updated At
               </div>
 
@@ -5896,7 +5896,7 @@ function LeadImportExport({ activeBusiness }) {
 
           {/* Quick export shortcuts */}
           <div className="card" style={{padding:'20px 24px'}}>
-            <div style={{fontWeight:700,fontSize:13,color:'#1e293b',marginBottom:12}}>Quick Exports</div>
+            <div style={{fontWeight:700,fontSize:13,color:'var(--text-primary)',marginBottom:12}}>Quick Exports</div>
             <div style={{display:'flex',flexDirection:'column',gap:8}}>
               {[
                 { label: '🔥 Hot Leads Only', temp: 'hot', stage: '' },
@@ -5923,7 +5923,7 @@ function LeadImportExport({ activeBusiness }) {
                     } catch(e) { showToast('Export failed'); }
                     setExporting(false);
                   }}
-                  style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',borderRadius:8,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13,color:'#1e293b',fontWeight:500}}
+                  style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',borderRadius:8,border:'1px solid var(--border)',background:'var(--bg-card)',cursor:'pointer',fontSize:13,color:'var(--text-primary)',fontWeight:500}}
                 >
                   <span>{opt.label}</span>
                   <Download size={13} color="#94a3b8"/>
@@ -5943,7 +5943,7 @@ const URGENCY_CONFIG = {
   critical: { label: 'CRITICAL', color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
   high:     { label: 'HIGH',     color: '#f97316', bg: '#fff7ed', border: '#fed7aa' },
   medium:   { label: 'MEDIUM',   color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
-  low:      { label: 'LOW',      color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' },
+  low:      { label: 'LOW',      color: '#64748b', bg: '#f8fafc', border: 'var(--border)' },
 };
 
 const STAGE_OPTIONS = [
@@ -6045,8 +6045,8 @@ function HotLeadQueue({ activeBusiness, setPage }) {
         sub={`${total} leads ranked by urgency — take action before they go cold`}
         action={
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
-            {lastRefresh && <span style={{fontSize:11,color:'#94a3b8'}}>Updated {lastRefresh.toLocaleTimeString()}</span>}
-            <button onClick={fetchQueue} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:8,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13,color:'#475569'}}>
+            {lastRefresh && <span style={{fontSize:11,color:'var(--text-muted)'}}>Updated {lastRefresh.toLocaleTimeString()}</span>}
+            <button onClick={fetchQueue} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:8,border:'1px solid var(--border)',background:'var(--bg-card)',cursor:'pointer',fontSize:13,color:'var(--text-secondary)'}}>
               <RefreshCw size={14}/>Refresh
             </button>
           </div>
@@ -6064,7 +6064,7 @@ function HotLeadQueue({ activeBusiness, setPage }) {
           <div key={s.label} className="card" style={{padding:'16px 20px',display:'flex',alignItems:'center',gap:14}}>
             <div style={{fontSize:24}}>{s.icon}</div>
             <div>
-              <div style={{fontSize:11,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.05em',fontWeight:600}}>{s.label}</div>
+              <div style={{fontSize:11,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em',fontWeight:600}}>{s.label}</div>
               <div style={{fontSize:26,fontWeight:700,color:s.color,lineHeight:1.2}}>{s.value}</div>
             </div>
           </div>
@@ -6075,18 +6075,18 @@ function HotLeadQueue({ activeBusiness, setPage }) {
       <div style={{display:'flex',gap:8,marginBottom:16}}>
         {[['all','All'],['critical','Critical'],['high','High'],['medium','Medium']].map(([k,l]) => (
           <button key={k} onClick={() => setFilter(k)}
-            style={{padding:'6px 16px',borderRadius:20,border:'1px solid',borderColor:filter===k?'#ef4444':'#e2e8f0',background:filter===k?'#fef2f2':'white',color:filter===k?'#ef4444':'#64748b',fontSize:12,fontWeight:filter===k?600:400,cursor:'pointer'}}>
+            style={{padding:'6px 16px',borderRadius:20,border:'1px solid',borderColor:filter===k?'#ef4444':'var(--border)',background:filter===k?'#fef2f2':'white',color:filter===k?'#ef4444':'#64748b',fontSize:12,fontWeight:filter===k?600:400,cursor:'pointer'}}>
             {l}
           </button>
         ))}
       </div>
 
       {loading ? (
-        <div style={{display:'flex',justifyContent:'center',padding:'60px 0',color:'#94a3b8',gap:10}}>
+        <div style={{display:'flex',justifyContent:'center',padding:'60px 0',color:'var(--text-muted)',gap:10}}>
           <Loader size={20} className="spin"/>Loading queue...
         </div>
       ) : filtered.length === 0 ? (
-        <div style={{textAlign:'center',padding:'60px 0',color:'#94a3b8'}}>
+        <div style={{textAlign:'center',padding:'60px 0',color:'var(--text-muted)'}}>
           <Flame size={40} style={{marginBottom:12,opacity:0.3}}/>
           <p>No leads in this category right now.</p>
           <p style={{fontSize:13}}>Check back later or adjust your filter.</p>
@@ -6115,22 +6115,22 @@ function HotLeadQueue({ activeBusiness, setPage }) {
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
                       <div style={{position:'relative', display:'flex', alignItems:'center', gap:'8px'}}>
-                        <div style={{width:'28px', height:'28px', borderRadius:'6px', background:'#f1f5f9', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.75em', fontWeight:700, color:'#475569'}}>
+                        <div style={{width:'28px', height:'28px', borderRadius:'6px', background:'var(--bg-input)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.75em', fontWeight:700, color:'var(--text-secondary)'}}>
                           {(lead.name || '?')[0].toUpperCase()}
                         </div>
-                        <div style={{position:'absolute', bottom:'-4px', left:'18px', width:'14px', height:'14px', borderRadius:'50%', background:'white', border:'1px solid #e2e8f0', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                        <div style={{position:'absolute', bottom:'-4px', left:'18px', width:'14px', height:'14px', borderRadius:'50%', background:'var(--bg-card)', border:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center'}}>
                           {lead.source === 'whatsapp' ? 
                             <Phone size={8} fill="#25d366" stroke="#25d366"/> : 
                             <Image size={8} color="#e1306c"/>
                           }
                         </div>
-                        <span style={{fontWeight:700,fontSize:15,color:'#1e293b'}}>{lead.name || `User ${String(lead.sender_id).slice(-4)}`}</span>
+                        <span style={{fontWeight:700,fontSize:15,color:'var(--text-primary)'}}>{lead.name || `User ${String(lead.sender_id).slice(-4)}`}</span>
                       </div>
                       <span style={{padding:'2px 8px',borderRadius:10,fontSize:11,fontWeight:700,background:urg.bg,color:urg.color,border:`1px solid ${urg.border}`}}>{urg.label}</span>
                       {lead.temperature === 'hot' && <span style={{fontSize:11}}>🔥 Hot</span>}
                       {lead.is_qualified && <span style={{fontSize:11,color:'#10b981',fontWeight:600}}>✓ Qualified</span>}
                     </div>
-                    <div style={{fontSize:12,color:'#64748b',marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                    <div style={{fontSize:12,color:'var(--text-secondary)',marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
                       {lead.interested_module && <span style={{marginRight:10}}>📚 {lead.interested_module}</span>}
                       {lead.last_message && <span>💬 "{lead.last_message.slice(0,60)}{lead.last_message.length>60?'...':''}"</span>}
                     </div>
@@ -6176,7 +6176,7 @@ function HotLeadQueue({ activeBusiness, setPage }) {
 
                 {/* Expanded detail panel */}
                 {isExpanded && (
-                  <div style={{borderTop:`1px solid ${urg.border}`,padding:'16px 20px',background:'#fafafa',display:'flex',flexDirection:'column',gap:14}}>
+                  <div style={{borderTop:`1px solid ${urg.border}`,padding:'16px 20px',background:'var(--bg-input)',display:'flex',flexDirection:'column',gap:14}}>
                     {/* Contact + meta row */}
                     <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:10}}>
                       {[
@@ -6187,21 +6187,21 @@ function HotLeadQueue({ activeBusiness, setPage }) {
                         { icon: '🌡️', label: 'Temperature', value: lead.temperature || '—' },
                         { icon: '⭐', label: 'Score', value: lead.score },
                       ].map(item => (
-                        <div key={item.label} style={{background:'white',borderRadius:8,padding:'10px 14px',border:'1px solid #e2e8f0'}}>
-                          <div style={{fontSize:11,color:'#94a3b8',fontWeight:600,marginBottom:2}}>{item.icon} {item.label}</div>
-                          <div style={{fontSize:13,color:'#1e293b',fontWeight:500}}>{item.value}</div>
+                        <div key={item.label} style={{background:'var(--bg-card)',borderRadius:8,padding:'10px 14px',border:'1px solid var(--border)'}}>
+                          <div style={{fontSize:11,color:'var(--text-muted)',fontWeight:600,marginBottom:2}}>{item.icon} {item.label}</div>
+                          <div style={{fontSize:13,color:'var(--text-primary)',fontWeight:500}}>{item.value}</div>
                         </div>
                       ))}
                     </div>
 
                     {/* Stage selector */}
                     <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
-                      <span style={{fontSize:12,fontWeight:600,color:'#475569'}}>STAGE:</span>
+                      <span style={{fontSize:12,fontWeight:600,color:'var(--text-secondary)'}}>STAGE:</span>
                       {STAGE_OPTIONS.map(opt => (
                         <button key={opt.value}
                           onClick={() => handleStageChange(lead, opt.value)}
                           disabled={stageSaving === lead.id}
-                          style={{padding:'5px 12px',borderRadius:20,border:'1px solid',borderColor:lead.lead_stage===opt.value?'#3b82f6':'#e2e8f0',background:lead.lead_stage===opt.value?'#eff6ff':'white',color:lead.lead_stage===opt.value?'#3b82f6':'#64748b',fontSize:12,fontWeight:lead.lead_stage===opt.value?700:400,cursor:'pointer'}}
+                          style={{padding:'5px 12px',borderRadius:20,border:'1px solid',borderColor:lead.lead_stage===opt.value?'#3b82f6':'var(--border)',background:lead.lead_stage===opt.value?'#eff6ff':'white',color:lead.lead_stage===opt.value?'#3b82f6':'#64748b',fontSize:12,fontWeight:lead.lead_stage===opt.value?700:400,cursor:'pointer'}}
                         >
                           {stageSaving===lead.id&&lead.lead_stage===opt.value ? '...' : opt.label}
                         </button>
@@ -6210,14 +6210,14 @@ function HotLeadQueue({ activeBusiness, setPage }) {
 
                     {/* Notes */}
                     <div>
-                      <div style={{fontSize:12,fontWeight:600,color:'#475569',marginBottom:6}}>NOTES</div>
+                      <div style={{fontSize:12,fontWeight:600,color:'var(--text-secondary)',marginBottom:6}}>NOTES</div>
                       <div style={{display:'flex',gap:8}}>
                         <textarea
                           value={noteVal}
                           onChange={e => setNoteEditing(prev => ({...prev, [lead.id]: e.target.value}))}
                           placeholder="Add a note about this lead..."
                           rows={2}
-                          style={{flex:1,padding:'8px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,resize:'vertical',fontFamily:'inherit',outline:'none'}}
+                          style={{flex:1,padding:'8px 12px',borderRadius:8,border:'1px solid var(--border)',fontSize:13,resize:'vertical',fontFamily:'inherit',outline:'none'}}
                         />
                         <button
                           onClick={() => handleSaveNote(lead)}
@@ -6373,7 +6373,7 @@ function GoogleReviewsPage({ activeBusiness }) {
         sub="Monitor, respond to, and auto-reply to Google Business reviews with AI"
         action={
           <div style={{display:'flex',gap:8}}>
-            <button onClick={fetchReviews} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:8,border:'1px solid #e2e8f0',background:'white',cursor:'pointer',fontSize:13,color:'#475569'}}>
+            <button onClick={fetchReviews} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:8,border:'1px solid var(--border)',background:'var(--bg-card)',cursor:'pointer',fontSize:13,color:'var(--text-secondary)'}}>
               <RefreshCw size={14}/>Refresh
             </button>
           </div>
@@ -6383,7 +6383,7 @@ function GoogleReviewsPage({ activeBusiness }) {
       {/* Top tabs */}
       <div style={{display:'flex',gap:8,marginBottom:20}}>
         {[['reviews','Reviews'], ['settings','Auto-Responder Settings']].map(([k,l]) => (
-          <button key={k} onClick={() => setSettingsTab(k)} style={{padding:'8px 18px',borderRadius:8,border:'1px solid',borderColor:settingsTab===k?'#3b82f6':'#e2e8f0',background:settingsTab===k?'#eff6ff':'white',color:settingsTab===k?'#3b82f6':'#64748b',fontWeight:settingsTab===k?600:400,fontSize:13,cursor:'pointer'}}>{l}</button>
+          <button key={k} onClick={() => setSettingsTab(k)} style={{padding:'8px 18px',borderRadius:8,border:'1px solid',borderColor:settingsTab===k?'#3b82f6':'var(--border)',background:settingsTab===k?'#eff6ff':'white',color:settingsTab===k?'#3b82f6':'#64748b',fontWeight:settingsTab===k?600:400,fontSize:13,cursor:'pointer'}}>{l}</button>
         ))}
       </div>
 
@@ -6400,7 +6400,7 @@ function GoogleReviewsPage({ activeBusiness }) {
               <div key={s.label} className="card" style={{padding:'16px 20px',display:'flex',alignItems:'center',gap:14}}>
                 <div style={{fontSize:24}}>{s.icon}</div>
                 <div>
-                  <div style={{fontSize:11,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.05em',fontWeight:600}}>{s.label}</div>
+                  <div style={{fontSize:11,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em',fontWeight:600}}>{s.label}</div>
                   <div style={{fontSize:26,fontWeight:700,color:s.color,lineHeight:1.2}}>{s.value}</div>
                 </div>
               </div>
@@ -6411,13 +6411,13 @@ function GoogleReviewsPage({ activeBusiness }) {
           <div style={{display:'flex',gap:8,marginBottom:16,flexWrap:'wrap',alignItems:'center'}}>
             <div style={{display:'flex',gap:6}}>
               {[['all','All'],['pending','Needs Reply'],['replied','Replied']].map(([k,l]) => (
-                <button key={k} onClick={() => setTab(k)} style={{padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor:tab===k?'#3b82f6':'#e2e8f0',background:tab===k?'#eff6ff':'white',color:tab===k?'#3b82f6':'#64748b',fontSize:12,fontWeight:tab===k?600:400,cursor:'pointer'}}>{l}</button>
+                <button key={k} onClick={() => setTab(k)} style={{padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor:tab===k?'#3b82f6':'var(--border)',background:tab===k?'#eff6ff':'white',color:tab===k?'#3b82f6':'#64748b',fontSize:12,fontWeight:tab===k?600:400,cursor:'pointer'}}>{l}</button>
               ))}
             </div>
             <div style={{marginLeft:'auto',display:'flex',gap:6,alignItems:'center'}}>
-              <span style={{fontSize:12,color:'#94a3b8'}}>Filter by stars:</span>
+              <span style={{fontSize:12,color:'var(--text-muted)'}}>Filter by stars:</span>
               {['all','5','4','3','2','1'].map(s => (
-                <button key={s} onClick={() => setFilter(s)} style={{padding:'4px 10px',borderRadius:20,border:'1px solid',borderColor:filter===s?'#f59e0b':'#e2e8f0',background:filter===s?'#fffbeb':'white',color:filter===s?'#d97706':'#64748b',fontSize:12,fontWeight:filter===s?600:400,cursor:'pointer'}}>
+                <button key={s} onClick={() => setFilter(s)} style={{padding:'4px 10px',borderRadius:20,border:'1px solid',borderColor:filter===s?'#f59e0b':'var(--border)',background:filter===s?'#fffbeb':'white',color:filter===s?'#d97706':'#64748b',fontSize:12,fontWeight:filter===s?600:400,cursor:'pointer'}}>
                   {s === 'all' ? 'All' : `${s}★`}
                 </button>
               ))}
@@ -6435,27 +6435,27 @@ function GoogleReviewsPage({ activeBusiness }) {
           )}
 
           {loading ? (
-            <div style={{display:'flex',justifyContent:'center',padding:'60px 0',color:'#94a3b8'}}><Loader size={24} className="spin"/>  Loading reviews...</div>
+            <div style={{display:'flex',justifyContent:'center',padding:'60px 0',color:'var(--text-muted)'}}><Loader size={24} className="spin"/>  Loading reviews...</div>
           ) : filteredReviews.length === 0 ? (
-            <div style={{textAlign:'center',padding:'60px 0',color:'#94a3b8'}}>
+            <div style={{textAlign:'center',padding:'60px 0',color:'var(--text-muted)'}}>
               <Star size={40} style={{marginBottom:12,opacity:0.3}}/>
               <p>No reviews found for this filter.</p>
             </div>
           ) : (
             <div style={{display:'flex',flexDirection:'column',gap:16}}>
               {filteredReviews.map(review => (
-                <div key={review.id} className="card" style={{padding:'20px 24px',border: review.status !== 'replied' ? '1px solid #fed7aa' : '1px solid #e2e8f0'}}>
+                <div key={review.id} className="card" style={{padding:'20px 24px',border: review.status !== 'replied' ? '1px solid #fed7aa' : '1px solid var(--border)'}}>
                   {/* Review header */}
                   <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:12}}>
                     <div style={{display:'flex',alignItems:'center',gap:12}}>
-                      <div style={{width:40,height:40,borderRadius:'50%',background:'#f1f5f9',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:700,color:'#475569'}}>
+                      <div style={{width:40,height:40,borderRadius:'50%',background:'var(--bg-input)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:700,color:'var(--text-secondary)'}}>
                         {(review.reviewer_name || 'A')[0].toUpperCase()}
                       </div>
                       <div>
-                        <div style={{fontWeight:700,fontSize:15,color:'#1e293b'}}>{review.reviewer_name || 'Anonymous'}</div>
+                        <div style={{fontWeight:700,fontSize:15,color:'var(--text-primary)'}}>{review.reviewer_name || 'Anonymous'}</div>
                         <div style={{display:'flex',alignItems:'center',gap:8,marginTop:2}}>
                           <StarRating rating={review.star_rating}/>
-                          <span style={{fontSize:12,color:'#94a3b8'}}>{review.create_time ? new Date(review.create_time).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : ''}</span>
+                          <span style={{fontSize:12,color:'var(--text-muted)'}}>{review.create_time ? new Date(review.create_time).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : ''}</span>
                         </div>
                       </div>
                     </div>
@@ -6466,11 +6466,11 @@ function GoogleReviewsPage({ activeBusiness }) {
 
                   {/* Review comment */}
                   {review.comment ? (
-                    <div style={{background:'#f8fafc',borderRadius:8,padding:'12px 16px',marginBottom:14,fontSize:14,color:'#334155',lineHeight:1.6,borderLeft:'3px solid #e2e8f0'}}>
+                    <div style={{background:'var(--bg-input)',borderRadius:8,padding:'12px 16px',marginBottom:14,fontSize:14,color:'var(--text-secondary)',lineHeight:1.6,borderLeft:'3px solid var(--border)'}}>
                       "{review.comment}"
                     </div>
                   ) : (
-                    <div style={{marginBottom:14,fontSize:13,color:'#94a3b8',fontStyle:'italic'}}>No text comment — rating only.</div>
+                    <div style={{marginBottom:14,fontSize:13,color:'var(--text-muted)',fontStyle:'italic'}}>No text comment — rating only.</div>
                   )}
 
                   {/* Existing reply */}
@@ -6485,7 +6485,7 @@ function GoogleReviewsPage({ activeBusiness }) {
                   {review.status !== 'replied' && (
                     <div>
                       <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
-                        <span style={{fontSize:12,fontWeight:600,color:'#475569'}}>REPLY DRAFT</span>
+                        <span style={{fontSize:12,fontWeight:600,color:'var(--text-secondary)'}}>REPLY DRAFT</span>
                         <button
                           onClick={() => handleGenerateReply(review)}
                           disabled={generatingFor === review.id}
@@ -6500,7 +6500,7 @@ function GoogleReviewsPage({ activeBusiness }) {
                         onChange={e => setReplyDrafts(prev => ({ ...prev, [review.id]: e.target.value }))}
                         placeholder="Write your reply here, or click 'Generate AI Reply' above..."
                         rows={3}
-                        style={{width:'100%',padding:'10px 14px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,color:'#334155',resize:'vertical',fontFamily:'inherit',boxSizing:'border-box',outline:'none'}}
+                        style={{width:'100%',padding:'10px 14px',borderRadius:8,border:'1px solid var(--border)',fontSize:13,color:'var(--text-secondary)',resize:'vertical',fontFamily:'inherit',boxSizing:'border-box',outline:'none'}}
                       />
                       <div style={{display:'flex',justifyContent:'flex-end',marginTop:8}}>
                         <button
@@ -6523,15 +6523,15 @@ function GoogleReviewsPage({ activeBusiness }) {
 
       {settingsTab === 'settings' && (
         <div className="card" style={{padding:'28px 32px',maxWidth:600}}>
-          <h3 style={{marginBottom:6,fontSize:16,fontWeight:700,color:'#1e293b'}}>Auto-Responder Configuration</h3>
-          <p style={{fontSize:13,color:'#64748b',marginBottom:24}}>When enabled, the AI will automatically generate and post replies to new Google Reviews based on the rules below.</p>
+          <h3 style={{marginBottom:6,fontSize:16,fontWeight:700,color:'var(--text-primary)'}}>Auto-Responder Configuration</h3>
+          <p style={{fontSize:13,color:'var(--text-secondary)',marginBottom:24}}>When enabled, the AI will automatically generate and post replies to new Google Reviews based on the rules below.</p>
 
           <div style={{display:'flex',flexDirection:'column',gap:20}}>
             {/* Enable toggle */}
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px',background:'#f8fafc',borderRadius:10,border:'1px solid #e2e8f0'}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px',background:'var(--bg-input)',borderRadius:10,border:'1px solid var(--border)'}}>
               <div>
-                <div style={{fontWeight:600,fontSize:14,color:'#1e293b'}}>Enable Auto-Responder</div>
-                <div style={{fontSize:12,color:'#64748b',marginTop:2}}>Automatically reply to new reviews without manual approval</div>
+                <div style={{fontWeight:600,fontSize:14,color:'var(--text-primary)'}}>Enable Auto-Responder</div>
+                <div style={{fontSize:12,color:'var(--text-secondary)',marginTop:2}}>Automatically reply to new reviews without manual approval</div>
               </div>
               <button onClick={() => setSettings(s => ({...s, is_enabled: !s.is_enabled}))} style={{background:'none',border:'none',cursor:'pointer',padding:0}}>
                 {settings.is_enabled ? <ToggleRight size={36} color="#3b82f6"/> : <ToggleLeft size={36} color="#cbd5e1"/>}
@@ -6540,34 +6540,34 @@ function GoogleReviewsPage({ activeBusiness }) {
 
             {/* Delay */}
             <div>
-              <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Reply Delay (minutes)</label>
+              <label style={{fontSize:13,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:6}}>Reply Delay (minutes)</label>
               <input
                 type="number" min={0} max={1440}
                 value={settings.delay_minutes}
                 onChange={e => setSettings(s => ({...s, delay_minutes: parseInt(e.target.value)||0}))}
-                style={{padding:'8px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:14,width:'100%',boxSizing:'border-box'}}
+                style={{padding:'8px 12px',borderRadius:8,border:'1px solid var(--border)',fontSize:14,width:'100%',boxSizing:'border-box'}}
               />
-              <p style={{fontSize:11,color:'#94a3b8',marginTop:4}}>Set to 0 for instant replies. Recommended: 30–120 minutes for a natural feel.</p>
+              <p style={{fontSize:11,color:'var(--text-muted)',marginTop:4}}>Set to 0 for instant replies. Recommended: 30–120 minutes for a natural feel.</p>
             </div>
 
             {/* Min rating */}
             <div>
-              <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Minimum Star Rating to Auto-Reply</label>
+              <label style={{fontSize:13,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:6}}>Minimum Star Rating to Auto-Reply</label>
               <div style={{display:'flex',gap:8}}>
                 {[1,2,3,4,5].map(n => (
                   <button key={n} onClick={() => setSettings(s => ({...s, min_rating_to_reply: n}))}
-                    style={{flex:1,padding:'8px',borderRadius:8,border:'1px solid',borderColor:settings.min_rating_to_reply===n?'#f59e0b':'#e2e8f0',background:settings.min_rating_to_reply===n?'#fffbeb':'white',color:settings.min_rating_to_reply===n?'#d97706':'#64748b',fontWeight:settings.min_rating_to_reply===n?700:400,cursor:'pointer',fontSize:14}}
+                    style={{flex:1,padding:'8px',borderRadius:8,border:'1px solid',borderColor:settings.min_rating_to_reply===n?'#f59e0b':'var(--border)',background:settings.min_rating_to_reply===n?'#fffbeb':'white',color:settings.min_rating_to_reply===n?'#d97706':'#64748b',fontWeight:settings.min_rating_to_reply===n?700:400,cursor:'pointer',fontSize:14}}
                   >{n}★</button>
                 ))}
               </div>
-              <p style={{fontSize:11,color:'#94a3b8',marginTop:4}}>Only auto-reply to reviews with this rating or higher. Low ratings need human attention.</p>
+              <p style={{fontSize:11,color:'var(--text-muted)',marginTop:4}}>Only auto-reply to reviews with this rating or higher. Low ratings need human attention.</p>
             </div>
 
             {/* Text only toggle */}
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px',background:'#f8fafc',borderRadius:10,border:'1px solid #e2e8f0'}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px',background:'var(--bg-input)',borderRadius:10,border:'1px solid var(--border)'}}>
               <div>
-                <div style={{fontWeight:600,fontSize:14,color:'#1e293b'}}>Only Auto-Reply to Reviews with Text</div>
-                <div style={{fontSize:12,color:'#64748b',marginTop:2}}>Skip rating-only reviews (no written comment)</div>
+                <div style={{fontWeight:600,fontSize:14,color:'var(--text-primary)'}}>Only Auto-Reply to Reviews with Text</div>
+                <div style={{fontSize:12,color:'var(--text-secondary)',marginTop:2}}>Skip rating-only reviews (no written comment)</div>
               </div>
               <button onClick={() => setSettings(s => ({...s, auto_reply_to_text_only: !s.auto_reply_to_text_only}))} style={{background:'none',border:'none',cursor:'pointer',padding:0}}>
                 {settings.auto_reply_to_text_only ? <ToggleRight size={36} color="#3b82f6"/> : <ToggleLeft size={36} color="#cbd5e1"/>}
@@ -6628,9 +6628,9 @@ function BroadcastsPage({ activeBusiness }) {
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,alignItems:'start'}}>
         {/* Template Selection */}
         <div className="card">
-          <h3 style={{marginBottom:12,color:'#1e293b',fontWeight:700}}>1. Select Template</h3>
+          <h3 style={{marginBottom:12,color:'var(--text-primary)',fontWeight:700}}>1. Select Template</h3>
           {loading ? (
-            <div style={{color:'#64748b',fontSize:13}}>Loading templates...</div>
+            <div style={{color:'var(--text-secondary)',fontSize:13}}>Loading templates...</div>
           ) : templates.length === 0 ? (
             <div>
               <div style={{color:'#ef4444',fontSize:13,marginBottom:8}}>No templates found. Create one in WhatsApp Manager.</div>
@@ -6640,10 +6640,10 @@ function BroadcastsPage({ activeBusiness }) {
               {templates.map((t, i) => (
                 <div key={i}
                   onClick={() => setSelectedTemplate(t)}
-                  style={{padding:'12px 14px',borderRadius:8,border:`1px solid ${selectedTemplate?.name===t.name?'#3b82f6':'#e2e8f0'}`,background:selectedTemplate?.name===t.name?'#eff6ff':'white',cursor:'pointer',transition:'all 0.15s'}}
+                  style={{padding:'12px 14px',borderRadius:8,border:`1px solid ${selectedTemplate?.name===t.name?'#3b82f6':'var(--border)'}`,background:selectedTemplate?.name===t.name?'#eff6ff':'white',cursor:'pointer',transition:'all 0.15s'}}
                 >
-                  <div style={{fontWeight:600,fontSize:13,color:'#1e293b'}}>{t.name}</div>
-                  <div style={{fontSize:11,color:'#64748b',marginTop:2}}>{t.language} &bull; {t.status}</div>
+                  <div style={{fontWeight:600,fontSize:13,color:'var(--text-primary)'}}>{t.name}</div>
+                  <div style={{fontSize:11,color:'var(--text-secondary)',marginTop:2}}>{t.language} &bull; {t.status}</div>
                 </div>
               ))}
             </div>
@@ -6652,11 +6652,11 @@ function BroadcastsPage({ activeBusiness }) {
 
         {/* Configure & Send */}
         <div className="card">
-          <h3 style={{marginBottom:12,color:'#1e293b',fontWeight:700}}>2. Configure &amp; Send</h3>
+          <h3 style={{marginBottom:12,color:'var(--text-primary)',fontWeight:700}}>2. Configure &amp; Send</h3>
           <div style={{marginBottom:12}}>
-            <label style={{fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:6}}>Audience Filter</label>
+            <label style={{fontSize:12,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:6}}>Audience Filter</label>
             <select value={audience} onChange={e => setAudience(e.target.value)}
-              style={{width:'100%',padding:'8px 10px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,color:'#1e293b',background:'white'}}>
+              style={{width:'100%',padding:'8px 10px',borderRadius:7,border:'1px solid var(--border)',fontSize:13,color:'var(--text-primary)',background:'var(--bg-card)'}}>
               <option value="all">All Leads</option>
               <option value="hot">Hot Leads Only</option>
               <option value="warm">Warm Leads Only</option>
@@ -6664,9 +6664,9 @@ function BroadcastsPage({ activeBusiness }) {
             </select>
           </div>
           {selectedTemplate && (
-            <div style={{background:'#f8fafc',borderRadius:8,padding:'12px',marginBottom:12,border:'1px solid #e2e8f0'}}>
-              <div style={{fontSize:11,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',marginBottom:6}}>Selected Template</div>
-              <div style={{fontSize:13,fontWeight:600,color:'#1e293b'}}>{selectedTemplate.name}</div>
+            <div style={{background:'var(--bg-input)',borderRadius:8,padding:'12px',marginBottom:12,border:'1px solid var(--border)'}}>
+              <div style={{fontSize:11,fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',marginBottom:6}}>Selected Template</div>
+              <div style={{fontSize:13,fontWeight:600,color:'var(--text-primary)'}}>{selectedTemplate.name}</div>
             </div>
           )}
           <button
@@ -6766,7 +6766,7 @@ function LoginPage({ onLoginSuccess }) {
             <Bot size={28} color="white"/>
           </div>
           <h1 style={{fontSize:26,fontWeight:800,color:'white',margin:0,letterSpacing:'-0.02em'}}>AI Command Center</h1>
-          <p style={{fontSize:14,color:'#94a3b8',marginTop:6,marginBottom:0}}>Your intelligent business assistant</p>
+          <p style={{fontSize:14,color:'var(--text-muted)',marginTop:6,marginBottom:0}}>Your intelligent business assistant</p>
         </div>
 
         {/* Card */}
@@ -6799,9 +6799,9 @@ function LoginPage({ onLoginSuccess }) {
             {mode === 'register' && (
               <>
                 <div>
-                  <label style={{fontSize:12,fontWeight:600,color:'#94a3b8',display:'block',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Full Name</label>
+                  <label style={{fontSize:12,fontWeight:600,color:'var(--text-muted)',display:'block',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Full Name</label>
                   <div style={{position:'relative'}}>
-                    <UserPlus size={15} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'#64748b'}}/>
+                    <UserPlus size={15} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'var(--text-secondary)'}}/>
                     <input
                       type="text" value={name} onChange={e => setName(e.target.value)}
                       placeholder="Mohamed Aslam"
@@ -6810,7 +6810,7 @@ function LoginPage({ onLoginSuccess }) {
                   </div>
                 </div>
                 <div>
-                  <label style={{fontSize:12,fontWeight:600,color:'#94a3b8',display:'block',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Business</label>
+                  <label style={{fontSize:12,fontWeight:600,color:'var(--text-muted)',display:'block',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Business</label>
                   {existingBusinesses.length > 0 ? (
                     <>
                       <select value={existingBusinessId} onChange={e => setExistingBusinessId(e.target.value)}
@@ -6835,15 +6835,15 @@ function LoginPage({ onLoginSuccess }) {
                       style={{width:'100%',padding:'11px',borderRadius:9,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.07)',color:'white',fontSize:14,outline:'none',boxSizing:'border-box'}}
                     />
                   )}
-                  <p style={{fontSize:11,color:'#64748b',margin:'6px 0 0'}}>Select an existing business or create a new one</p>
+                  <p style={{fontSize:11,color:'var(--text-secondary)',margin:'6px 0 0'}}>Select an existing business or create a new one</p>
                 </div>
               </>
             )}
 
             <div>
-              <label style={{fontSize:12,fontWeight:600,color:'#94a3b8',display:'block',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Email Address</label>
+              <label style={{fontSize:12,fontWeight:600,color:'var(--text-muted)',display:'block',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Email Address</label>
               <div style={{position:'relative'}}>
-                <Mail size={15} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'#64748b'}}/>
+                <Mail size={15} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'var(--text-secondary)'}}/>
                 <input
                   type="email" value={email} onChange={e => setEmail(e.target.value)}
                   placeholder="you@company.com"
@@ -6853,16 +6853,16 @@ function LoginPage({ onLoginSuccess }) {
             </div>
 
             <div>
-              <label style={{fontSize:12,fontWeight:600,color:'#94a3b8',display:'block',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Password</label>
+              <label style={{fontSize:12,fontWeight:600,color:'var(--text-muted)',display:'block',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Password</label>
               <div style={{position:'relative'}}>
-                <Lock size={15} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'#64748b'}}/>
+                <Lock size={15} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'var(--text-secondary)'}}/>
                 <input
                   type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
                   placeholder={mode==='register' ? 'Min 8 characters' : 'Enter your password'}
                   style={{width:'100%',padding:'11px 40px 11px 38px',borderRadius:9,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.07)',color:'white',fontSize:14,outline:'none',boxSizing:'border-box'}}
                 />
                 <button type="button" onClick={() => setShowPw(p => !p)}
-                  style={{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',color:'#64748b',padding:0,display:'flex',alignItems:'center'}}>
+                  style={{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',color:'var(--text-secondary)',padding:0,display:'flex',alignItems:'center'}}>
                   {showPw ? <EyeOff size={15}/> : <Eye size={15}/>}
                 </button>
               </div>
@@ -6878,7 +6878,7 @@ function LoginPage({ onLoginSuccess }) {
           </form>
 
           {mode === 'login' && (
-            <div style={{textAlign:'center',marginTop:20,fontSize:12,color:'#64748b'}}>
+            <div style={{textAlign:'center',marginTop:20,fontSize:12,color:'var(--text-secondary)'}}>
               Don't have an account?{' '}
               <button onClick={() => { setMode('register'); setError(''); }}
                 style={{background:'none',border:'none',cursor:'pointer',color:'#60a5fa',fontWeight:600,fontSize:12,padding:0}}>Create one</button>
@@ -6886,7 +6886,7 @@ function LoginPage({ onLoginSuccess }) {
           )}
         </div>
 
-        <div style={{textAlign:'center',marginTop:20,fontSize:11,color:'#475569'}}>
+        <div style={{textAlign:'center',marginTop:20,fontSize:11,color:'var(--text-secondary)'}}>
           AI Command Center &copy; {new Date().getFullYear()} &middot; Powered by Archon Solutions
         </div>
       </div>
