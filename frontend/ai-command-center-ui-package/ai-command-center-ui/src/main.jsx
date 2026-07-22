@@ -183,7 +183,7 @@ function timeAgo(ts) {
   return `${Math.floor(diff/86400)}d ago`;
 }
 
-function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notifications, unreadCount, onMarkAllRead, authUser, onLogout, theme, onToggleTheme }) {
+function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notifications, unreadCount, onMarkAllRead, authUser, onLogout, theme='light', onToggleTheme }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = React.useRef(null);
   React.useEffect(() => {
@@ -383,7 +383,7 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notification
   );
 }
 
-function Screen({page, dashboard, activeBusiness, setPage, theme}) {
+function Screen({page, dashboard, activeBusiness, setPage, theme='light'}) {
   return (
     <>
       {page==='Overview'&&<Overview dashboard={dashboard} setPage={setPage} activeBusiness={activeBusiness} theme={theme}/>}
@@ -415,7 +415,7 @@ function Stat({label,value,change}) {
   return <div className="card stat"><p>{label}</p><h2>{value}</h2><span>{change}</span><small>live data</small></div>;
 }
 
-function Overview({ setPage, activeBusiness, theme }) {
+function Overview({ setPage, activeBusiness, theme='light' }) {
   const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
   const bizHeaders = { 'X-Business-ID': bizId };
   const [data, setData] = useState(null);
@@ -814,7 +814,7 @@ const CONV_STATE_COLORS = {
   replied: '#10b981',
 };
 
-function Conversations({ activeBusiness, theme }) {
+function Conversations({ activeBusiness, theme='light' }) {
   const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
   const bizHeaders = { 'X-Business-ID': bizId };
   const [conversations, setConversations] = useState([]);
@@ -1053,7 +1053,7 @@ function Conversations({ activeBusiness, theme }) {
   );
 }
 
-function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh, bizId, theme }) {
+function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh, bizId, theme='light' }) {
   const bizHeaders = { 'X-Business-ID': bizId || '00000000-0000-0000-0000-000000000000' };
   const [replyText, setReplyText] = useState('');
   const [sending, setSending] = useState(false);
@@ -1305,7 +1305,7 @@ function LeadTemperatureDot({ temp }) {
   );
 }
 
-function Leads({ activeBusiness, theme }) {
+function Leads({ activeBusiness, theme='light' }) {
   const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
   const bizHeaders = { 'X-Business-ID': bizId };
   const [allLeads, setAllLeads] = useState([]);
@@ -1492,7 +1492,7 @@ function Leads({ activeBusiness, theme }) {
   );
 }
 
-function LeadDetailPanel({ lead: initialLead, onClose, getLeadName, bizId, theme }) {
+function LeadDetailPanel({ lead: initialLead, onClose, getLeadName, bizId, theme='light' }) {
   const bizHeaders = { 'X-Business-ID': bizId || '00000000-0000-0000-0000-000000000000' };
   const [lead, setLead] = useState(initialLead);
   const [qualifying, setQualifying] = useState(false);
@@ -1725,7 +1725,7 @@ const STAGE_COLORS = {
   running:   { bg: '#eff6ff', border: '#93c5fd', dot: '#2563eb', text: '#1e3a8a' },
 };
 
-function Debugger({ activeBusiness, theme }) {
+function Debugger({ activeBusiness, theme='light' }) {
   const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
   const bizHeaders = { 'X-Business-ID': bizId };
   const [message, setMessage] = useState('I want to learn SAP FICO. I am based in Mumbai. Please share fee details.');
@@ -1956,7 +1956,7 @@ function Debugger({ activeBusiness, theme }) {
   );
 }
 
-function Playground({ activeBusiness, theme }) {
+function Playground({ activeBusiness, theme='light' }) {
   const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
   const bizHeaders = { 'X-Business-ID': bizId };
   const [message, setMessage] = React.useState('');
@@ -2299,7 +2299,7 @@ const CATEGORY_LABELS = {
 
 const EMPTY_RULE = { rule_name: '', category: 'business_rule', trigger_keywords: '', response_template: '', priority: 10, notes: '' };
 
-function BusinessBrain({ activeBusiness, theme }) {
+function BusinessBrain({ activeBusiness, theme='light' }) {
   const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
   const bizHeaders = { 'X-Business-ID': bizId };
   const [rules, setRules] = useState([]);
@@ -2915,7 +2915,7 @@ const TIMELINE_ICONS = { start: '💬', lead: '🔥', qualified: '✅', activity
 const SENTIMENT_COLORS = { positive: '#10b981', neutral: '#64748b', negative: '#ef4444' };
 const URGENCY_COLORS = { high: '#ef4444', medium: '#f59e0b', low: '#10b981' };
 
-function Customer360({ activeBusiness, theme }) {
+function Customer360({ activeBusiness, theme='light' }) {
   const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
   const bizHeaders = { 'X-Business-ID': bizId };
   const [customers, setCustomers] = useState([]);
@@ -3204,7 +3204,7 @@ function Customer360({ activeBusiness, theme }) {
   );
 }
 
-function Reports({ activeBusiness, theme }) {
+function Reports({ activeBusiness, theme='light' }) {
   const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
   const bizHeaders = { 'X-Business-ID': bizId };
   const [data, setData] = React.useState(null);
@@ -3476,7 +3476,7 @@ function Reports({ activeBusiness, theme }) {
   );
 }
 
-function SettingsPage({ activeBusiness, theme }) {
+function SettingsPage({ activeBusiness, theme='light' }) {
   const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
   const bizHeaders = { 'X-Business-ID': bizId };
   const [loading, setLoading] = useState(true);
@@ -3826,7 +3826,7 @@ function SettingsPage({ activeBusiness, theme }) {
 
 
 // ─── FOLLOWER DM PANEL ────────────────────────────────────────────────────────
-function FollowerDMPanel({ bizId, bizHeaders, theme }) {
+function FollowerDMPanel({ bizId, bizHeaders, theme='light' }) {
   const [settings, setSettings] = useState({
     enabled: true,
     welcome_message: '',
@@ -4034,7 +4034,7 @@ function FollowerDMPanel({ bizId, bizHeaders, theme }) {
   );
 }
 
-function Automation({ activeBusiness, theme }) {
+function Automation({ activeBusiness, theme='light' }) {
   const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
   const bizHeaders = { 'X-Business-ID': bizId };
   const [activeTab, setActiveTab] = useState('rules');
@@ -4407,7 +4407,7 @@ const INDUSTRIES = [
   'Fitness / Wellness', 'Travel / Hospitality', 'Legal Services', 'Other'
 ];
 
-function BusinessesAdmin({ activeBusiness, setPage, theme }) {
+function BusinessesAdmin({ activeBusiness, setPage, theme='light' }) {
   const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -4606,7 +4606,7 @@ function BusinessesAdmin({ activeBusiness, setPage, theme }) {
 function Card({title,children}) { return <div className="card">{title&&<h3>{title}</h3>}{children}</div>; }
 function Tabs({tabs}) { return <div className="tabs">{tabs.map((t,i)=><button className={i===0?'active':''} key={t}>{t}</button>)}</div>; }
 function Table({heads,rows}) { return <div className="table"><table><thead><tr>{heads.map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>{rows.map((r,i)=><tr key={i}>{r.map((c,j)=><td key={j}>{c}</td>)}</tr>)}</tbody></table></div>; }
-function Name({ name, source, theme }) {
+function Name({ name, source, theme='light' }) {
   const color = source === 'whatsapp' ? '#22c55e' : (source === 'instagram' ? '#ec4899' : '#3b82f6');
   const displayName = name && name !== 'Name Pending' && name !== 'Unknown' ? name : 'Name Pending';
   return (
@@ -4765,7 +4765,7 @@ const INTEGRATIONS_CONFIG = [
   },
 ];
 
-function IntegrationsPage({ activeBusiness, theme }) {
+function IntegrationsPage({ activeBusiness, theme='light' }) {
   const [integrations, setIntegrations] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeModal, setActiveModal] = useState(null); // integration config id
@@ -5031,7 +5031,7 @@ const PLATFORMS = [
 
 const CHAR_LIMITS = { instagram: 2200, facebook: 63206, whatsapp: 1024 };
 
-function PublisherPage({ activeBusiness, setPage, theme }) {
+function PublisherPage({ activeBusiness, setPage, theme='light' }) {
   const [tab, setTab] = useState('compose');
   const [caption, setCaption] = useState('');
   const [mediaUrl, setMediaUrl] = useState('');
@@ -5532,7 +5532,7 @@ function PublisherPage({ activeBusiness, setPage, theme }) {
 
 // ─── LEAD IMPORT & EXPORT ───────────────────────────────────────────────────
 
-function LeadImportExport({ activeBusiness, theme }) {
+function LeadImportExport({ activeBusiness, theme='light' }) {
   const [tab, setTab] = useState('import'); // import | export
   const [dragOver, setDragOver] = useState(false);
   const [file, setFile] = useState(null);
@@ -5953,7 +5953,7 @@ const STAGE_OPTIONS = [
   { value: 'lost',           label: 'Lost' },
 ];
 
-function HotLeadQueue({ activeBusiness, setPage, theme }) {
+function HotLeadQueue({ activeBusiness, setPage, theme='light' }) {
   const [queue, setQueue] = useState([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -6249,7 +6249,7 @@ function StarRating({ rating, size = 16 }) {
   );
 }
 
-function GoogleReviewsPage({ activeBusiness, theme }) {
+function GoogleReviewsPage({ activeBusiness, theme='light' }) {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
@@ -6582,7 +6582,7 @@ function GoogleReviewsPage({ activeBusiness, theme }) {
   );
 }
 
-function BroadcastsPage({ activeBusiness, theme }) {
+function BroadcastsPage({ activeBusiness, theme='light' }) {
   const [templates, setTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [audience, setAudience] = useState('all');
