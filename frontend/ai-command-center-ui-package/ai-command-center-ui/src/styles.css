@@ -300,6 +300,280 @@ td { color: var(--text-primary); background: var(--bg-table-row); }
 [data-theme="dark"] ::-webkit-scrollbar-track { background: #161b22; }
 [data-theme="dark"] ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   DARK MODE — COMPREHENSIVE INLINE STYLE OVERRIDES
+   These target all hardcoded hex colours used in inline JSX styles
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── All generic divs, spans, sections with hardcoded dark text ── */
+[data-theme="dark"] section,
+[data-theme="dark"] div,
+[data-theme="dark"] span,
+[data-theme="dark"] p,
+[data-theme="dark"] label {
+  color: inherit;
+}
+
+/* ── White card backgrounds used inline ── */
+[data-theme="dark"] [style*="background:white"],
+[data-theme="dark"] [style*="background: white"],
+[data-theme="dark"] [style*="background:'white'"],
+[data-theme="dark"] [style*="background: '#ffffff'"],
+[data-theme="dark"] [style*="background:'#ffffff'"],
+[data-theme="dark"] [style*="background: #ffffff"],
+[data-theme="dark"] [style*="background:#ffffff"] {
+  background: #161b22 !important;
+}
+
+/* ── Light grey page backgrounds used inline ── */
+[data-theme="dark"] [style*="background:'#f8fafc'"],
+[data-theme="dark"] [style*="background: #f8fafc"],
+[data-theme="dark"] [style*="background:#f8fafc"],
+[data-theme="dark"] [style*="background:'#f1f5f9'"],
+[data-theme="dark"] [style*="background: #f1f5f9"],
+[data-theme="dark"] [style*="background:#f1f5f9"],
+[data-theme="dark"] [style*="background:'#f4f7fb'"],
+[data-theme="dark"] [style*="background: #f4f7fb"],
+[data-theme="dark"] [style*="background:#f4f7fb"] {
+  background: #1c2128 !important;
+}
+
+/* ── Dark text colours used inline ── */
+[data-theme="dark"] [style*="color:'#1e293b'"],
+[data-theme="dark"] [style*="color: #1e293b"],
+[data-theme="dark"] [style*="color:#1e293b"],
+[data-theme="dark"] [style*="color:'#0f172a'"],
+[data-theme="dark"] [style*="color: #0f172a"],
+[data-theme="dark"] [style*="color:#0f172a"],
+[data-theme="dark"] [style*="color:'#111827'"],
+[data-theme="dark"] [style*="color: #111827"],
+[data-theme="dark"] [style*="color:#111827"],
+[data-theme="dark"] [style*="color:'#374151'"],
+[data-theme="dark"] [style*="color: #374151"],
+[data-theme="dark"] [style*="color:#374151"] {
+  color: #e6edf3 !important;
+}
+
+/* ── Secondary/muted text colours used inline ── */
+[data-theme="dark"] [style*="color:'#64748b'"],
+[data-theme="dark"] [style*="color: #64748b"],
+[data-theme="dark"] [style*="color:#64748b"],
+[data-theme="dark"] [style*="color:'#475569'"],
+[data-theme="dark"] [style*="color: #475569"],
+[data-theme="dark"] [style*="color:#475569"],
+[data-theme="dark"] [style*="color:'#6b7280'"],
+[data-theme="dark"] [style*="color: #6b7280"],
+[data-theme="dark"] [style*="color:#6b7280"] {
+  color: #8b949e !important;
+}
+
+/* ── Very muted text ── */
+[data-theme="dark"] [style*="color:'#94a3b8'"],
+[data-theme="dark"] [style*="color: #94a3b8"],
+[data-theme="dark"] [style*="color:#94a3b8"],
+[data-theme="dark"] [style*="color:'#9ca3af'"],
+[data-theme="dark"] [style*="color: #9ca3af"],
+[data-theme="dark"] [style*="color:#9ca3af"],
+[data-theme="dark"] [style*="color:'#cbd5e1'"],
+[data-theme="dark"] [style*="color: #cbd5e1"],
+[data-theme="dark"] [style*="color:#cbd5e1"] {
+  color: #6e7681 !important;
+}
+
+/* ── Border colours used inline ── */
+[data-theme="dark"] [style*="border:'1px solid #e2e8f0'"],
+[data-theme="dark"] [style*="border: 1px solid #e2e8f0"],
+[data-theme="dark"] [style*="border:1px solid #e2e8f0"],
+[data-theme="dark"] [style*="borderColor:'#e2e8f0'"],
+[data-theme="dark"] [style*="borderColor: #e2e8f0"],
+[data-theme="dark"] [style*="borderColor:#e2e8f0"] {
+  border-color: #30363d !important;
+}
+
+/* ── Table header background used inline ── */
+[data-theme="dark"] [style*="background:'#f8fafc'"][style*="fontSize:12"],
+[data-theme="dark"] th[style*="background"] {
+  background: #1c2128 !important;
+  color: #8b949e !important;
+}
+
+/* ── Lead name column and table cell text ── */
+[data-theme="dark"] td {
+  color: #e6edf3 !important;
+  background: #161b22 !important;
+}
+[data-theme="dark"] tr:hover td {
+  background: #1c2128 !important;
+}
+
+/* ── Stat card numbers ── */
+[data-theme="dark"] [style*="fontSize:24"][style*="fontWeight:700"],
+[data-theme="dark"] [style*="fontSize:28"][style*="fontWeight:700"],
+[data-theme="dark"] [style*="fontSize:32"][style*="fontWeight:700"] {
+  color: #f0f6fc !important;
+}
+
+/* ── Section/page headers ── */
+[data-theme="dark"] [style*="fontSize:24"][style*="fontWeight:800"],
+[data-theme="dark"] [style*="fontSize:22"][style*="fontWeight:700"],
+[data-theme="dark"] [style*="fontSize:20"][style*="fontWeight:700"],
+[data-theme="dark"] [style*="fontSize:18"][style*="fontWeight:700"],
+[data-theme="dark"] [style*="fontSize:16"][style*="fontWeight:700"],
+[data-theme="dark"] [style*="fontSize:15"][style*="fontWeight:700"] {
+  color: #f0f6fc !important;
+}
+
+/* ── Inline card containers ── */
+[data-theme="dark"] [style*="borderRadius:10"][style*="background:white"],
+[data-theme="dark"] [style*="borderRadius:12"][style*="background:white"],
+[data-theme="dark"] [style*="borderRadius:8"][style*="background:white"] {
+  background: #161b22 !important;
+}
+
+/* ── Modal overlays ── */
+[data-theme="dark"] [style*="background:'rgba(0,0,0,0.4)'"],
+[data-theme="dark"] [style*="background: rgba(0,0,0,0.4)"] {
+  background: rgba(0,0,0,0.7) !important;
+}
+
+/* ── Modal inner panels ── */
+[data-theme="dark"] [style*="position:'fixed'"] > [style*="background:white"],
+[data-theme="dark"] [style*="position:'fixed'"] > [style*="background:'white'"] {
+  background: #161b22 !important;
+  color: #e6edf3 !important;
+}
+
+/* ── Light background info boxes ── */
+[data-theme="dark"] [style*="background:'#eff6ff'"],
+[data-theme="dark"] [style*="background: #eff6ff"],
+[data-theme="dark"] [style*="background:#eff6ff"] {
+  background: #1c2d4f !important;
+  color: #79c0ff !important;
+}
+
+[data-theme="dark"] [style*="background:'#f0fdf4'"],
+[data-theme="dark"] [style*="background: #f0fdf4"],
+[data-theme="dark"] [style*="background:#f0fdf4"] {
+  background: #0d2e1a !important;
+  color: #4ade80 !important;
+}
+
+[data-theme="dark"] [style*="background:'#fef3c7'"],
+[data-theme="dark"] [style*="background: #fef3c7"],
+[data-theme="dark"] [style*="background:#fef3c7"] {
+  background: #2e2000 !important;
+  color: #fbbf24 !important;
+}
+
+[data-theme="dark"] [style*="background:'#fee2e2'"],
+[data-theme="dark"] [style*="background: #fee2e2"],
+[data-theme="dark"] [style*="background:#fee2e2"] {
+  background: #3f1010 !important;
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] [style*="background:'#fdf2f8'"],
+[data-theme="dark"] [style*="background:'#fce7f3'"],
+[data-theme="dark"] [style*="background: #fce7f3"] {
+  background: #3d1020 !important;
+  color: #f472b6 !important;
+}
+
+[data-theme="dark"] [style*="background:'#f5f3ff'"],
+[data-theme="dark"] [style*="background: #f5f3ff"],
+[data-theme="dark"] [style*="background:#f5f3ff"] {
+  background: #1e1040 !important;
+  color: #a78bfa !important;
+}
+
+/* ── Conversation chat panel ── */
+[data-theme="dark"] [style*="background:'#f0f4ff'"],
+[data-theme="dark"] [style*="background: #f0f4ff"],
+[data-theme="dark"] [style*="background:#f0f4ff"] {
+  background: #1c2d4f !important;
+}
+
+/* ── Inline monospace code blocks ── */
+[data-theme="dark"] [style*="fontFamily:'monospace'"],
+[data-theme="dark"] [style*="fontFamily: monospace"] {
+  background: #1c2128 !important;
+  color: #c9d1d9 !important;
+}
+
+/* ── Leads table name column ── */
+[data-theme="dark"] [style*="fontWeight:700"][style*="color:'#1e293b'"] {
+  color: #e6edf3 !important;
+}
+
+/* ── Conversation list items ── */
+[data-theme="dark"] [style*="background:'#fafbff'"],
+[data-theme="dark"] [style*="background: #fafbff"],
+[data-theme="dark"] [style*="background:#fafbff"] {
+  background: #1c2128 !important;
+}
+
+/* ── Lead detail panel ── */
+[data-theme="dark"] [style*="background:'#f8f9ff'"],
+[data-theme="dark"] [style*="background: #f8f9ff"],
+[data-theme="dark"] [style*="background:#f8f9ff"] {
+  background: #1c2128 !important;
+}
+
+/* ── AI summary card ── */
+[data-theme="dark"] [style*="background:'#f0f7ff'"],
+[data-theme="dark"] [style*="background: #f0f7ff"],
+[data-theme="dark"] [style*="background:#f0f7ff"] {
+  background: #1c2d4f !important;
+}
+
+/* ── Morning briefing banner ── */
+[data-theme="dark"] [style*="background:'linear-gradient(135deg,#1e3a8a"],
+[data-theme="dark"] [style*="background: linear-gradient(135deg, #1e3a8a"] {
+  background: linear-gradient(135deg, #0d1b3e, #0a1628) !important;
+}
+
+/* ── Topbar business switcher button ── */
+[data-theme="dark"] [style*="background:'#f0f4ff'"],
+[data-theme="dark"] [style*="background:'#eef2ff'"],
+[data-theme="dark"] [style*="background: #eef2ff"] {
+  background: #1c2d4f !important;
+  color: #79c0ff !important;
+}
+
+/* ── Inline border overrides for dark mode ── */
+[data-theme="dark"] [style*="border:'1px solid #bfdbfe'"],
+[data-theme="dark"] [style*="border: 1px solid #bfdbfe"],
+[data-theme="dark"] [style*="border:1px solid #bfdbfe"] {
+  border-color: #1c2d4f !important;
+}
+
+[data-theme="dark"] [style*="border:'1px solid #bbf7d0'"],
+[data-theme="dark"] [style*="border: 1px solid #bbf7d0"],
+[data-theme="dark"] [style*="border:1px solid #bbf7d0"] {
+  border-color: #0d2e1a !important;
+}
+
+/* ── Dividers ── */
+[data-theme="dark"] hr,
+[data-theme="dark"] [style*="borderBottom:'1px solid #e2e8f0'"],
+[data-theme="dark"] [style*="borderBottom: 1px solid #e2e8f0"],
+[data-theme="dark"] [style*="borderTop:'1px solid #e2e8f0'"],
+[data-theme="dark"] [style*="borderTop: 1px solid #e2e8f0"] {
+  border-color: #30363d !important;
+}
+
+/* ── Section group labels in sidebar ── */
+[data-theme="dark"] [style*="color:'#94a3b8'"][style*="fontSize:10"],
+[data-theme="dark"] [style*="color:'#94a3b8'"][style*="fontSize:11"] {
+  color: #6e7681 !important;
+}
+
+/* ── Inline background for active nav items ── */
+[data-theme="dark"] [style*="background:'rgba(255,255,255,0.1)'"],
+[data-theme="dark"] [style*="background: rgba(255,255,255,0.1)"] {
+  background: rgba(255,255,255,0.08) !important;
+}
+
 /* ── Responsive ── */
 @media(max-width:1000px){
   aside{width:86px}
