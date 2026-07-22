@@ -32,6 +32,13 @@ function App() {
   const [activeBusiness, setActiveBusiness] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  // ── Theme state ──
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+  const toggleTheme = () => {
+    const next = theme === 'light' ? 'dark' : 'light';
+    setTheme(next);
+    localStorage.setItem('theme', next);
+  };
   // ── Auth state ──
   const [authUser, setAuthUser] = useState(() => {
     try { return JSON.parse(localStorage.getItem('authUser') || 'null'); } catch { return null; }
@@ -105,10 +112,10 @@ function App() {
   };
 
   return (
-    <div className="app">
+    <div className="app" data-theme={theme}>
       <Sidebar page={page} setPage={setPage} activeBusiness={activeBusiness}/>
       <main>
-        <Topbar businesses={businesses} activeBusiness={activeBusiness} onSwitch={handleSwitchBusiness} onNavigate={setPage} notifications={notifications} unreadCount={unreadCount} onMarkAllRead={() => setUnreadCount(0)} authUser={authUser} onLogout={handleLogout}/>
+        <Topbar businesses={businesses} activeBusiness={activeBusiness} onSwitch={handleSwitchBusiness} onNavigate={setPage} notifications={notifications} unreadCount={unreadCount} onMarkAllRead={() => setUnreadCount(0)} authUser={authUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}/>
         <Screen page={page} dashboard={dashboard} activeBusiness={activeBusiness} setPage={setPage} authToken={authToken}/>
       </main>
     </div>
@@ -172,7 +179,7 @@ function timeAgo(ts) {
   return `${Math.floor(diff/86400)}d ago`;
 }
 
-function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notifications, unreadCount, onMarkAllRead, authUser, onLogout }) {
+function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notifications, unreadCount, onMarkAllRead, authUser, onLogout, theme, onToggleTheme }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = React.useRef(null);
   React.useEffect(() => {
@@ -327,6 +334,18 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notification
           </div>
         )}
       </div>
+
+      {/* Theme Toggle */}
+      <button
+        onClick={onToggleTheme}
+        className="theme-toggle"
+        title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+      >
+        {theme === 'dark'
+          ? <><span style={{fontSize:15}}>☀️</span> Light</>
+          : <><span style={{fontSize:15}}>🌙</span> Dark</>
+        }
+      </button>
 
       <HelpCircle size={18} style={{color:'#94a3b8',cursor:'pointer'}}/>
 
