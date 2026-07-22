@@ -6,6 +6,10 @@ import './styles.css';
 
 const API_BASE = "https://sap-guru-assistant.onrender.com";
 
+// Theme-aware colour helper — use in inline styles: tc(theme, 'light_val', 'dark_val')
+const tc = (theme, light, dark) => theme === 'dark' ? dark : light;
+
+
 const nav = [
   ['Overview', LayoutDashboard], ['Conversations', MessagesSquare], ['Leads', Users], ['Hot Lead Queue', Flame], ['Import & Export', Download], ['Pipeline Debugger', Bug],
   ['AI Playground', Bot], ['Business Brain', Brain], ['Customer 360°', UserRound], ['Reports', BarChart3], ['Automation', Workflow], ['Publisher', Radio], ['Google Reviews', Star], ['Businesses', Building2], ['Integrations', Plug], ['Settings', Settings]
@@ -116,7 +120,7 @@ function App() {
       <Sidebar page={page} setPage={setPage} activeBusiness={activeBusiness}/>
       <main>
         <Topbar businesses={businesses} activeBusiness={activeBusiness} onSwitch={handleSwitchBusiness} onNavigate={setPage} notifications={notifications} unreadCount={unreadCount} onMarkAllRead={() => setUnreadCount(0)} authUser={authUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}/>
-        <Screen page={page} dashboard={dashboard} activeBusiness={activeBusiness} setPage={setPage} authToken={authToken}/>
+        <Screen page={page} dashboard={dashboard} activeBusiness={activeBusiness} setPage={setPage} authToken={authToken} theme={theme}/>
       </main>
     </div>
   );
@@ -310,7 +314,7 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notification
                       <div style={{width:36,height:36,borderRadius:9,background:cfg.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>{cfg.icon}</div>
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:2}}>
-                          <span style={{fontSize:12,fontWeight:700,color:'#1e293b'}}>{notif.title}</span>
+                          <span style={{fontSize:12,fontWeight:700,color: theme === 'dark' ? '#e6edf3' : '#1e293b'}}>{notif.title}</span>
                           <span style={{fontSize:10,color:'#94a3b8',flexShrink:0,marginLeft:8}}>{timeAgo(notif.time)}</span>
                         </div>
                         <div style={{fontSize:12,color:'#64748b',lineHeight:1.4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{notif.message}</div>
@@ -379,12 +383,12 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notification
   );
 }
 
-function Screen({page, dashboard, activeBusiness, setPage}) {
+function Screen({page, dashboard, activeBusiness, setPage, theme}) {
   return (
     <>
-      {page==='Overview'&&<Overview dashboard={dashboard} setPage={setPage} activeBusiness={activeBusiness}/>}
-      {page==='Conversations'&&<Conversations dashboard={dashboard} activeBusiness={activeBusiness}/>}
-      {page==='Leads'&&<Leads activeBusiness={activeBusiness}/>}
+      {page==='Overview'&&<Overview dashboard={dashboard} setPage={setPage} activeBusiness={activeBusiness} theme={theme}/>}
+      {page==='Conversations'&&<Conversations dashboard={dashboard} activeBusiness={activeBusiness} theme={theme}/>}
+      {page==='Leads'&&<Leads activeBusiness={activeBusiness} theme={theme}/>}
       {page==='Pipeline Debugger'&&<Debugger activeBusiness={activeBusiness}/>}
       {page==='AI Playground'&&<Playground activeBusiness={activeBusiness}/>}
       {page==='Business Brain'&&<BusinessBrain activeBusiness={activeBusiness}/>}
@@ -411,7 +415,7 @@ function Stat({label,value,change}) {
   return <div className="card stat"><p>{label}</p><h2>{value}</h2><span>{change}</span><small>live data</small></div>;
 }
 
-function Overview({ setPage, activeBusiness }) {
+function Overview({ setPage, activeBusiness, theme }) {
   const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
   const bizHeaders = { 'X-Business-ID': bizId };
   const [data, setData] = useState(null);
@@ -426,6 +430,24 @@ function Overview({ setPage, activeBusiness }) {
       .then(r => r.json())
       .then(d => { if (d.status === 'success') setBriefing(d.briefing); })
       .catch(() => {})
+      .finally(() => setBriefingLoading(false));
+  };
+
+  const handleGenerateBriefing = () => {
+    setBriefingLoading(true);
+    fetch(`${API_BASE}/briefing/generate`, { method: 'POST', headers: bizHeaders })
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success' && d.briefing) {
+          setBriefing(d.briefing);
+        } else {
+          // Fallback: try fetching latest
+          return fetch(`${API_BASE}/briefing/latest`, { headers: bizHeaders })
+            .then(r => r.json())
+            .then(d2 => { if (d2.status === 'success') setBriefing(d2.briefing); });
+        }
+      })
+      .catch(err => console.error('Briefing generate error:', err))
       .finally(() => setBriefingLoading(false));
   };
 
@@ -491,7 +513,7 @@ function Overview({ setPage, activeBusiness }) {
           ) : (
             <div style={{display:'flex',alignItems:'center',gap:12}}>
               <div style={{fontSize:13,color:'#64748b'}}>No briefing generated yet for today.</div>
-              <button onClick={fetchBriefing} style={{fontSize:12,padding:'4px 12px',borderRadius:6,background:'rgba(251,191,36,0.15)',border:'1px solid rgba(251,191,36,0.3)',color:'#fbbf24',cursor:'pointer',fontWeight:600}}>Generate Now</button>
+              <button onClick={handleGenerateBriefing} style={{fontSize:12,padding:'4px 12px',borderRadius:6,background:'rgba(251,191,36,0.15)',border:'1px solid rgba(251,191,36,0.3)',color:'#fbbf24',cursor:'pointer',fontWeight:600}}>Generate Now</button>
             </div>
           )}
         </div>
@@ -758,7 +780,7 @@ function Overview({ setPage, activeBusiness }) {
             <Table
               heads={['Name', 'Module', 'Phone', 'Temperature', 'Stage', 'Last Active']}
               rows={recentLeads.map(lead => [
-                <Name name={lead.name}/>,
+                <Name name={lead.name} theme={theme}/>,
                 lead.interested_module || <span style={{color:'#475569'}}>—</span>,
                 lead.phone || <span style={{color:'#475569'}}>—</span>,
                 <LeadTemperatureDot temp={lead.temperature}/>,
@@ -792,7 +814,7 @@ const CONV_STATE_COLORS = {
   replied: '#10b981',
 };
 
-function Conversations({ activeBusiness }) {
+function Conversations({ activeBusiness, theme }) {
   const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
   const bizHeaders = { 'X-Business-ID': bizId };
   const [conversations, setConversations] = useState([]);
@@ -1184,7 +1206,7 @@ function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh, bi
                   background:'#f1f5f9',
                   border:'1px solid #cbd5e1',
                   borderRadius:'16px 16px 16px 4px',
-                  fontSize:'0.88em', color:'#1e293b', lineHeight:'1.6',
+                  fontSize:'0.88em', color: theme === 'dark' ? '#e6edf3' : '#1e293b', lineHeight:'1.6',
                 }}>
                   <div style={{fontSize:'0.75em', color:'#64748b', marginBottom:'4px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>Customer</div>
                   {item.user}
@@ -1282,7 +1304,7 @@ function LeadTemperatureDot({ temp }) {
   );
 }
 
-function Leads({ activeBusiness }) {
+function Leads({ activeBusiness, theme }) {
   const bizId = activeBusiness?.id || '00000000-0000-0000-0000-000000000000';
   const bizHeaders = { 'X-Business-ID': bizId };
   const [allLeads, setAllLeads] = useState([]);
@@ -1444,15 +1466,15 @@ function Leads({ activeBusiness }) {
                     }}
                     onClick={() => setSelectedLead(lead)}
                   >
-                    <td><Name name={getLeadName(lead)} source={lead.source}/></td>
-                    <td style={{fontSize:'0.9em', color:'#f1f5f9', fontWeight:500}}>{lead.phone || lead.email || '-'}</td>
+                    <td><Name name={getLeadName(lead)} source={lead.source} theme={theme}/></td>
+                    <td style={{fontSize:'0.9em', color: theme==='dark' ? '#c9d1d9' : '#334155', fontWeight:500}}>{lead.phone || lead.email || '-'}</td>
                     <td style={{fontSize:'0.9em', color:'#94a3b8'}}>{lead.location || '-'}</td>
                     <td><span style={{fontSize:'0.78em', padding:'3px 9px', borderRadius:'10px', background:'rgba(139,92,246,0.15)', color:'#a78bfa', fontWeight:600}}>{lead.interested_module || '-'}</span></td>
                     <td><LeadTemperatureDot temp={lead.temperature}/></td>
                     <td><span style={{fontSize:'0.8em', color:'#94a3b8', fontWeight:600, textTransform:'capitalize'}}>{(lead.lead_stage || '').replace('_', ' ')}</span></td>
                     <td><Badge text={lead.status || 'new'}/></td>
-                    <td style={{fontSize:'0.78em', color:'#475569'}}>{lead.updated_at ? timeAgo(lead.updated_at) : '-'}</td>
-                    <td><ChevronRight size={14} color="#334155"/></td>
+                    <td style={{fontSize:'0.78em', color: theme==='dark' ? '#8b949e' : '#475569'}}>{lead.updated_at ? timeAgo(lead.updated_at) : '-'}</td>
+                    <td><ChevronRight size={14} color={theme==='dark' ? '#8b949e' : '#334155'}/></td>
                   </tr>
                 ))}
               </tbody>
@@ -1462,14 +1484,14 @@ function Leads({ activeBusiness }) {
 
         {/* Lead Detail Panel */}
         {selectedLead && (
-          <LeadDetailPanel lead={selectedLead} onClose={() => setSelectedLead(null)} getLeadName={getLeadName} bizId={bizId}/>
+          <LeadDetailPanel lead={selectedLead} onClose={() => setSelectedLead(null)} getLeadName={getLeadName} bizId={bizId} theme={theme}/>
         )}
       </div>
     </section>
   );
 }
 
-function LeadDetailPanel({ lead: initialLead, onClose, getLeadName, bizId }) {
+function LeadDetailPanel({ lead: initialLead, onClose, getLeadName, bizId, theme }) {
   const bizHeaders = { 'X-Business-ID': bizId || '00000000-0000-0000-0000-000000000000' };
   const [lead, setLead] = useState(initialLead);
   const [qualifying, setQualifying] = useState(false);
@@ -1634,11 +1656,11 @@ function LeadDetailPanel({ lead: initialLead, onClose, getLeadName, bizId }) {
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'8px'}}>
                 <div style={{padding:'8px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', textAlign:'center'}}>
                   <div style={{fontSize:'0.7em', color:'#64748b', marginBottom:'3px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>INTENT</div>
-                  <div style={{fontSize:'0.82em', color:'#1e293b', fontWeight:600}}>{summary.summary?.intent || '-'}</div>
+                  <div style={{fontSize:'0.82em', color: theme === 'dark' ? '#e6edf3' : '#1e293b', fontWeight:600}}>{summary.summary?.intent || '-'}</div>
                 </div>
                 <div style={{padding:'8px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', textAlign:'center'}}>
                   <div style={{fontSize:'0.7em', color:'#64748b', marginBottom:'3px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>STAGE</div>
-                  <div style={{fontSize:'0.82em', color:'#1e293b', fontWeight:600}}>{summary.summary?.stage || '-'}</div>
+                  <div style={{fontSize:'0.82em', color: theme === 'dark' ? '#e6edf3' : '#1e293b', fontWeight:600}}>{summary.summary?.stage || '-'}</div>
                 </div>
                 <div style={{padding:'8px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', textAlign:'center'}}>
                   <div style={{fontSize:'0.7em', color:'#64748b', marginBottom:'3px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>URGENCY</div>
@@ -1654,7 +1676,7 @@ function LeadDetailPanel({ lead: initialLead, onClose, getLeadName, bizId }) {
                   <div style={{fontSize:'0.75em', color:'#475569', marginBottom:'6px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em'}}>Key Facts</div>
                   <ul style={{margin:0, padding:'0 0 0 16px', display:'flex', flexDirection:'column', gap:'5px'}}>
                     {summary.summary.key_facts.map((fact, i) => (
-                      <li key={i} style={{fontSize:'0.85em', color:'#1e293b', lineHeight:'1.5'}}>{fact}</li>
+                      <li key={i} style={{fontSize:'0.85em', color: theme === 'dark' ? '#c9d1d9' : '#1e293b', lineHeight:'1.5'}}>{fact}</li>
                     ))}
                   </ul>
                 </div>
@@ -3884,7 +3906,7 @@ function FollowerDMPanel({ bizId, bizHeaders }) {
       </div>
 
       {activeSubTab === 'settings' && (
-        <div style={{background:'white',borderRadius:12,border:'1px solid #e2e8f0',padding:24,display:'flex',flexDirection:'column',gap:20}}>
+        <div style={{background: theme==='dark' ? '#161b22' : 'white',borderRadius:12,border:`1px solid ${theme==='dark'?'#30363d':'#e2e8f0'}`,padding:24,display:'flex',flexDirection:'column',gap:20}}>
           {/* Enable toggle */}
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 18px',background: settings.enabled ? '#f0fdf4' : '#f8fafc',borderRadius:10,border:`1px solid ${settings.enabled ? '#bbf7d0' : '#e2e8f0'}`}}>
             <div>
@@ -3907,7 +3929,7 @@ function FollowerDMPanel({ bizId, bizHeaders }) {
               value={settings.welcome_message}
               onChange={e => setSettings(p => ({...p, welcome_message: e.target.value}))}
               rows={6}
-              style={{width:'100%',padding:'10px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:13,resize:'vertical',fontFamily:'inherit',lineHeight:1.6,boxSizing:'border-box'}}
+              style={{width:'100%',padding:'10px 12px',borderRadius:8,border:`1px solid ${theme==='dark'?'#30363d':'#e2e8f0'}`,fontSize:13,resize:'vertical',fontFamily:'inherit',lineHeight:1.6,boxSizing:'border-box',background: theme==='dark' ? '#21262d' : 'white',color: theme==='dark' ? '#e6edf3' : '#1e293b'}}
             />
           </div>
 
@@ -3969,7 +3991,7 @@ function FollowerDMPanel({ bizId, bizHeaders }) {
       {activeSubTab === 'conversations' && (
         <div>
           {conversations.length === 0 ? (
-            <div style={{background:'white',borderRadius:12,border:'1px solid #e2e8f0',padding:48,textAlign:'center'}}>
+            <div style={{background: theme==='dark' ? '#161b22' : 'white',borderRadius:12,border:`1px solid ${theme==='dark'?'#30363d':'#e2e8f0'}`,padding:48,textAlign:'center'}}>
               <div style={{fontSize:32,marginBottom:12}}>👋</div>
               <div style={{fontSize:16,fontWeight:600,color:'#1e293b',marginBottom:6}}>No follower conversations yet</div>
               <div style={{fontSize:13,color:'#64748b'}}>When new followers reply to your welcome DM, their conversations will appear here</div>
@@ -4583,7 +4605,7 @@ function BusinessesAdmin({ activeBusiness, setPage }) {
 function Card({title,children}) { return <div className="card">{title&&<h3>{title}</h3>}{children}</div>; }
 function Tabs({tabs}) { return <div className="tabs">{tabs.map((t,i)=><button className={i===0?'active':''} key={t}>{t}</button>)}</div>; }
 function Table({heads,rows}) { return <div className="table"><table><thead><tr>{heads.map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>{rows.map((r,i)=><tr key={i}>{r.map((c,j)=><td key={j}>{c}</td>)}</tr>)}</tbody></table></div>; }
-function Name({ name, source }) {
+function Name({ name, source, theme }) {
   const color = source === 'whatsapp' ? '#22c55e' : (source === 'instagram' ? '#ec4899' : '#3b82f6');
   const displayName = name && name !== 'Name Pending' && name !== 'Unknown' ? name : 'Name Pending';
   return (
@@ -4602,7 +4624,7 @@ function Name({ name, source }) {
       }}>
         {source === 'whatsapp' ? '💬' : source === 'instagram' ? '📸' : '👤'}
       </span>
-      <span style={{ fontWeight: 700, color: displayName === 'Name Pending' ? '#94a3b8' : '#1e293b', fontSize: '0.95em' }}>
+      <span style={{ fontWeight: 700, color: displayName === 'Name Pending' ? '#94a3b8' : (theme === 'dark' ? '#e6edf3' : '#1e293b'), fontSize: '0.95em' }}>
         {displayName}
       </span>
     </span>
