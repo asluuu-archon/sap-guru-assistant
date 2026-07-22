@@ -97,6 +97,7 @@ class RegisterRequest(BaseModel):
     password: str
     business_name: Optional[str] = None
     industry: Optional[str] = "Education / Training"
+    existing_business_id: Optional[str] = None  # Link to an existing business instead of creating new
 
 
 class LoginRequest(BaseModel):
@@ -145,14 +146,32 @@ async def register(data: RegisterRequest):
 
     business_id = None
 
-    # Create first business if business_name provided
-    if data.business_name and user_id:
+    # Option A: Link to an existing business
+    if data.existing_business_id and user_id:
+        try:
+            business_id = data.existing_business_id
+            # Check if link already exists
+            existing_link = supabase.table("user_businesses") \
+                .select("id") \
+                .eq("user_id", user_id) \
+                .eq("business_id", business_id) \
+                .execute()
+            if not existing_link.data:
+                supabase.table("user_businesses").insert({
+                    "user_id": user_id,
+                    "business_id": business_id,
+                    "role": "admin"
+                }).execute()
+        except Exception:
+            pass
+
+    # Option B: Create a new business
+    elif data.business_name and data.business_name.strip() and user_id:
         try:
             biz_res = supabase.table("businesses").insert({
                 "name": data.business_name.strip(),
                 "industry": data.industry or "Education / Training",
-                "owner_user_id": user_id,
-                "status": "active",
+                "is_active": True,
                 "created_at": datetime.utcnow().isoformat()
             }).execute()
             business_id = biz_res.data[0]["id"] if biz_res.data else None
@@ -166,15 +185,18 @@ async def register(data: RegisterRequest):
                 }).execute()
 
                 # Create default business_profile row
-                supabase.table("business_profile").insert({
-                    "business_id": business_id,
-                    "business_name": data.business_name.strip(),
-                    "industry": data.industry or "Education / Training",
-                    "ai_enabled": True,
-                    "auto_reply_enabled": True,
-                    "ai_tone": "Professional & Helpful",
-                    "reply_delay_minutes": 2,
-                }).execute()
+                try:
+                    supabase.table("business_profile").insert({
+                        "business_id": business_id,
+                        "business_name": data.business_name.strip(),
+                        "industry": data.industry or "Education / Training",
+                        "ai_enabled": True,
+                        "auto_reply_enabled": True,
+                        "ai_tone": "Professional & Helpful",
+                        "reply_delay_minutes": 2,
+                    }).execute()
+                except Exception:
+                    pass
 
         except Exception:
             pass  # Business creation is optional, don't fail registration
@@ -223,7 +245,7 @@ async def login(data: LoginRequest):
 
         # Get user's businesses
         biz_res = supabase.table("user_businesses") \
-            .select("business_id, role, businesses(id, name, industry, status)") \
+            .select("business_id, role, businesses(id, name, industry, is_active)") \
             .eq("user_id", user_id) \
             .execute()
 
@@ -236,7 +258,7 @@ async def login(data: LoginRequest):
                 "id": row.get("business_id"),
                 "name": biz.get("name", ""),
                 "industry": biz.get("industry", ""),
-                "status": biz.get("status", "active"),
+                "status": "active" if biz.get("is_active", True) else "inactive",
                 "role": row.get("role", "agent"),
             })
 
@@ -259,6 +281,7 @@ async def login(data: LoginRequest):
 
         return {
             "status": "success",
+            "access_token": token,
             "token": token,
             "user": {
                 "id": user_id,
@@ -283,7 +306,7 @@ async def get_me(user: dict = Depends(require_auth)):
 
     try:
         biz_res = supabase.table("user_businesses") \
-            .select("business_id, role, businesses(id, name, industry, status)") \
+            .select("business_id, role, businesses(id, name, industry, is_active)") \
             .eq("user_id", user["user_id"]) \
             .execute()
 
@@ -296,7 +319,7 @@ async def get_me(user: dict = Depends(require_auth)):
                 "id": row.get("business_id"),
                 "name": biz.get("name", ""),
                 "industry": biz.get("industry", ""),
-                "status": biz.get("status", "active"),
+                "status": "active" if biz.get("is_active", True) else "inactive",
                 "role": row.get("role", "agent"),
             })
 
