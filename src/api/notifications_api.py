@@ -57,9 +57,9 @@ async def get_notifications(business_id: Optional[str] = Header(None, alias="X-B
         # 3. Stale Conversations (no activity in 48h)
         # Using a simple check on conversations updated_at
         forty_eight_hours_ago = (datetime.now(timezone.utc) - timedelta(hours=48)).isoformat()
-        stale_res = supabase.table("conversations").select("id, instagram_username, updated_at").lt("updated_at", forty_eight_hours_ago).order("updated_at", desc=True).limit(3).execute()
+        stale_res = supabase.table("conversations").select("id, updated_at").lt("updated_at", forty_eight_hours_ago).order("updated_at", desc=True).limit(3).execute()
         for row in stale_res.data or []:
-            name = row.get("instagram_username") or "Unknown"
+            name = "User"
             notifications.append({
                 "id": f"stale_{row['id']}",
                 "type": "stale_conversation",

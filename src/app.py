@@ -1,4 +1,7 @@
 from fastapi import FastAPI, Request, Query
+from .services.follower_polling_service import poll_new_followers
+import asyncio
+
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
@@ -31,6 +34,7 @@ from .api.briefing_api import router as briefing_router
 from .api.appointment_api import router as appointment_router
 from .api.campaign_context_api import router as campaign_context_router
 from .api.auth_api import router as auth_router
+from .api.follower_dm_api import router as follower_dm_router
 from .services.webhook_service import process_instagram_webhook
 
 
@@ -89,6 +93,7 @@ app.include_router(briefing_router)
 app.include_router(appointment_router)
 app.include_router(campaign_context_router)
 app.include_router(auth_router)
+app.include_router(follower_dm_router)
 
 VERIFY_TOKEN = "sap_guru_2026"
 AUTO_REPLY = os.getenv("AUTO_REPLY", "false").lower() == "true"
@@ -232,6 +237,21 @@ def should_ignore_manual_reply(manual_reply_text: str) -> bool:
 
 
 @app.post("/webhook")
+
+def _get_business_id_from_ig(ig_id: str) -> str:
+    """Find the business ID associated with this Instagram Page/Account ID."""
+    try:
+        from .memory import supabase
+        res = supabase.table("business_integrations").select("business_id, credentials").eq("provider", "instagram").execute()
+        for row in res.data or []:
+            creds = row.get("credentials") or {}
+            if str(creds.get("instagram_account_id")) == str(ig_id) or str(creds.get("page_id")) == str(ig_id):
+                return row["business_id"]
+    except Exception as e:
+        print(f"Error looking up business ID: {e}", flush=True)
+    return None
+
+@app.post("/webhook")
 async def receive_webhook(request: Request):
     data = await request.json()
     service_preview = await process_instagram_webhook(data)
@@ -243,11 +263,38 @@ async def receive_webhook(request: Request):
     try:
         entry = data.get("entry", [{}])[0]
 
+        # ── Follow event detection ──────────────────────────────────────────
+        from .services.follower_dm_service import (
+            is_follow_event, extract_follow_sender, handle_new_follower, handle_follower_reply
+        )
+
+        # Check for follow events in changes (subscriptions format)
+        if "changes" in entry:
+            for change in entry.get("changes", []):
+                val = change.get("value", {})
+                if val.get("item") == "follow" and val.get("verb") == "add":
+                    follower_id = str(val.get("sender_id") or val.get("from", {}).get("id", ""))
+                    if follower_id:
+                        print(f"FOLLOW_EVENT: New follower {follower_id}", flush=True)
+                        ig_id = entry.get('id', '')
+                        biz_id = _get_business_id_from_ig(ig_id)
+                        await handle_new_follower(sender_id=follower_id, business_id=biz_id)
+                        return {"status": "follow_dm_sent"}
+
         if "messaging" not in entry:
             print("Ignoring non-DM webhook", flush=True)
             return {"status": "ignored_non_dm"}
 
         messaging = entry["messaging"][0]
+
+        # Check for follow event in messaging format
+        if "follow" in messaging:
+            follower_id = str(messaging["sender"]["id"])
+            print(f"FOLLOW_EVENT (messaging): New follower {follower_id}", flush=True)
+            ig_id = entry.get('id', '')
+            biz_id = _get_business_id_from_ig(ig_id)
+            await handle_new_follower(sender_id=follower_id, business_id=biz_id)
+            return {"status": "follow_dm_sent"}
 
         if "message" not in messaging:
             print("Ignoring non-message event", flush=True)
@@ -318,6 +365,22 @@ async def receive_webhook(request: Request):
                         # Append transcription to message text so the AI can read it
                         message_text = (message_text + " " + transcribed_text).strip()
                         print(f"VOICE_NOTE_TRANSCRIBED: {message_text}", flush=True)
+
+        # ── FOLLOWER DM REPLY ROUTING ─────────────────────────────────────────
+        # If this sender is in an active follower DM flow, handle it there
+        # instead of the main AI pipeline.
+        if message_text and not message.get("is_echo"):
+            ig_id = entry.get('id', '')
+            biz_id = _get_business_id_from_ig(ig_id)
+            follower_result = await handle_follower_reply(
+                sender_id=sender_id,
+                message_text=message_text,
+                business_id=biz_id,
+            )
+            if follower_result.get("handled"):
+                print(f"FOLLOWER_DM: Handled reply from {sender_id}, intent={follower_result.get('intent')}", flush=True)
+                return {"status": "follower_dm_handled", "intent": follower_result.get("intent")}
+        # ─────────────────────────────────────────────────────────────────────
 
         # ── KEEP HUMAN / CLOSED GUARD ────────────────────────────────────────
         # If this conversation is already marked needs_human or closed,
@@ -425,3 +488,18 @@ async def receive_webhook(request: Request):
     except Exception as e:
         print(f"ERROR: {e}", flush=True)
         return {"status": "error", "message": str(e)}
+
+# Background task for polling followers
+async def follower_polling_task():
+    while True:
+        try:
+            await poll_new_followers()
+        except Exception as e:
+            print(f"Error in follower polling task: {e}", flush=True)
+        # Sleep for 15 minutes (900 seconds)
+        await asyncio.sleep(900)
+
+@app.on_event("startup")
+async def startup_event():
+    # Start the background task
+    asyncio.create_task(follower_polling_task())
