@@ -2981,11 +2981,11 @@ function Customer360({ activeBusiness }) {
               const tc = TEMP_COLORS_360[c.temperature] || '#64748b';
               return (
                 <div key={c.sender_id} onClick={() => loadProfile(c.sender_id)}
-                  style={{padding:'10px 12px', background: isSelected ? '#eff6ff' : '#fff', border:`1px solid ${isSelected ? '#3b82f6' : '#e2e8f0'}`, borderRadius:'8px', cursor:'pointer', transition:'all 0.15s'}}>
+                  style={{padding:'10px 12px', background: isSelected ? 'var(--bg-tab)' : 'var(--bg-card)', border:`1px solid ${isSelected ? '#3b82f6' : 'var(--border,#e2e8f0)'}`, borderRadius:'8px', cursor:'pointer', transition:'all 0.15s'}}>
                   <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                     <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
                       <div style={{position:'relative'}}>
-                        <div style={{width:'32px', height:'32px', borderRadius:'8px', background: isSelected ? '#3b82f6' : '#e2e8f0', color: isSelected ? '#fff' : '#475569', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.85em', fontWeight:700, flexShrink:0}}>
+                        <div style={{width:'32px', height:'32px', borderRadius:'8px', background: isSelected ? '#3b82f6' : 'var(--bg-input,#e2e8f0)', color: isSelected ? '#fff' : 'inherit', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.85em', fontWeight:700, flexShrink:0}}>
                           {(c.name || c.sender_id || '?')[0].toUpperCase()}
                         </div>
                         <div style={{position:'absolute', bottom:'-4px', right:'-4px', width:'14px', height:'14px', borderRadius:'50%', background:'var(--bg-card)', border:'1px solid #e2e8f0', display:'flex', alignItems:'center', justifyContent:'center'}}>
@@ -3153,7 +3153,7 @@ function Customer360({ activeBusiness }) {
                         <div style={{width:'28px', height:'28px', borderRadius:'50%', background:'#eff6ff', border:'2px solid #bfdbfe', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.85em'}}>
                           {TIMELINE_ICONS[event.type] || '📌'}
                         </div>
-                        {i < profile.timeline.length - 1 && <div style={{width:'2px', flex:1, background:'#e2e8f0', marginTop:'4px'}}/>}
+                        {i < profile.timeline.length - 1 && <div style={{width:'2px', flex:1, background:'var(--border,#e2e8f0)', marginTop:'4px'}}/>}
                       </div>
                       <div style={{paddingTop:'4px'}}>
                         <div style={{fontSize:'0.85em', fontWeight:700, color:'inherit'}}>{event.event}</div>
