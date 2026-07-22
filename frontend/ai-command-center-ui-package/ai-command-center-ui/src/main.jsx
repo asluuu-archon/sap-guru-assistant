@@ -2988,7 +2988,7 @@ function Customer360({ activeBusiness }) {
                         <div style={{width:'32px', height:'32px', borderRadius:'8px', background: isSelected ? '#3b82f6' : '#e2e8f0', color: isSelected ? '#fff' : '#475569', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.85em', fontWeight:700, flexShrink:0}}>
                           {(c.name || c.sender_id || '?')[0].toUpperCase()}
                         </div>
-                        <div style={{position:'absolute', bottom:'-4px', right:'-4px', width:'14px', height:'14px', borderRadius:'50%', background:'white', border:'1px solid #e2e8f0', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                        <div style={{position:'absolute', bottom:'-4px', right:'-4px', width:'14px', height:'14px', borderRadius:'50%', background:'var(--bg-card)', border:'1px solid #e2e8f0', display:'flex', alignItems:'center', justifyContent:'center'}}>
                           {c.primary_channel === 'whatsapp' ? 
                             <Phone size={8} fill="#25d366" stroke="#25d366"/> : 
                             <Image size={8} color="#e1306c"/>
@@ -2996,7 +2996,7 @@ function Customer360({ activeBusiness }) {
                         </div>
                       </div>
                       <div>
-                        <div style={{fontSize:'0.85em', fontWeight:600, color:'#1e293b'}}>{c.name || c.instagram_username || `User ${String(c.sender_id).slice(-4)}`}</div>
+                        <div style={{fontSize:'0.85em', fontWeight:600, color:'inherit'}}>{c.name || c.instagram_username || `User ${String(c.sender_id).slice(-4)}`}</div>
                         <div style={{fontSize:'0.72em', color:'#94a3b8'}}>{c.interested_in || c.location || 'No details yet'}</div>
                       </div>
                     </div>
@@ -3013,7 +3013,7 @@ function Customer360({ activeBusiness }) {
           <Card>
             <div style={{display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'400px', gap:'12px', color:'#94a3b8'}}>
               <div style={{fontSize:'3em'}}>👤</div>
-              <div style={{fontSize:'1em', fontWeight:600, color:'#475569'}}>Select a customer</div>
+              <div style={{fontSize:'1em', fontWeight:600, color:'inherit'}}>Select a customer</div>
               <div style={{fontSize:'0.85em', textAlign:'center', maxWidth:'280px'}}>Click any customer on the left to see their full 360° profile, conversation history, and AI-generated insights.</div>
             </div>
           </Card>
@@ -3032,7 +3032,7 @@ function Customer360({ activeBusiness }) {
                 </div>
                 <div style={{flex:1}}>
                   <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
-                    <div style={{fontSize:'1.2em', fontWeight:700, color:'#1e293b'}}>{profile.display_name}</div>
+                    <div style={{fontSize:'1.2em', fontWeight:700, color:'inherit'}}>{profile.display_name}</div>
                     <div style={{display:'flex', alignItems:'center', gap:'4px', padding:'2px 8px', borderRadius:'12px', background: profile.identity?.source === 'whatsapp' ? '#f0fdf4' : '#fdf2f8', border: `1px solid ${profile.identity?.source === 'whatsapp' ? '#dcfce7' : '#fce7f3'}`}}>
                       {profile.identity?.source === 'whatsapp' ? 
                         <><Phone size={10} fill="#25d366" stroke="#25d366"/><span style={{fontSize:10, fontWeight:700, color:'#15803d'}}>WhatsApp</span></> : 
@@ -3041,7 +3041,7 @@ function Customer360({ activeBusiness }) {
                     </div>
                   </div>
                   {profile.instagram_username && (
-                    <div style={{fontSize:'0.82em', color:'#64748b', marginTop:'2px'}}>@{profile.instagram_username}</div>
+                    <div style={{fontSize:'0.82em', color:'inherit', marginTop:'2px'}}>@{profile.instagram_username}</div>
                   )}
                 </div>
                 <div style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
@@ -3063,7 +3063,7 @@ function Customer360({ activeBusiness }) {
                   {[['Name', profile.identity?.name], ['Phone', profile.identity?.phone], ['Email', profile.identity?.email], ['Location', profile.identity?.location], ['Education', profile.identity?.education], ['Experience', profile.identity?.experience], ['Source', profile.identity?.source]].map(([k,v]) => v ? (
                     <div key={k}>
                       <div style={{fontSize:'0.7em', color:'#94a3b8', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>{k}</div>
-                      <div style={{fontSize:'0.85em', color:'#1e293b', fontWeight:500, marginTop:'1px'}}>{v}</div>
+                      <div style={{fontSize:'0.85em', color:'inherit', fontWeight:500, marginTop:'1px'}}>{v}</div>
                     </div>
                   ) : null)}
                 </div>
@@ -3073,7 +3073,7 @@ function Customer360({ activeBusiness }) {
                   {[['Interested In', profile.lead?.interested_in], ['Mode', profile.lead?.mode], ['Lead Stage', profile.lead?.lead_stage], ['Status', profile.lead?.status], ['Lead Score', profile.lead?.lead_score], ['Notes', profile.lead?.notes]].map(([k,v]) => v ? (
                     <div key={k}>
                       <div style={{fontSize:'0.7em', color:'#94a3b8', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>{k}</div>
-                      <div style={{fontSize:'0.85em', color:'#1e293b', fontWeight:500, marginTop:'1px'}}>{String(v)}</div>
+                      <div style={{fontSize:'0.85em', color:'inherit', fontWeight:500, marginTop:'1px'}}>{String(v)}</div>
                     </div>
                   ) : null)}
                 </div>
@@ -3083,13 +3083,13 @@ function Customer360({ activeBusiness }) {
                   {[['Messages', profile.conversation?.message_count], ['State', profile.conversation?.conversation_state], ['Last Message', profile.conversation?.last_message], ['Last Active', profile.conversation?.last_active ? new Date(profile.conversation.last_active).toLocaleDateString() : null]].map(([k,v]) => v ? (
                     <div key={k}>
                       <div style={{fontSize:'0.7em', color:'#94a3b8', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>{k}</div>
-                      <div style={{fontSize:'0.85em', color:'#1e293b', fontWeight:500, marginTop:'1px', wordBreak:'break-word'}}>{String(v)}</div>
+                      <div style={{fontSize:'0.85em', color:'inherit', fontWeight:500, marginTop:'1px', wordBreak:'break-word'}}>{String(v)}</div>
                     </div>
                   ) : null)}
                   {profile.conversation?.ai_summary && (
                     <div>
                       <div style={{fontSize:'0.7em', color:'#94a3b8', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>AI Summary</div>
-                      <div style={{fontSize:'0.82em', color:'#475569', marginTop:'2px', fontStyle:'italic', lineHeight:'1.5'}}>{profile.conversation.ai_summary}</div>
+                      <div style={{fontSize:'0.82em', color:'inherit', marginTop:'2px', fontStyle:'italic', lineHeight:'1.5'}}>{profile.conversation.ai_summary}</div>
                     </div>
                   )}
                 </div>
@@ -3100,21 +3100,21 @@ function Customer360({ activeBusiness }) {
             {profile.ai_profile && !profile.ai_profile.error && (
               <Card title="🧠 AI Customer Profile">
                 <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px'}}>
-                  <div style={{gridColumn:'1/-1', padding:'12px 14px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px', fontSize:'0.88em', color:'#1e293b', fontStyle:'italic', lineHeight:'1.6'}}>
+                  <div style={{gridColumn:'1/-1', padding:'12px 14px', background:'var(--bg-card)', border:'1px solid #e2e8f0', borderRadius:'8px', fontSize:'0.88em', color:'inherit', fontStyle:'italic', lineHeight:'1.6'}}>
                     "{profile.ai_profile.one_liner}"
                   </div>
                   {[['Interest', profile.ai_profile.interest], ['Intent', profile.ai_profile.intent], ['Journey Stage', profile.ai_profile.stage], ['Contact Shared', profile.ai_profile.contact_info_shared]].map(([k,v]) => v ? (
-                    <div key={k} style={{padding:'8px 10px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px'}}>
-                      <div style={{fontSize:'0.7em', color:'#64748b', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'3px'}}>{k}</div>
-                      <div style={{fontSize:'0.85em', color:'#1e293b', fontWeight:600}}>{v}</div>
+                    <div key={k} style={{padding:'8px 10px', background:'var(--bg-card)', border:'1px solid #e2e8f0', borderRadius:'8px'}}>
+                      <div style={{fontSize:'0.7em', color:'inherit', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'3px'}}>{k}</div>
+                      <div style={{fontSize:'0.85em', color:'inherit', fontWeight:600}}>{v}</div>
                     </div>
                   ) : null)}
-                  <div style={{padding:'8px 10px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px'}}>
-                    <div style={{fontSize:'0.7em', color:'#64748b', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'3px'}}>Sentiment</div>
+                  <div style={{padding:'8px 10px', background:'var(--bg-card)', border:'1px solid #e2e8f0', borderRadius:'8px'}}>
+                    <div style={{fontSize:'0.7em', color:'inherit', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'3px'}}>Sentiment</div>
                     <div style={{fontSize:'0.85em', fontWeight:700, color: SENTIMENT_COLORS[profile.ai_profile.sentiment] || '#64748b'}}>{profile.ai_profile.sentiment}</div>
                   </div>
-                  <div style={{padding:'8px 10px', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:'8px'}}>
-                    <div style={{fontSize:'0.7em', color:'#64748b', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'3px'}}>Urgency</div>
+                  <div style={{padding:'8px 10px', background:'var(--bg-card)', border:'1px solid #e2e8f0', borderRadius:'8px'}}>
+                    <div style={{fontSize:'0.7em', color:'inherit', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em', marginBottom:'3px'}}>Urgency</div>
                     <div style={{fontSize:'0.85em', fontWeight:700, color: URGENCY_COLORS[profile.ai_profile.urgency] || '#64748b'}}>{profile.ai_profile.urgency}</div>
                   </div>
                   {profile.ai_profile.key_facts?.length > 0 && (
@@ -3156,8 +3156,8 @@ function Customer360({ activeBusiness }) {
                         {i < profile.timeline.length - 1 && <div style={{width:'2px', flex:1, background:'#e2e8f0', marginTop:'4px'}}/>}
                       </div>
                       <div style={{paddingTop:'4px'}}>
-                        <div style={{fontSize:'0.85em', fontWeight:700, color:'#1e293b'}}>{event.event}</div>
-                        <div style={{fontSize:'0.78em', color:'#64748b', marginTop:'1px'}}>{event.description}</div>
+                        <div style={{fontSize:'0.85em', fontWeight:700, color:'inherit'}}>{event.event}</div>
+                        <div style={{fontSize:'0.78em', color:'inherit', marginTop:'1px'}}>{event.description}</div>
                         {event.timestamp && <div style={{fontSize:'0.72em', color:'#94a3b8', marginTop:'2px'}}>{new Date(event.timestamp).toLocaleString()}</div>}
                       </div>
                     </div>
@@ -3178,8 +3178,8 @@ function Customer360({ activeBusiness }) {
                       <div key={i}>
                         {item.user && (
                           <div style={{display:'flex', justifyContent:'flex-start', marginBottom:'4px'}}>
-                            <div style={{maxWidth:'75%', padding:'8px 12px', background:'#f1f5f9', borderRadius:'12px 12px 12px 2px', fontSize:'0.84em', color:'#1e293b', lineHeight:'1.5'}}>
-                              <div style={{fontSize:'0.7em', color:'#64748b', fontWeight:700, marginBottom:'3px'}}>Customer</div>
+                            <div style={{maxWidth:'75%', padding:'8px 12px', background:'var(--bg-card)', borderRadius:'12px 12px 12px 2px', fontSize:'0.84em', color:'inherit', lineHeight:'1.5'}}>
+                              <div style={{fontSize:'0.7em', color:'inherit', fontWeight:700, marginBottom:'3px'}}>Customer</div>
                               {item.user}
                             </div>
                           </div>
