@@ -117,7 +117,7 @@ function App() {
 
   return (
     <div className="app" data-theme={theme}>
-      <Sidebar page={page} setPage={setPage} activeBusiness={activeBusiness}/>
+      <Sidebar page={page} setPage={setPage} activeBusiness={activeBusiness} theme={theme}/>
       <main>
         <Topbar businesses={businesses} activeBusiness={activeBusiness} onSwitch={handleSwitchBusiness} onNavigate={setPage} notifications={notifications} unreadCount={unreadCount} onMarkAllRead={() => setUnreadCount(0)} authUser={authUser} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme}/>
         <Screen page={page} dashboard={dashboard} activeBusiness={activeBusiness} setPage={setPage} authToken={authToken} theme={theme}/>
@@ -126,7 +126,7 @@ function App() {
   );
 }
 
-function Sidebar({page,setPage,activeBusiness}) {
+function Sidebar({page,setPage,activeBusiness,theme='light'}) {
   const bizName = activeBusiness?.name || 'Admin';
   const initials = bizName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   
@@ -6690,6 +6690,7 @@ function BroadcastsPage({ activeBusiness, theme }) {
 // LOGIN PAGE
 // ─────────────────────────────────────────────────────────────────────────────────────
 function LoginPage({ onLoginSuccess }) {
+  const [theme] = useState(() => localStorage.getItem('theme') || 'light');
   const [mode, setMode] = useState('login'); // 'login' | 'register'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
