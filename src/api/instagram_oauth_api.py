@@ -10,7 +10,8 @@ Flow:
 6. Backend exchanges code for short-lived token, then extends to long-lived token
 7. Backend fetches the Instagram account info
 8. Backend saves access_token + instagram_account_id into business_integrations
-9. Frontend detects success and shows "Connected" status
+9. Backend subscribes the account to webhook events (messages + messaging_echoes)
+10. Frontend detects success and shows "Connected" status
 
 IMPORTANT — Two different App IDs exist for the same Meta app:
   META_APP_ID       — The Facebook/Meta App ID (shown at top of Meta App Dashboard)
@@ -51,7 +52,6 @@ def _get_instagram_app_id():
     This is DIFFERENT from the Facebook App ID shown at the top of the dashboard.
     From the embed URL we saw: client_id=994918496484799
     """
-    # Try INSTAGRAM_APP_ID first, fall back to META_APP_ID
     v = os.getenv("INSTAGRAM_APP_ID", "") or os.getenv("META_APP_ID", "")
     if not v:
         raise HTTPException(status_code=500, detail="INSTAGRAM_APP_ID environment variable not set. Add it in Render → Environment. Find it in Meta App Dashboard → Instagram → API setup with Instagram login → Business login settings → Instagram App ID")
@@ -65,7 +65,6 @@ def _get_instagram_app_secret():
     
     This is DIFFERENT from the Facebook App Secret.
     """
-    # Try INSTAGRAM_APP_SECRET first, fall back to META_APP_SECRET
     v = os.getenv("INSTAGRAM_APP_SECRET", "") or os.getenv("META_APP_SECRET", "")
     if not v:
         raise HTTPException(status_code=500, detail="INSTAGRAM_APP_SECRET environment variable not set. Add it in Render → Environment.")
@@ -115,9 +114,6 @@ async def start_instagram_oauth(
     callback_url = f"{base_url}/instagram-oauth/callback"
 
     # Correct scopes for Instagram API with Instagram Login
-    # Only instagram_business_basic is required; instagram_business_manage_messages
-    # is needed for DM automation. Do NOT include instagram_business_manage_comments
-    # unless you have it approved — it causes "Invalid Scopes" if not added in dashboard.
     scope = "instagram_business_basic,instagram_business_manage_messages"
 
     # CORRECT endpoint: instagram.com/oauth/authorize (NOT facebook.com/dialog/oauth)
@@ -149,10 +145,8 @@ async def instagram_oauth_callback(
 ):
     """
     Instagram redirects here after the user grants (or denies) permissions.
-    Exchange the code for a token, fetch account info, and save to Supabase.
-    
-    Token exchange uses api.instagram.com/oauth/access_token (Instagram endpoint,
-    NOT graph.facebook.com which is for Facebook Login).
+    Exchange the code for a token, fetch account info, save to Supabase,
+    and subscribe the account to webhook events automatically.
     """
     # ── Handle user denial ────────────────────────────────────────────────────
     if error:
@@ -186,8 +180,6 @@ async def instagram_oauth_callback(
 
     try:
         # ── Step A: Exchange code for short-lived Instagram User access token ──
-        # Correct endpoint: api.instagram.com/oauth/access_token
-        # Uses Instagram App ID and Instagram App Secret (NOT Facebook App ID/Secret)
         token_res = requests.post(
             "https://api.instagram.com/oauth/access_token",
             data={
@@ -217,7 +209,6 @@ async def instagram_oauth_callback(
         print(f"INSTAGRAM_OAUTH: Short-lived token obtained for business_id={business_id}, ig_user_id={ig_user_id}", flush=True)
 
         # ── Step B: Exchange for long-lived token (60-day) ────────────────────
-        # Correct endpoint: graph.instagram.com/access_token
         long_token_res = requests.get(
             "https://graph.instagram.com/access_token",
             params={
@@ -231,7 +222,6 @@ async def instagram_oauth_callback(
         print(f"INSTAGRAM_OAUTH: Long token response: {json.dumps(long_token_data)[:200]}", flush=True)
 
         if "error" in long_token_data:
-            # Non-fatal: use short-lived token if long-lived exchange fails
             print(f"INSTAGRAM_OAUTH: Long-lived token exchange failed, using short-lived: {long_token_data}", flush=True)
             long_lived_token = short_lived_token
         else:
@@ -240,7 +230,6 @@ async def instagram_oauth_callback(
         print(f"INSTAGRAM_OAUTH: Token ready for business_id={business_id}", flush=True)
 
         # ── Step C: Get Instagram account info ────────────────────────────────
-        # For Instagram API with Instagram Login, use graph.instagram.com
         ig_info_res = requests.get(
             "https://graph.instagram.com/v23.0/me",
             params={
@@ -266,6 +255,7 @@ async def instagram_oauth_callback(
         credentials = {
             "page_access_token": long_lived_token,
             "instagram_account_id": ig_account_id,
+            "ig_user_id": ig_account_id,
             "instagram_username": ig_username,
             "instagram_name": ig_name,
             "connected_via": "oauth",
@@ -293,7 +283,17 @@ async def instagram_oauth_callback(
 
         print(f"INSTAGRAM_OAUTH: Saved credentials for business_id={business_id}, @{ig_username}", flush=True)
 
-        # ── Step E: Redirect back to frontend with success ────────────────────
+        # ── Step E: Subscribe account to webhook events (auto, per-tenant) ────
+        # This ensures every connected account receives DM webhooks automatically.
+        # Without this step, webhooks only fire for accounts that were manually
+        # subscribed in the Meta App Dashboard — which breaks multi-tenant onboarding.
+        webhook_subscribe_result = _subscribe_to_webhooks(
+            ig_account_id=ig_account_id,
+            access_token=long_lived_token,
+        )
+        print(f"INSTAGRAM_OAUTH: Webhook subscription result for @{ig_username}: {webhook_subscribe_result}", flush=True)
+
+        # ── Step F: Redirect back to frontend with success ────────────────────
         return HTMLResponse(content=_success_page(ig_username, ig_name, redirect_after))
 
     except Exception as e:
@@ -302,6 +302,76 @@ async def instagram_oauth_callback(
             "Connection failed",
             f"An error occurred while connecting Instagram: {str(e)}. Please try again."
         ))
+
+
+# ─── Webhook Subscription Helper ─────────────────────────────────────────────
+
+def _subscribe_to_webhooks(ig_account_id: str, access_token: str) -> dict:
+    """
+    Subscribe an Instagram account to receive webhook events for messages
+    and messaging_echoes (manual replies from the account owner).
+    
+    Uses the Instagram Graph API:
+    POST /v23.0/{ig-user-id}/subscribed_apps
+    
+    This must be called with the user's access token (not app token).
+    The subscribed_fields tell Meta which events to send to our webhook URL.
+    """
+    try:
+        res = requests.post(
+            f"https://graph.instagram.com/v23.0/{ig_account_id}/subscribed_apps",
+            params={
+                "subscribed_fields": "messages,messaging_echoes",
+                "access_token": access_token,
+            },
+            timeout=15,
+        )
+        result = res.json()
+        if result.get("success"):
+            print(f"WEBHOOK_SUBSCRIBE: Successfully subscribed {ig_account_id} to messages + messaging_echoes", flush=True)
+            return {"status": "subscribed", "ig_account_id": ig_account_id}
+        else:
+            print(f"WEBHOOK_SUBSCRIBE: Subscription response for {ig_account_id}: {result}", flush=True)
+            return {"status": "unknown", "response": result}
+    except Exception as e:
+        print(f"WEBHOOK_SUBSCRIBE: Error subscribing {ig_account_id}: {e}", flush=True)
+        return {"status": "error", "error": str(e)}
+
+
+# ─── Re-subscribe endpoint (for existing connected accounts) ─────────────────
+
+@router.post("/resubscribe")
+async def resubscribe_webhooks(business_id: str = Query(...)):
+    """
+    Re-subscribe an already-connected Instagram account to webhook events.
+    Use this for accounts that were connected before auto-subscription was added.
+    """
+    try:
+        supabase = _supabase()
+        res = supabase.table("business_integrations") \
+            .select("credentials") \
+            .eq("business_id", business_id) \
+            .eq("provider", "instagram") \
+            .eq("is_connected", True) \
+            .execute()
+
+        if not res.data:
+            raise HTTPException(status_code=404, detail="No connected Instagram account found for this business")
+
+        creds = res.data[0].get("credentials") or {}
+        ig_account_id = creds.get("instagram_account_id") or creds.get("ig_user_id")
+        access_token = creds.get("page_access_token") or creds.get("access_token")
+
+        if not ig_account_id or not access_token:
+            raise HTTPException(status_code=400, detail="Missing instagram_account_id or access_token in stored credentials")
+
+        result = _subscribe_to_webhooks(ig_account_id=ig_account_id, access_token=access_token)
+        return {"status": "success", "subscription": result}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ─── Status endpoint ──────────────────────────────────────────────────────────
