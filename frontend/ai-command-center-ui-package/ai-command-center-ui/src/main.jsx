@@ -3649,7 +3649,7 @@ function SettingsPage({ activeBusiness }) {
               <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:20}}>Control how the AI responds and when it sends replies.</div>
 
               {/* AI Enabled Toggle */}
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 16px',background: form.ai_enabled ? '#f0fdf4' : '#fef2f2',borderRadius:10,border:`1px solid ${form.ai_enabled ? '#bbf7d0' : '#fecaca'}`,marginBottom:16}}>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 16px',background: form.ai_enabled ? '#0d2e1a' : '#3f1010',borderRadius:10,border:`1px solid ${form.ai_enabled ? '#166534' : '#7f1d1d'}`,marginBottom:16}}>
                 <div>
                   <div style={{fontSize:13,fontWeight:700,color:'var(--text-primary)'}}>AI Auto-Reply</div>
                   <div style={{fontSize:12,color:'var(--text-secondary)',marginTop:2}}>{form.ai_enabled ? 'AI is actively replying to incoming messages' : 'AI is paused — no automatic replies being sent'}</div>
@@ -3902,7 +3902,7 @@ function FollowerDMPanel({ bizId, bizHeaders }) {
           {id:'conversations', label:`💬 Conversations (${conversations.length})`},
         ].map(t => (
           <button key={t.id} onClick={() => setActiveSubTab(t.id)}
-            style={{padding:'7px 16px',borderRadius:20,border:'1px solid',borderColor: activeSubTab===t.id ? '#2563eb' : 'var(--border)',background: activeSubTab===t.id ? '#eff6ff' : 'white',color: activeSubTab===t.id ? '#2563eb' : '#64748b',fontWeight: activeSubTab===t.id ? 600 : 400,fontSize:13,cursor:'pointer'}}>
+            style={{padding:'7px 16px',borderRadius:20,border:'1px solid',borderColor: activeSubTab===t.id ? '#2563eb' : 'var(--border)',background: activeSubTab===t.id ? '#1c2d4f' : 'var(--bg-card)',color: activeSubTab===t.id ? '#93c5fd' : 'var(--text-secondary)',fontWeight: activeSubTab===t.id ? 600 : 400,fontSize:13,cursor:'pointer'}}>
             {t.label}
           </button>
         ))}
@@ -3911,7 +3911,7 @@ function FollowerDMPanel({ bizId, bizHeaders }) {
       {activeSubTab === 'settings' && (
         <div style={{background:'var(--bg-card)',borderRadius:12,border:'1px solid var(--border)',padding:24,display:'flex',flexDirection:'column',gap:20}}>
           {/* Enable toggle */}
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 18px',background: settings.enabled ? '#f0fdf4' : '#f8fafc',borderRadius:10,border:`1px solid ${settings.enabled ? '#bbf7d0' : 'var(--border)'}`}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 18px',background: settings.enabled ? '#0d2e1a' : 'var(--bg-input)',borderRadius:10,border:`1px solid ${settings.enabled ? '#166534' : 'var(--border)'}`}}>
             <div>
               <div style={{fontSize:15,fontWeight:700,color:'var(--text-primary)'}}>New Follower Auto-DM</div>
               <div style={{fontSize:12,color:'var(--text-secondary)',marginTop:2}}>Automatically send a welcome DM when someone follows your Instagram page</div>
@@ -4535,7 +4535,7 @@ function BusinessesAdmin({ activeBusiness, setPage }) {
                       📸 {biz.instagram_handle}
                     </span>
                   )}
-                  <span style={{fontSize:11,color: biz.is_active ? '#10b981' : '#94a3b8',background: biz.is_active ? '#f0fdf4' : '#f8fafc',padding:'2px 8px',borderRadius:10,fontWeight:500}}>
+                  <span style={{fontSize:11,color: biz.is_active ? '#4ade80' : 'var(--text-muted)',background: biz.is_active ? '#0d2e1a' : 'var(--bg-input)',padding:'2px 8px',borderRadius:10,fontWeight:500}}>
                     {biz.is_active ? '● Active' : '○ Inactive'}
                   </span>
                 </div>
@@ -6075,7 +6075,7 @@ function HotLeadQueue({ activeBusiness, setPage }) {
       <div style={{display:'flex',gap:8,marginBottom:16}}>
         {[['all','All'],['critical','Critical'],['high','High'],['medium','Medium']].map(([k,l]) => (
           <button key={k} onClick={() => setFilter(k)}
-            style={{padding:'6px 16px',borderRadius:20,border:'1px solid',borderColor:filter===k?'#ef4444':'var(--border)',background:filter===k?'#fef2f2':'white',color:filter===k?'#ef4444':'#64748b',fontSize:12,fontWeight:filter===k?600:400,cursor:'pointer'}}>
+            style={{padding:'6px 16px',borderRadius:20,border:'1px solid',borderColor:filter===k?'#ef4444':'var(--border)',background:filter===k?'#3f1010':'var(--bg-card)',color:filter===k?'#fca5a5':'var(--text-secondary)',fontSize:12,fontWeight:filter===k?600:400,cursor:'pointer'}}>
             {l}
           </button>
         ))}
