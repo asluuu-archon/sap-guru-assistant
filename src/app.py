@@ -250,6 +250,7 @@ def _get_business_id_from_ig(ig_id: str) -> str:
                 str(creds.get("instagram_account_id")) == str(ig_id)
                 or str(creds.get("page_id")) == str(ig_id)
                 or str(creds.get("ig_user_id")) == str(ig_id)
+                or str(creds.get("webhook_ig_id")) == str(ig_id)
             ):
                 return row["business_id"]
     except Exception as e:
