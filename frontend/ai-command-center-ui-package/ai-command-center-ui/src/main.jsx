@@ -4654,7 +4654,8 @@ const INTEGRATIONS_CONFIG = [
       { key: 'instagram_account_id', label: 'Instagram Account ID', type: 'text', placeholder: '17841xxxxxxxxx' },
     ],
     docs_url: 'https://developers.facebook.com/docs/messenger-platform',
-    status_note: 'Webhook must be configured on Meta Developer Portal'
+    status_note: 'Webhook must be configured on Meta Developer Portal',
+    use_oauth: true
   },
   {
     id: 'whatsapp',
