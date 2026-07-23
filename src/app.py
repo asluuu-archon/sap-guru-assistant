@@ -98,21 +98,18 @@ app.include_router(follower_dm_router)
 app.include_router(instagram_oauth_router)
 
 VERIFY_TOKEN = os.getenv("WEBHOOK_VERIFY_TOKEN", "sap_guru_2026")
-AUTO_REPLY = os.getenv("AUTO_REPLY", "false").lower() == "true"
 
 processed_message_ids = set()
 
 
-
 @app.get("/health")
 def health():
-    return {"status": "ok", "auto_reply": AUTO_REPLY}
+    return {"status": "ok", "version": "pilot_3"}
 
 
 @app.get("/run-delayed-replies")
 async def run_delayed_replies():
     return await process_pending_replies()
-
 
 
 @app.get("/test-instagram-profile/{sender_id}")
@@ -239,17 +236,50 @@ def should_ignore_manual_reply(manual_reply_text: str) -> bool:
 
 
 def _get_business_id_from_ig(ig_id: str) -> str:
-    """Find the business ID associated with this Instagram Page/Account ID."""
+    """
+    Find the business UUID associated with this Instagram account ID.
+    Looks up business_integrations table by instagram_account_id or page_id.
+    """
+    if not ig_id:
+        return ""
     try:
-        from .memory import supabase
         res = supabase.table("business_integrations").select("business_id, credentials").eq("provider", "instagram").execute()
         for row in res.data or []:
             creds = row.get("credentials") or {}
-            if str(creds.get("instagram_account_id")) == str(ig_id) or str(creds.get("page_id")) == str(ig_id):
+            if (
+                str(creds.get("instagram_account_id")) == str(ig_id)
+                or str(creds.get("page_id")) == str(ig_id)
+                or str(creds.get("ig_user_id")) == str(ig_id)
+            ):
                 return row["business_id"]
     except Exception as e:
-        print(f"Error looking up business ID: {e}", flush=True)
-    return None
+        print(f"BIZ_ID_LOOKUP_ERROR: {e}", flush=True)
+    return ""
+
+
+def _get_organization_id_for_business(business_id: str) -> int:
+    """
+    Resolve integer organization_id for a business UUID.
+    Uses business_profile if available, otherwise falls back to row order.
+    Returns 1 as default fallback.
+    """
+    if not business_id:
+        return 1
+    try:
+        # Try business_profile first (has organization_id if set)
+        res = supabase.table("business_profile").select("organization_id").eq("business_id", business_id).limit(1).execute()
+        rows = res.data or []
+        if rows and rows[0].get("organization_id"):
+            return int(rows[0]["organization_id"])
+        # Fallback: use row position in businesses table as a stable integer ID
+        all_res = supabase.table("businesses").select("id").order("created_at", desc=False).execute()
+        all_ids = [r["id"] for r in (all_res.data or [])]
+        if business_id in all_ids:
+            return all_ids.index(business_id) + 1
+    except Exception as e:
+        print(f"ORG_ID_LOOKUP_ERROR: {e}", flush=True)
+    return 1
+
 
 @app.post("/webhook")
 async def receive_webhook(request: Request):
@@ -262,6 +292,12 @@ async def receive_webhook(request: Request):
 
     try:
         entry = data.get("entry", [{}])[0]
+
+        # ── Resolve which business this webhook belongs to ──────────────────
+        ig_id = entry.get("id", "")
+        business_id = _get_business_id_from_ig(ig_id)
+        organization_id = _get_organization_id_for_business(business_id)
+        print(f"WEBHOOK_TENANT: ig_id={ig_id} → business_id={business_id} → org_id={organization_id}", flush=True)
 
         # ── Follow event detection ──────────────────────────────────────────
         from .services.follower_dm_service import (
@@ -276,9 +312,7 @@ async def receive_webhook(request: Request):
                     follower_id = str(val.get("sender_id") or val.get("from", {}).get("id", ""))
                     if follower_id:
                         print(f"FOLLOW_EVENT: New follower {follower_id}", flush=True)
-                        ig_id = entry.get('id', '')
-                        biz_id = _get_business_id_from_ig(ig_id)
-                        await handle_new_follower(sender_id=follower_id, business_id=biz_id)
+                        await handle_new_follower(sender_id=follower_id, business_id=business_id)
                         return {"status": "follow_dm_sent"}
 
         if "messaging" not in entry:
@@ -291,9 +325,7 @@ async def receive_webhook(request: Request):
         if "follow" in messaging:
             follower_id = str(messaging["sender"]["id"])
             print(f"FOLLOW_EVENT (messaging): New follower {follower_id}", flush=True)
-            ig_id = entry.get('id', '')
-            biz_id = _get_business_id_from_ig(ig_id)
-            await handle_new_follower(sender_id=follower_id, business_id=biz_id)
+            await handle_new_follower(sender_id=follower_id, business_id=business_id)
             return {"status": "follow_dm_sent"}
 
         if "message" not in messaging:
@@ -308,20 +340,10 @@ async def receive_webhook(request: Request):
             manual_reply_text = message.get("text", "")
             target_user_id = recipient_id
 
-            pipeline_result = await process_incoming_message(
-                organization_id=1,
-                channel="instagram",
-                sender_id=sender_id,
-                message_text=manual_reply_text,
-                raw_payload=messaging,
-            )
-
-            print(f"PIPELINE_LOGS: {pipeline_result.get('logs')}", flush=True)
-
             if should_ignore_manual_reply(manual_reply_text):
                 print("Manual echo ignored for learning, but clearing pending flag.", flush=True)
-                # CRITICAL FIX: Even if we ignore the reply for "learning", we MUST clear the pending flag
-                # so the AI doesn't reply after Mohamed has already sent a short/manual message.
+                # CRITICAL: Even if we ignore the reply for "learning", clear the pending flag
+                # so the AI doesn't reply after a short/manual message has been sent.
                 mark_manual_replied(target_user_id, manual_reply_text)
                 return {"status": "manual_reply_ignored"}
 
@@ -335,15 +357,15 @@ async def receive_webhook(request: Request):
                     break
 
             if last_user_message and manual_reply_text:
+                # Learn from this manual reply
                 save_manual_reply_to_bank(
                     user_question=last_user_message,
                     sap_guru_reply=manual_reply_text,
                     category="manual",
                     tags="manual_reply",
                 )
-
                 mark_manual_replied(target_user_id, manual_reply_text)
-                print("MANUAL REPLY LEARNED", flush=True)
+                print(f"MANUAL REPLY LEARNED: business={business_id}", flush=True)
             else:
                 print("Manual echo found but no matching user message", flush=True)
 
@@ -362,7 +384,6 @@ async def receive_webhook(request: Request):
                     from .services.voice_transcriber import transcribe_voice_note
                     transcribed_text = transcribe_voice_note(audio_url)
                     if transcribed_text:
-                        # Append transcription to message text so the AI can read it
                         message_text = (message_text + " " + transcribed_text).strip()
                         print(f"VOICE_NOTE_TRANSCRIBED: {message_text}", flush=True)
 
@@ -370,12 +391,10 @@ async def receive_webhook(request: Request):
         # If this sender is in an active follower DM flow, handle it there
         # instead of the main AI pipeline.
         if message_text and not message.get("is_echo"):
-            ig_id = entry.get('id', '')
-            biz_id = _get_business_id_from_ig(ig_id)
             follower_result = await handle_follower_reply(
                 sender_id=sender_id,
                 message_text=message_text,
-                business_id=biz_id,
+                business_id=business_id,
             )
             if follower_result.get("handled"):
                 print(f"FOLLOWER_DM: Handled reply from {sender_id}, intent={follower_result.get('intent')}", flush=True)
@@ -391,7 +410,7 @@ async def receive_webhook(request: Request):
 
         if existing_needs_human or existing_state in ("needs_human", "closed", "keep_human"):
             print(f"KEEP_HUMAN_GUARD: Skipping AI for {sender_id} (state={existing_state}, needs_human={existing_needs_human})", flush=True)
-            save_conversation(sender_id, message_text, "", existing_state or "needs_human")
+            save_conversation(sender_id, message_text, "", existing_state or "needs_human", business_id=business_id)
             return {
                 "status": "keep_human_active",
                 "reason": "Conversation is marked for human handling — AI skipped.",
@@ -400,11 +419,12 @@ async def receive_webhook(request: Request):
         # ─────────────────────────────────────────────────────────────────────
 
         pipeline_result = await process_incoming_message(
-            organization_id=1,
+            organization_id=organization_id,
             channel="instagram",
             sender_id=sender_id,
             message_text=message_text,
             raw_payload=messaging,
+            business_id=business_id,
         )
 
         customer = pipeline_result.get("customer") or {}
@@ -444,23 +464,22 @@ async def receive_webhook(request: Request):
         print(f"ACTION: {action}", flush=True)
         print(f"REPLY: {reply_text}", flush=True)
         print(f"SHOULD_REPLY: {should_reply}", flush=True)
+        print(f"BUSINESS: {business_id}", flush=True)
 
         if action == "human" or should_reply is False or not reply_text:
             reason = decision.get("reason", "Low confidence or unclear message.")
             print(f"NEEDS HUMAN: {reason}", flush=True)
-
-            # Save the conversation so the inbox shows this message
-            # Mark as pending_reply=True so the delay processor can attempt a reply later
-            save_conversation(sender_id, message_text, "", "needs_human")
+            save_conversation(sender_id, message_text, "", "needs_human", business_id=business_id)
             mark_needs_human(sender_id, reason)
-
             return {
                 "status": "needs_human",
                 "reason": reason,
-                "auto_reply": False,
             }
 
-        save_conversation(sender_id, message_text, reply_text, category)
+        # ── SAVE CONVERSATION — always pending_reply=True ─────────────────────
+        # The delay processor will send the reply after the configured delay.
+        # Never send immediately from the webhook handler.
+        save_conversation(sender_id, message_text, reply_text, category, business_id=business_id)
 
         save_possible_lead(
             sender_id=sender_id,
@@ -469,32 +488,10 @@ async def receive_webhook(request: Request):
             category=category,
         )
 
-        if AUTO_REPLY:
-            # Resolve per-business Instagram token if available
-            ig_access_token = None
-            try:
-                ig_biz_id = _get_business_id_from_ig(recipient_id)
-                if ig_biz_id:
-                    from .api.integrations_api import get_business_credentials
-                    ig_creds = get_business_credentials(ig_biz_id, "instagram")
-                    ig_access_token = ig_creds.get("page_access_token")
-            except Exception as tok_err:
-                print(f"TOKEN_LOOKUP_ERROR: {tok_err}", flush=True)
-            result = send_reply(
-                 channel="instagram",
-                 recipient_id=sender_id,
-                 message=reply_text,
-                 access_token=ig_access_token,
-            )
+        print(f"REPLY QUEUED FOR DELAYED SEND: business={business_id}, sender={sender_id}", flush=True)
+        print(f"QUEUED REPLY TEXT: {reply_text}", flush=True)
 
-            print(f"AUTO REPLY SENT: {result}", flush=True)
-        else:
-            print("AUTO REPLY DISABLED", flush=True)
-            print(f"WOULD HAVE SENT: {reply_text}", flush=True)
-
-        return {"status": "received", "auto_reply": AUTO_REPLY}
-
-     
+        return {"status": "received", "queued_for_delay": True}
 
     except Exception as e:
         print(f"ERROR: {e}", flush=True)

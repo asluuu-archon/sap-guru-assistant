@@ -73,6 +73,7 @@ def save_conversation(
     user_message: str,
     assistant_reply: str,
     category: str = "",
+    business_id: str = "",
 ):
     conversation = get_conversation(sender_id)
     history = conversation.get("history") or []
@@ -124,6 +125,12 @@ def save_conversation(
         "state_reason": state_reason,
         "closed_at": None,
     }
+
+    # Store business_id for tenant isolation — only set if provided and not already set
+    if business_id:
+        payload["business_id"] = business_id
+    elif conversation.get("business_id"):
+        payload["business_id"] = conversation["business_id"]
 
     supabase.table("conversations").upsert(payload).execute()
 

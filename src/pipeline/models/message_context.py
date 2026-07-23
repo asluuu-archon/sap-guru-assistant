@@ -11,6 +11,7 @@ class MessageContext:
     """
 
     organization_id: int = 1
+    business_id: str = ""  # UUID from businesses table — used for tenant isolation
     channel: str = "instagram"
     sender_id: str = ""
     message_text: str = ""
@@ -50,6 +51,7 @@ class MessageContext:
     def to_dict(self) -> dict[str, Any]:
         return {
             "organization_id": self.organization_id,
+            "business_id": self.business_id,
             "channel": self.channel,
             "sender_id": self.sender_id,
             "message_text": self.message_text,

@@ -23,9 +23,11 @@ def build_message_context(
     sender_id: str,
     message_text: str,
     raw_payload: dict | None = None,
+    business_id: str = "",
 ) -> MessageContext:
     return MessageContext(
         organization_id=organization_id or 1,
+        business_id=business_id or "",
         channel=channel or "instagram",
         sender_id=sender_id or "",
         message_text=message_text or "",
@@ -185,6 +187,7 @@ async def process_incoming_message(
     sender_id: str,
     message_text: str,
     raw_payload: dict | None = None,
+    business_id: str = "",
 ) -> dict:
     context = build_message_context(
         organization_id=organization_id,
@@ -192,6 +195,7 @@ async def process_incoming_message(
         sender_id=sender_id,
         message_text=message_text,
         raw_payload=raw_payload,
+        business_id=business_id,
     )
 
     if not context.sender_id:
