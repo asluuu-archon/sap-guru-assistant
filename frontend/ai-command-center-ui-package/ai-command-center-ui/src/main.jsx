@@ -369,7 +369,7 @@ function Topbar({ businesses, activeBusiness, onSwitch, onNavigate, notification
             <div style={{padding:'12px 16px',borderBottom:'1px solid var(--border)'}}>
               <div style={{fontSize:13,fontWeight:700,color:'var(--text-primary)'}}>{authUser?.name || 'Admin'}</div>
               <div style={{fontSize:11,color:'var(--text-muted)',marginTop:2}}>{authUser?.email || ''}</div>
-              {authUser?.role && <div style={{fontSize:10,padding:'2px 7px',borderRadius:8,background:'#eff6ff',color:'#3b82f6',fontWeight:600,display:'inline-block',marginTop:4}}>{authUser.role}</div>}
+              {authUser?.role && <div style={{fontSize:10,padding:'2px 7px',borderRadius:8,background:'#1c2d4f',color:'#93c5fd',fontWeight:600,display:'inline-block',marginTop:4}}>{authUser.role}</div>}
             </div>
             <button
               onClick={() => { setShowUserMenu(false); onLogout(); }}
@@ -758,12 +758,12 @@ function Overview({ setPage, activeBusiness }) {
 
       {/* Hot Lead Queue shortcut banner */}
       {(s.hot_leads > 0 || s.needs_human > 0) && (
-        <div style={{marginTop:'20px',background:'linear-gradient(135deg,#fef2f2,#fff7ed)',border:'1px solid #fecaca',borderRadius:12,padding:'16px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+        <div style={{marginTop:'20px',background:'linear-gradient(135deg,#3f1010,#2e1800)',border:'1px solid #7f1d1d',borderRadius:12,padding:'16px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
           <div style={{display:'flex',alignItems:'center',gap:12}}>
             <div style={{fontSize:28}}>🔥</div>
             <div>
-              <div style={{fontWeight:700,color:'#991b1b',fontSize:15}}>Action Required</div>
-              <div style={{fontSize:13,color:'#b91c1c'}}>
+              <div style={{fontWeight:700,color:'#fca5a5',fontSize:15}}>Action Required</div>
+              <div style={{fontSize:13,color:'#fca5a5'}}>
                 {s.hot_leads > 0 && <span>{s.hot_leads} hot lead{s.hot_leads>1?'s':''} need attention</span>}
                 {s.hot_leads > 0 && s.needs_human > 0 && <span> · </span>}
                 {s.needs_human > 0 && <span>{s.needs_human} conversation{s.needs_human>1?'s':''} need human reply</span>}
@@ -1220,10 +1220,10 @@ function ConversationChatPanel({ conv, fullConv, loading, onClose, onRefresh, bi
               <div style={{display:'flex', justifyContent:'flex-end'}}>
                 <div style={{
                   maxWidth:'78%', padding:'10px 13px',
-                  background:'#dbeafe',
+                  background:'#1c2d4f',
                   border:'1px solid #93c5fd',
                   borderRadius:'16px 16px 4px 16px',
-                  fontSize:'0.88em', color:'#1e3a8a', lineHeight:'1.6',
+                  fontSize:'0.88em', color:'#93c5fd', lineHeight:'1.6',
                 }}>
                   <div style={{fontSize:'0.75em', color:'#2563eb', marginBottom:'4px', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em'}}>AI Assistant</div>
                   {item.assistant}
@@ -1687,9 +1687,9 @@ function LeadDetailPanel({ lead: initialLead, onClose, getLeadName, bizId }) {
 
               {/* Recommended action */}
               {summary.summary?.recommended_action && (
-                <div style={{padding:'10px 12px', background:'#f0fdf4', border:'1px solid #86efac', borderRadius:'8px', borderLeft:'3px solid #10b981'}}>
-                  <div style={{fontSize:'0.72em', color:'#15803d', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'4px'}}>Recommended Action</div>
-                  <div style={{fontSize:'0.87em', color:'#14532d', lineHeight:'1.5'}}>{summary.summary.recommended_action}</div>
+                <div style={{padding:'10px 12px', background:'#0d2e1a', border:'1px solid #166534', borderRadius:'8px', borderLeft:'3px solid #4ade80'}}>
+                  <div style={{fontSize:'0.72em', color:'#4ade80', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'4px'}}>Recommended Action</div>
+                  <div style={{fontSize:'0.87em', color:'#86efac', lineHeight:'1.5'}}>{summary.summary.recommended_action}</div>
                 </div>
               )}
 
@@ -1801,7 +1801,7 @@ function Debugger({ activeBusiness }) {
                 <span style={{fontSize:'0.8em', padding:'4px 10px', borderRadius:'20px', background: result.is_lead ? '#fef3c7' : '#f1f5f9', color: result.is_lead ? '#92400e' : '#475569', fontWeight:600, border:`1px solid ${result.is_lead ? '#fcd34d' : 'var(--border)'}`}}>
                   {result.is_lead ? '🔥 Lead Detected' : '👤 Not a Lead'}
                 </span>
-                <span style={{fontSize:'0.8em', padding:'4px 10px', borderRadius:'20px', background:'#eff6ff', color:'#1e40af', fontWeight:600, border:'1px solid #bfdbfe'}}>
+                <span style={{fontSize:'0.8em', padding:'4px 10px', borderRadius:'20px', background:'#1c2d4f', color:'#93c5fd', fontWeight:600, border:'1px solid #1e40af'}}>
                   🎯 {result.intent}
                 </span>
                 <span style={{fontSize:'0.8em', padding:'4px 10px', borderRadius:'20px', background: result.needs_human ? '#fef2f2' : '#f0fdf4', color: result.needs_human ? '#991b1b' : '#14532d', fontWeight:600, border:`1px solid ${result.needs_human ? '#fca5a5' : '#86efac'}`}}>
@@ -1818,7 +1818,7 @@ function Debugger({ activeBusiness }) {
       </Card>
 
       {error && (
-        <div style={{padding:'12px 16px', background:'#fef2f2', border:'1px solid #fca5a5', borderRadius:'8px', color:'#991b1b', fontSize:'0.88em', marginTop:'12px'}}>
+        <div style={{padding:'12px 16px', background:'#3f1010', border:'1px solid #ef4444', borderRadius:'8px', color:'#fca5a5', fontSize:'0.88em', marginTop:'12px'}}>
           ⚠ {error}
         </div>
       )}
@@ -1893,7 +1893,7 @@ function Debugger({ activeBusiness }) {
             <Card title="AI Generated Reply">
               {result.reply_text ? (
                 <div>
-                  <div style={{padding:'14px', background:'#eff6ff', border:'1px solid #bfdbfe', borderRadius:'8px', fontSize:'0.9em', color:'#1e3a8a', lineHeight:'1.6', marginBottom:'10px'}}>
+                  <div style={{padding:'14px', background:'#1c2d4f', border:'1px solid #2563eb', borderRadius:'8px', fontSize:'0.9em', color:'#93c5fd', lineHeight:'1.6', marginBottom:'10px'}}>
                     {result.reply_text}
                   </div>
                   <div style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
@@ -2064,7 +2064,7 @@ function Playground({ activeBusiness }) {
           <button onClick={() => { setMessage(''); setResult(null); setError(null); setSelectedHistory(null); }} style={{padding:'10px 16px',background:'var(--bg-input)',border:'1px solid var(--border)',borderRadius:8,cursor:'pointer',fontSize:13,color:'var(--text-secondary)'}}>Clear</button>
           {loading && <span style={{fontSize:13,color:'#6b7280',fontStyle:'italic'}}>Processing through 9 pipeline stages...</span>}
         </div>
-        {error && <div style={{marginTop:12,padding:'10px 14px',background:'#fef2f2',border:'1px solid #fecaca',borderRadius:8,color:'#dc2626',fontSize:13}}>{error}</div>}
+        {error && <div style={{marginTop:12,padding:'10px 14px',background:'#3f1010',border:'1px solid #ef4444',borderRadius:8,color:'#fca5a5',fontSize:13}}>{error}</div>}
       </div>
 
       {/* Results */}
@@ -2079,12 +2079,12 @@ function Playground({ activeBusiness }) {
               <h3 style={{fontSize:14,fontWeight:700,color:'var(--text-primary)',margin:'0 0 12px',display:'flex',alignItems:'center',gap:8}}>
                 <span style={{fontSize:18}}>💬</span> AI Generated Reply
               </h3>
-              <div style={{background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:8,padding:'14px 16px',color:'#1e40af',fontSize:14,lineHeight:1.6,fontStyle:'italic'}}>
+              <div style={{background:'#1c2d4f',border:'1px solid #1e40af',borderRadius:8,padding:'14px 16px',color:'#93c5fd',fontSize:14,lineHeight:1.6,fontStyle:'italic'}}>
                 {displayResult.reply?.reply || displayResult.reply?.message || 'No reply generated'}
               </div>
               {displayResult.reply?.category && (
                 <div style={{marginTop:8,display:'flex',gap:8,flexWrap:'wrap'}}>
-                  <span style={{padding:'3px 10px',background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:20,fontSize:12,color:'#15803d',fontWeight:600}}>{displayResult.reply.category}</span>
+                  <span style={{padding:'3px 10px',background:'#0d2e1a',border:'1px solid #166534',borderRadius:20,fontSize:12,color:'#4ade80',fontWeight:600}}>{displayResult.reply.category}</span>
                   <span style={{padding:'3px 10px',background:'var(--bg-input)',border:'1px solid var(--border)',borderRadius:20,fontSize:12,color:'var(--text-secondary)'}}>{displayResult.reply.char_count || (displayResult.reply.reply || '').length} chars</span>
                 </div>
               )}
@@ -2162,7 +2162,7 @@ function Playground({ activeBusiness }) {
                 </div>
               </div>
               {displayResult.lead?.next_action && (
-                <div style={{padding:'10px 12px',background:'#fffbeb',border:'1px solid #fde68a',borderRadius:8,fontSize:13,color:'#92400e'}}>
+                <div style={{padding:'10px 12px',background:'#2e2000',border:'1px solid #92400e',borderRadius:8,fontSize:13,color:'#fde68a'}}>
                   <strong>Next Action:</strong> {displayResult.lead.next_action}
                 </div>
               )}
@@ -2186,7 +2186,7 @@ function Playground({ activeBusiness }) {
                     </div>
                   )}
                   {displayResult.business_brain.context_injected && (
-                    <div style={{marginTop:8,padding:'10px 12px',background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:8,fontSize:13,color:'#1e40af',fontStyle:'italic'}}>
+                    <div style={{marginTop:8,padding:'10px 12px',background:'#1c2d4f',border:'1px solid #1e40af',borderRadius:8,fontSize:13,color:'#93c5fd',fontStyle:'italic'}}>
                       {displayResult.business_brain.context_injected}
                     </div>
                   )}
@@ -3035,7 +3035,7 @@ function Customer360({ activeBusiness }) {
                     <div style={{fontSize:'1.2em', fontWeight:700, color:'inherit'}}>{profile.display_name}</div>
                     <div style={{display:'flex', alignItems:'center', gap:'4px', padding:'2px 8px', borderRadius:'12px', background: profile.identity?.source === 'whatsapp' ? '#f0fdf4' : '#fdf2f8', border: `1px solid ${profile.identity?.source === 'whatsapp' ? '#dcfce7' : '#fce7f3'}`}}>
                       {profile.identity?.source === 'whatsapp' ? 
-                        <><Phone size={10} fill="#25d366" stroke="#25d366"/><span style={{fontSize:10, fontWeight:700, color:'#15803d'}}>WhatsApp</span></> : 
+                        <><Phone size={10} fill="#25d366" stroke="#25d366"/><span style={{fontSize:10, fontWeight:700, color:'#4ade80'}}>WhatsApp</span></> : 
                         <><Image size={10} color="#e1306c"/><span style={{fontSize:10, fontWeight:700, color:'#be185d'}}>Instagram</span></>
                       }
                     </div>
@@ -3050,8 +3050,8 @@ function Customer360({ activeBusiness }) {
                       {temp === 'hot' ? '🔥' : temp === 'warm' ? '⭐' : '❄️'} {temp.charAt(0).toUpperCase() + temp.slice(1)} Lead
                     </span>
                   )}
-                  {profile.lead?.is_qualified && <span style={{padding:'4px 12px', borderRadius:'20px', background:'#f0fdf4', color:'#14532d', fontWeight:700, fontSize:'0.8em', border:'1px solid #86efac'}}>✅ Qualified</span>}
-                  {profile.conversation?.needs_human && <span style={{padding:'4px 12px', borderRadius:'20px', background:'#fef2f2', color:'#991b1b', fontWeight:700, fontSize:'0.8em', border:'1px solid #fca5a5'}}>🚨 Needs Human</span>}
+                  {profile.lead?.is_qualified && <span style={{padding:'4px 12px', borderRadius:'20px', background:'#0d2e1a', color:'#4ade80', fontWeight:700, fontSize:'0.8em', border:'1px solid #166534'}}>✅ Qualified</span>}
+                  {profile.conversation?.needs_human && <span style={{padding:'4px 12px', borderRadius:'20px', background:'#3f1010', color:'#fca5a5', fontWeight:700, fontSize:'0.8em', border:'1px solid #ef4444'}}>🚨 Needs Human</span>}
                 </div>
               </div>
             </Card>
@@ -3150,7 +3150,7 @@ function Customer360({ activeBusiness }) {
                   {profile.timeline.map((event, i) => (
                     <div key={i} style={{display:'flex', gap:'12px', paddingBottom: i < profile.timeline.length - 1 ? '16px' : '0'}}>
                       <div style={{display:'flex', flexDirection:'column', alignItems:'center', flexShrink:0}}>
-                        <div style={{width:'28px', height:'28px', borderRadius:'50%', background:'#eff6ff', border:'2px solid #bfdbfe', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.85em'}}>
+                        <div style={{width:'28px', height:'28px', borderRadius:'50%', background:'#1c2d4f', border:'2px solid #1e40af', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.85em'}}>
                           {TIMELINE_ICONS[event.type] || '📌'}
                         </div>
                         {i < profile.timeline.length - 1 && <div style={{width:'2px', flex:1, background:'var(--border,#e2e8f0)', marginTop:'4px'}}/>}
@@ -3186,8 +3186,8 @@ function Customer360({ activeBusiness }) {
                         )}
                         {item.assistant && (
                           <div style={{display:'flex', justifyContent:'flex-end'}}>
-                            <div style={{maxWidth:'75%', padding:'8px 12px', background:'#dbeafe', borderRadius:'12px 12px 2px 12px', fontSize:'0.84em', color:'#1e3a8a', lineHeight:'1.5'}}>
-                              <div style={{fontSize:'0.7em', color:'#1e40af', fontWeight:700, marginBottom:'3px'}}>AI Assistant</div>
+                            <div style={{maxWidth:'75%', padding:'8px 12px', background:'#1c2d4f', borderRadius:'12px 12px 2px 12px', fontSize:'0.84em', color:'#93c5fd', lineHeight:'1.5'}}>
+                              <div style={{fontSize:'0.7em', color:'#60a5fa', fontWeight:700, marginBottom:'3px'}}>AI Assistant</div>
                               {item.assistant}
                             </div>
                           </div>
@@ -3264,7 +3264,7 @@ function Reports({ activeBusiness }) {
       />
 
       {loading && <div style={{textAlign:'center',padding:40,color:'var(--text-secondary)'}}>Loading report data...</div>}
-      {error && <div style={{background:'#fef2f2',border:'1px solid #fecaca',borderRadius:8,padding:16,color:'#dc2626',marginBottom:16}}>{error}</div>}
+      {error && <div style={{background:'#3f1010',border:'1px solid #ef4444',borderRadius:8,padding:16,color:'#fca5a5',marginBottom:16}}>{error}</div>}
 
       {!loading && data && (
         <>
@@ -3746,8 +3746,8 @@ function SettingsPage({ activeBusiness }) {
                 </div>
               ))}
 
-              <div style={{background:'#f0f9ff',borderRadius:8,padding:'14px',border:'1px solid #bae6fd',marginTop:16}}>
-                <div style={{fontSize:12,fontWeight:600,color:'#0369a1',marginBottom:10}}>Add New Template</div>
+              <div style={{background:'#1c2d4f',borderRadius:8,padding:'14px',border:'1px solid #1e40af',marginTop:16}}>
+                <div style={{fontSize:12,fontWeight:600,color:'#93c5fd',marginBottom:10}}>Add New Template</div>
                 <input value={newTemplate.name} onChange={e => setNewTemplate(p=>({...p,name:e.target.value}))} placeholder="Template name (e.g. Greeting)" style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid var(--border)',fontSize:13,marginBottom:8,boxSizing:'border-box',color:'var(--text-primary)'}}/>
                 <textarea value={newTemplate.text} onChange={e => setNewTemplate(p=>({...p,text:e.target.value}))} placeholder="Template message... use {name} for personalisation" rows={3} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:'1px solid var(--border)',fontSize:13,resize:'vertical',fontFamily:'inherit',boxSizing:'border-box',color:'var(--text-primary)',marginBottom:8}}/>
                 <button onClick={addTemplate} style={{padding:'7px 16px',borderRadius:6,background:'#3b82f6',color:'white',border:'none',cursor:'pointer',fontSize:12,fontWeight:600}}>+ Add Template</button>
@@ -3766,7 +3766,7 @@ function SettingsPage({ activeBusiness }) {
                   <span style={{fontSize:12,color:'var(--text-muted)'}}>No keywords blacklisted yet.</span>
                 )}
                 {form.blacklist_keywords.map(kw => (
-                  <span key={kw} style={{display:'flex',alignItems:'center',gap:6,padding:'4px 10px',borderRadius:20,background:'#fef2f2',border:'1px solid #fecaca',fontSize:12,color:'#ef4444',fontWeight:500}}>
+                  <span key={kw} style={{display:'flex',alignItems:'center',gap:6,padding:'4px 10px',borderRadius:20,background:'#3f1010',border:'1px solid #ef4444',fontSize:12,color:'#fca5a5',fontWeight:500}}>
                     {kw}
                     <button onClick={() => removeKeyword(kw)} style={{background:'none',border:'none',cursor:'pointer',color:'#ef4444',padding:0,lineHeight:1,display:'flex'}}><X size={11}/></button>
                   </span>
@@ -3811,7 +3811,7 @@ function SettingsPage({ activeBusiness }) {
                 ))}
               </div>
 
-              <div style={{marginTop:16,padding:'12px 16px',background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:8,fontSize:12,color:'#0c4a6e',lineHeight:1.7}}>
+              <div style={{marginTop:16,padding:'12px 16px',background:'#1c2d4f',border:'1px solid #1e40af',borderRadius:8,fontSize:12,color:'#bfdbfe',lineHeight:1.7}}>
                 <b style={{display:'block',marginBottom:4}}>Version History</b>
                 v2.0 — Multi-business SaaS, Integrations, Notifications, Settings overhaul<br/>
                 v1.5 — Reports & Analytics, Automation rules<br/>
@@ -4006,7 +4006,7 @@ function FollowerDMPanel({ bizId, bizHeaders }) {
                 const stageInfo = STAGE_COLORS[conv.stage] || { color:'var(--text-secondary)', label: conv.stage || 'Unknown' };
                 return (
                   <div key={conv.id} style={{background:'var(--bg-card)',borderRadius:10,border:'1px solid var(--border)',padding:'14px 18px',display:'flex',alignItems:'center',gap:14}}>
-                    <div style={{width:38,height:38,borderRadius:'50%',background:'#eff6ff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
+                    <div style={{width:38,height:38,borderRadius:'50%',background:'#1c2d4f',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
                       {conv.intent === 'job_support' ? '💼' : conv.intent === 'training' ? '🎓' : conv.intent === 'content' ? '📱' : '👋'}
                     </div>
                     <div style={{flex:1,minWidth:0}}>
@@ -4017,7 +4017,7 @@ function FollowerDMPanel({ bizId, bizHeaders }) {
                         )}
                         <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:'var(--bg-input)',color:stageInfo.color}}>● {stageInfo.label}</span>
                         {conv.contact_captured && (
-                          <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:'#f0fdf4',color:'#166534'}}>✓ Lead Saved</span>
+                          <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:'#0d2e1a',color:'#4ade80'}}>✓ Lead Saved</span>
                         )}
                       </div>
                       <div style={{fontSize:12,color:'var(--text-muted)'}}>
@@ -4266,7 +4266,7 @@ function Automation({ activeBusiness }) {
                     <span style={{fontSize:15,fontWeight:700,color:'var(--text-primary)'}}>{rule.name}</span>
                     <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:tg.bg,color:tg.color}}>{tg.emoji} {tg.label}</span>
                     {rule.is_active
-                      ? <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:'#f0fdf4',color:'#10b981'}}>● Active</span>
+                      ? <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:'#0d2e1a',color:'#4ade80'}}>● Active</span>
                       : <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,background:'var(--bg-input)',color:'var(--text-muted)'}}>○ Inactive</span>}
                   </div>
                   <div style={{fontSize:13,color:'var(--text-secondary)',background:'var(--bg-input)',borderRadius:6,padding:'10px 12px',fontFamily:'monospace',lineHeight:1.5,wordBreak:'break-word'}}>
@@ -4513,7 +4513,7 @@ function BusinessesAdmin({ activeBusiness, setPage }) {
             return (
               <div key={biz.id} style={{background:'var(--bg-card)',borderRadius:12,border: isActive ? '2px solid #3b82f6' : '1px solid var(--border)',padding:20,position:'relative',transition:'border-color 0.2s'}}>
                 {isActive && (
-                  <div style={{position:'absolute',top:12,right:12,background:'#eff6ff',color:'#3b82f6',fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:10,textTransform:'uppercase',letterSpacing:'0.05em'}}>Active</div>
+                  <div style={{position:'absolute',top:12,right:12,background:'#1c2d4f',color:'#93c5fd',fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:10,textTransform:'uppercase',letterSpacing:'0.05em'}}>Active</div>
                 )}
                 <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
                   <div style={{width:44,height:44,borderRadius:10,background:color,display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:18,fontWeight:700,flexShrink:0}}>
@@ -4531,7 +4531,7 @@ function BusinessesAdmin({ activeBusiness, setPage }) {
 
                 <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:14}}>
                   {biz.instagram_handle && (
-                    <span style={{fontSize:11,color:'#8b5cf6',background:'#f5f3ff',padding:'2px 8px',borderRadius:10,fontWeight:500}}>
+                    <span style={{fontSize:11,color:'#c4b5fd',background:'#1e1040',padding:'2px 8px',borderRadius:10,fontWeight:500}}>
                       📸 {biz.instagram_handle}
                     </span>
                   )}
@@ -4543,7 +4543,7 @@ function BusinessesAdmin({ activeBusiness, setPage }) {
                 <div style={{display:'flex',gap:8}}>
                   <button
                     onClick={() => setPage('Overview')}
-                    style={{flex:1,padding:'7px',borderRadius:6,background: isActive ? '#3b82f6' : '#f1f5f9',color: isActive ? 'white' : '#475569',border:'none',cursor:'pointer',fontSize:12,fontWeight:600}}
+                    style={{flex:1,padding:'7px',borderRadius:6,background: isActive ? '#3b82f6' : 'var(--bg-input)',color: isActive ? 'white' : 'var(--text-secondary)',border:'none',cursor:'pointer',fontSize:12,fontWeight:600}}
                   >
                     {isActive ? '✓ Current Workspace' : 'View Dashboard'}
                   </button>
@@ -4555,9 +4555,9 @@ function BusinessesAdmin({ activeBusiness, setPage }) {
       )}
 
       {/* How it works info box */}
-      <div style={{background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:10,padding:'16px 20px',marginTop:20}}>
-        <div style={{fontWeight:600,color:'#0369a1',fontSize:13,marginBottom:6}}>💡 How Multi-Business Works</div>
-        <div style={{fontSize:12,color:'#0c4a6e',lineHeight:1.7}}>
+      <div style={{background:'#1c2d4f',border:'1px solid #1e40af',borderRadius:10,padding:'16px 20px',marginTop:20}}>
+        <div style={{fontWeight:600,color:'#93c5fd',fontSize:13,marginBottom:6}}>💡 How Multi-Business Works</div>
+        <div style={{fontSize:12,color:'#bfdbfe',lineHeight:1.7}}>
           Each business workspace has its own isolated leads, conversations, automation rules, and settings.
           Switch workspaces using the dropdown in the top navigation bar. Future versions will include
           per-business login so each client only sees their own data.
@@ -4859,9 +4859,9 @@ function IntegrationsPage({ activeBusiness }) {
         title="Integrations"
         sub={`Connect channels, databases, and tools for ${activeBusiness?.name || 'your workspace'}`}
         action={
-          <div style={{display:'flex',alignItems:'center',gap:8,padding:'6px 14px',borderRadius:8,background:'#f0fdf4',border:'1px solid #bbf7d0'}}>
-            <Wifi size={14} color="#10b981"/>
-            <span style={{fontSize:13,fontWeight:600,color:'#166534'}}>{connectedCount} of {INTEGRATIONS_CONFIG.length} connected</span>
+          <div style={{display:'flex',alignItems:'center',gap:8,padding:'6px 14px',borderRadius:8,background:'#0d2e1a',border:'1px solid #166534'}}>
+            <Wifi size={14} color="#4ade80"/>
+            <span style={{fontSize:13,fontWeight:600,color:'#4ade80'}}>{connectedCount} of {INTEGRATIONS_CONFIG.length} connected</span>
           </div>
         }
       />
@@ -4872,7 +4872,7 @@ function IntegrationsPage({ activeBusiness }) {
           <button
             key={cat}
             onClick={() => setFilter(cat)}
-            style={{padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor: filter===cat ? '#3b82f6' : 'var(--border)',background: filter===cat ? '#eff6ff' : 'white',color: filter===cat ? '#3b82f6' : '#64748b',fontSize:12,fontWeight: filter===cat ? 600 : 400,cursor:'pointer',transition:'all 0.15s'}}
+            style={{padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor: filter===cat ? '#3b82f6' : 'var(--border)',background: filter===cat ? '#1c2d4f' : 'var(--bg-card)',color: filter===cat ? '#93c5fd' : 'var(--text-secondary)',fontSize:12,fontWeight: filter===cat ? 600 : 400,cursor:'pointer',transition:'all 0.15s'}}
           >{cat}</button>
         ))}
       </div>
@@ -4895,7 +4895,7 @@ function IntegrationsPage({ activeBusiness }) {
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:2}}>
                       <span style={{fontSize:15,fontWeight:700,color:'var(--text-primary)'}}>{integ.name}</span>
-                      <span style={{fontSize:10,fontWeight:600,padding:'2px 7px',borderRadius:10,background: isConnected ? '#f0fdf4' : '#f8fafc',color: isConnected ? '#16a34a' : '#94a3b8',border:`1px solid ${isConnected ? '#bbf7d0' : 'var(--border)'}`}}>
+                      <span style={{fontSize:10,fontWeight:600,padding:'2px 7px',borderRadius:10,background: isConnected ? '#0d2e1a' : 'var(--bg-input)',color: isConnected ? '#4ade80' : 'var(--text-muted)',border:`1px solid ${isConnected ? '#166534' : 'var(--border)'}`}}>
                         {isConnected ? '● Connected' : '○ Not connected'}
                       </span>
                     </div>
@@ -4907,7 +4907,7 @@ function IntegrationsPage({ activeBusiness }) {
                 <div style={{fontSize:12,color:'var(--text-secondary)',lineHeight:1.6}}>{integ.description}</div>
 
                 {/* Status note */}
-                <div style={{fontSize:11,color: isConnected ? '#16a34a' : '#94a3b8',background: isConnected ? '#f0fdf4' : '#f8fafc',borderRadius:6,padding:'6px 10px',display:'flex',alignItems:'center',gap:6}}>
+                <div style={{fontSize:11,color: isConnected ? '#4ade80' : 'var(--text-muted)',background: isConnected ? '#0d2e1a' : 'var(--bg-input)',borderRadius:6,padding:'6px 10px',display:'flex',alignItems:'center',gap:6}}>
                   {isConnected ? <Wifi size={11}/> : <WifiOff size={11}/>}
                   {isConnected ? `Active — ${integ.status_note}` : integ.status_note}
                 </div>
@@ -4921,7 +4921,7 @@ function IntegrationsPage({ activeBusiness }) {
                 <div style={{display:'flex',gap:8,marginTop:'auto'}}>
                   <button
                     onClick={() => openModal(integ)}
-                    style={{flex:1,padding:'8px',borderRadius:6,background: isConnected ? '#f8fafc' : integ.bg,color: isConnected ? '#475569' : integ.color,border:`1px solid ${isConnected ? 'var(--border)' : integ.color+'40'}`,cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}
+                    style={{flex:1,padding:'8px',borderRadius:6,background: isConnected ? 'var(--bg-input)' : integ.bg,color: isConnected ? 'var(--text-secondary)' : integ.color,border:`1px solid ${isConnected ? 'var(--border)' : integ.color+'40'}`,cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}
                   >
                     <Key size={12}/> {isConnected ? 'Update Credentials' : 'Connect'}
                   </button>
@@ -4946,9 +4946,9 @@ function IntegrationsPage({ activeBusiness }) {
       )}
 
       {/* Info box */}
-      <div style={{background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:10,padding:'16px 20px',marginTop:20}}>
-        <div style={{fontWeight:600,color:'#0369a1',fontSize:13,marginBottom:6}}>💡 How Integrations Work</div>
-        <div style={{fontSize:12,color:'#0c4a6e',lineHeight:1.7}}>
+      <div style={{background:'#1c2d4f',border:'1px solid #1e40af',borderRadius:10,padding:'16px 20px',marginTop:20}}>
+        <div style={{fontWeight:600,color:'#93c5fd',fontSize:13,marginBottom:6}}>💡 How Integrations Work</div>
+        <div style={{fontSize:12,color:'#bfdbfe',lineHeight:1.7}}>
           Each integration is stored per workspace — different businesses can have different channels connected.
           Credentials are encrypted and stored securely in your Supabase database.
           Connecting an integration here enables the relevant features across the dashboard (e.g., connecting WhatsApp enables bulk WhatsApp messaging in the Automation page).
@@ -4970,7 +4970,7 @@ function IntegrationsPage({ activeBusiness }) {
               <button onClick={() => setActiveModal(null)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--text-muted)',padding:4}}><X size={18}/></button>
             </div>
 
-            <div style={{background:'#fffbeb',border:'1px solid #fde68a',borderRadius:8,padding:'10px 14px',fontSize:12,color:'#92400e',marginBottom:18,display:'flex',gap:8,alignItems:'flex-start'}}>
+            <div style={{background:'#2e2000',border:'1px solid #92400e',borderRadius:8,padding:'10px 14px',fontSize:12,color:'#fde68a',marginBottom:18,display:'flex',gap:8,alignItems:'flex-start'}}>
               <AlertTriangle size={14} style={{flexShrink:0,marginTop:1}}/>
               <span>Credentials are stored in your Supabase database. Never share your API keys publicly.</span>
             </div>
@@ -5664,7 +5664,7 @@ function LeadImportExport({ activeBusiness }) {
       <div style={{display:'flex',gap:8,marginBottom:24}}>
         {[['import','⬆️ Import Leads'],['export','⬇️ Export Leads']].map(([k,l]) => (
           <button key={k} onClick={() => setTab(k)}
-            style={{padding:'10px 24px',borderRadius:8,border:'1px solid',borderColor:tab===k?'#3b82f6':'var(--border)',background:tab===k?'#eff6ff':'white',color:tab===k?'#3b82f6':'#64748b',fontWeight:tab===k?700:400,fontSize:14,cursor:'pointer'}}>
+            style={{padding:'10px 24px',borderRadius:8,border:'1px solid',borderColor:tab===k?'#3b82f6':'var(--border)',background:tab===k?'#1c2d4f':'var(--bg-card)',color:tab===k?'#93c5fd':'var(--text-secondary)',fontWeight:tab===k?700:400,fontSize:14,cursor:'pointer'}}>
             {l}
           </button>
         ))}
@@ -5675,10 +5675,10 @@ function LeadImportExport({ activeBusiness }) {
         <div style={{display:'flex',flexDirection:'column',gap:20,maxWidth:800}}>
 
           {/* Download template */}
-          <div className="card" style={{padding:'16px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#f0fdf4',border:'1px solid #bbf7d0'}}>
+          <div className="card" style={{padding:'16px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#0d2e1a',border:'1px solid #166534'}}>
             <div>
-              <div style={{fontWeight:600,color:'#166534',fontSize:14}}>📋 Download Import Template</div>
-              <div style={{fontSize:12,color:'#15803d',marginTop:2}}>Use this CSV template to prepare your leads for import. Includes a sample row.</div>
+              <div style={{fontWeight:600,color:'#4ade80',fontSize:14}}>📋 Download Import Template</div>
+              <div style={{fontSize:12,color:'#86efac',marginTop:2}}>Use this CSV template to prepare your leads for import. Includes a sample row.</div>
             </div>
             <button onClick={handleDownloadTemplate}
               style={{display:'flex',alignItems:'center',gap:6,padding:'8px 16px',borderRadius:8,background:'#16a34a',color:'white',border:'none',fontWeight:600,fontSize:13,cursor:'pointer'}}>
@@ -5691,7 +5691,7 @@ function LeadImportExport({ activeBusiness }) {
             onDragOver={e => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={handleFileDrop}
-            style={{border:`2px dashed ${dragOver?'#3b82f6':'#cbd5e1'}`,borderRadius:12,padding:'40px 20px',textAlign:'center',background:dragOver?'#eff6ff':'#f8fafc',transition:'all 0.2s',cursor:'pointer'}}
+            style={{border:`2px dashed ${dragOver?'#3b82f6':'var(--border)'}`,borderRadius:12,padding:'40px 20px',textAlign:'center',background:dragOver?'#1c2d4f':'var(--bg-input)',transition:'all 0.2s',cursor:'pointer'}}
             onClick={() => document.getElementById('file-input').click()}
           >
             <input id="file-input" type="file" accept=".csv,.xlsx,.xls" onChange={handleFileDrop} style={{display:'none'}}/>
@@ -5744,9 +5744,9 @@ function LeadImportExport({ activeBusiness }) {
 
               {/* Warnings */}
               {preview.warnings?.length > 0 && (
-                <div style={{background:'#fffbeb',border:'1px solid #fde68a',borderRadius:10,padding:'12px 16px'}}>
+                <div style={{background:'#2e2000',border:'1px solid #92400e',borderRadius:10,padding:'12px 16px'}}>
                   {preview.warnings.map((w,i) => (
-                    <div key={i} style={{fontSize:13,color:'#92400e',display:'flex',gap:8,alignItems:'flex-start'}}>
+                    <div key={i} style={{fontSize:13,color:'#fde68a',display:'flex',gap:8,alignItems:'flex-start'}}>
                       <span>⚠️</span><span>{w}</span>
                     </div>
                   ))}
@@ -5758,7 +5758,7 @@ function LeadImportExport({ activeBusiness }) {
                 <div style={{fontWeight:700,fontSize:13,color:'var(--text-primary)',marginBottom:10}}>Column Mapping Detected</div>
                 <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
                   {Object.entries(preview.mapping).map(([csv,db]) => (
-                    <div key={csv} style={{padding:'4px 12px',borderRadius:20,background:'#f0fdf4',border:'1px solid #bbf7d0',fontSize:12,color:'#166534'}}>
+                    <div key={csv} style={{padding:'4px 12px',borderRadius:20,background:'#0d2e1a',border:'1px solid #166534',fontSize:12,color:'#4ade80'}}>
                       <b>{csv}</b> → {db}
                     </div>
                   ))}
@@ -5806,11 +5806,11 @@ function LeadImportExport({ activeBusiness }) {
 
               {/* Import result */}
               {importResult ? (
-                <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:10,padding:'16px 20px'}}>
-                  <div style={{fontWeight:700,color:'#166534',fontSize:15,marginBottom:6}}>✅ Import Complete</div>
-                  <div style={{fontSize:13,color:'#15803d'}}>{importResult.message}</div>
+                <div style={{background:'#0d2e1a',border:'1px solid #166534',borderRadius:10,padding:'16px 20px'}}>
+                  <div style={{fontWeight:700,color:'#4ade80',fontSize:15,marginBottom:6}}>✅ Import Complete</div>
+                  <div style={{fontSize:13,color:'#86efac'}}>{importResult.message}</div>
                   {importResult.errors?.length > 0 && (
-                    <div style={{marginTop:8,fontSize:12,color:'#dc2626'}}>
+                    <div style={{marginTop:8,fontSize:12,color:'#fca5a5'}}>
                       {importResult.errors.map((e,i) => <div key={i}>{e}</div>)}
                     </div>
                   )}
@@ -6103,7 +6103,7 @@ function HotLeadQueue({ activeBusiness, setPage }) {
                 style={{padding:'0',border:`1px solid ${urg.border}`,overflow:'hidden',transition:'box-shadow 0.15s'}}
               >
                 {/* Card header — always visible */}
-                <div style={{display:'flex',alignItems:'center',gap:14,padding:'16px 20px',cursor:'pointer',background:isExpanded?urg.bg:'white'}}
+                <div style={{display:'flex',alignItems:'center',gap:14,padding:'16px 20px',cursor:'pointer',background:isExpanded?urg.bg:'var(--bg-card)'}}
                   onClick={() => setExpandedId(isExpanded ? null : lead.id)}
                 >
                   {/* Rank badge */}
@@ -6140,7 +6140,7 @@ function HotLeadQueue({ activeBusiness, setPage }) {
                   <div style={{display:'flex',gap:6,flexShrink:0}} onClick={e => e.stopPropagation()}>
                     {lead.phone && (
                       <a href={`tel:${lead.phone}`}
-                        style={{display:'flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:8,background:'#f0fdf4',color:'#16a34a',border:'1px solid #bbf7d0',fontSize:12,fontWeight:600,textDecoration:'none'}}
+                        style={{display:'flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:8,background:'#0d2e1a',color:'#4ade80',border:'1px solid #166534',fontSize:12,fontWeight:600,textDecoration:'none'}}
                         title={`Call ${lead.phone}`}
                       >
                         <Phone size={13}/>Call
@@ -6148,7 +6148,7 @@ function HotLeadQueue({ activeBusiness, setPage }) {
                     )}
                     {lead.phone && (
                       <a href={`https://wa.me/${lead.phone.replace(/[^0-9]/g,'')}`} target="_blank" rel="noreferrer"
-                        style={{display:'flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:8,background:'#f0fdf4',color:'#15803d',border:'1px solid #bbf7d0',fontSize:12,fontWeight:600,textDecoration:'none'}}
+                        style={{display:'flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:8,background:'#0d2e1a',color:'#4ade80',border:'1px solid #166534',fontSize:12,fontWeight:600,textDecoration:'none'}}
                         title="Open WhatsApp"
                       >
                         💬 WhatsApp
@@ -6156,7 +6156,7 @@ function HotLeadQueue({ activeBusiness, setPage }) {
                     )}
                     {lead.email && (
                       <a href={`mailto:${lead.email}`}
-                        style={{display:'flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:8,background:'#eff6ff',color:'#2563eb',border:'1px solid #bfdbfe',fontSize:12,fontWeight:600,textDecoration:'none'}}
+                        style={{display:'flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:8,background:'#1c2d4f',color:'#93c5fd',border:'1px solid #1e40af',fontSize:12,fontWeight:600,textDecoration:'none'}}
                         title={`Email ${lead.email}`}
                       >
                         <Mail size={13}/>Email
@@ -6164,7 +6164,7 @@ function HotLeadQueue({ activeBusiness, setPage }) {
                     )}
                     <button
                       onClick={() => { setPage('Conversations'); }}
-                      style={{display:'flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:8,background:'#f5f3ff',color:'#7c3aed',border:'1px solid #ddd6fe',fontSize:12,fontWeight:600,cursor:'pointer'}}
+                      style={{display:'flex',alignItems:'center',gap:4,padding:'6px 12px',borderRadius:8,background:'#1e1040',color:'#c4b5fd',border:'1px solid #7c3aed',fontSize:12,fontWeight:600,cursor:'pointer'}}
                       title="View conversation"
                     >
                       <MessagesSquare size={13}/>Chat
@@ -6411,13 +6411,13 @@ function GoogleReviewsPage({ activeBusiness }) {
           <div style={{display:'flex',gap:8,marginBottom:16,flexWrap:'wrap',alignItems:'center'}}>
             <div style={{display:'flex',gap:6}}>
               {[['all','All'],['pending','Needs Reply'],['replied','Replied']].map(([k,l]) => (
-                <button key={k} onClick={() => setTab(k)} style={{padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor:tab===k?'#3b82f6':'var(--border)',background:tab===k?'#eff6ff':'white',color:tab===k?'#3b82f6':'#64748b',fontSize:12,fontWeight:tab===k?600:400,cursor:'pointer'}}>{l}</button>
+                <button key={k} onClick={() => setTab(k)} style={{padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor:tab===k?'#3b82f6':'var(--border)',background:tab===k?'#1c2d4f':'var(--bg-card)',color:tab===k?'#93c5fd':'var(--text-secondary)',fontSize:12,fontWeight:tab===k?600:400,cursor:'pointer'}}>{l}</button>
               ))}
             </div>
             <div style={{marginLeft:'auto',display:'flex',gap:6,alignItems:'center'}}>
               <span style={{fontSize:12,color:'var(--text-muted)'}}>Filter by stars:</span>
               {['all','5','4','3','2','1'].map(s => (
-                <button key={s} onClick={() => setFilter(s)} style={{padding:'4px 10px',borderRadius:20,border:'1px solid',borderColor:filter===s?'#f59e0b':'var(--border)',background:filter===s?'#fffbeb':'white',color:filter===s?'#d97706':'#64748b',fontSize:12,fontWeight:filter===s?600:400,cursor:'pointer'}}>
+                <button key={s} onClick={() => setFilter(s)} style={{padding:'4px 10px',borderRadius:20,border:'1px solid',borderColor:filter===s?'#f59e0b':'var(--border)',background:filter===s?'#2e2000':'var(--bg-card)',color:filter===s?'#fde68a':'var(--text-secondary)',fontSize:12,fontWeight:filter===s?600:400,cursor:'pointer'}}>
                   {s === 'all' ? 'All' : `${s}★`}
                 </button>
               ))}
@@ -6425,11 +6425,11 @@ function GoogleReviewsPage({ activeBusiness }) {
           </div>
 
           {!isConnected && (
-            <div style={{background:'#fffbeb',border:'1px solid #fde68a',borderRadius:12,padding:'20px 24px',marginBottom:20,display:'flex',alignItems:'center',gap:16}}>
+            <div style={{background:'#2e2000',border:'1px solid #92400e',borderRadius:12,padding:'20px 24px',marginBottom:20,display:'flex',alignItems:'center',gap:16}}>
               <div style={{fontSize:32}}>⚠️</div>
               <div>
-                <div style={{fontWeight:700,color:'#92400e',marginBottom:4}}>Google My Business not connected</div>
-                <div style={{fontSize:13,color:'#78350f'}}>Go to <strong>Integrations</strong> and connect your Google My Business account to start fetching real reviews. Showing sample data below.</div>
+                <div style={{fontWeight:700,color:'#fde68a',marginBottom:4}}>Google My Business not connected</div>
+                <div style={{fontSize:13,color:'#fde68a'}}>Go to <strong>Integrations</strong> and connect your Google My Business account to start fetching real reviews. Showing sample data below.</div>
               </div>
             </div>
           )}
@@ -6475,8 +6475,8 @@ function GoogleReviewsPage({ activeBusiness }) {
 
                   {/* Existing reply */}
                   {review.reply_text && (
-                    <div style={{background:'#f0fdf4',borderRadius:8,padding:'12px 16px',marginBottom:14,fontSize:13,color:'#166534',borderLeft:'3px solid #86efac'}}>
-                      <div style={{fontWeight:600,marginBottom:4,fontSize:12,color:'#15803d'}}>YOUR REPLY</div>
+                    <div style={{background:'#0d2e1a',borderRadius:8,padding:'12px 16px',marginBottom:14,fontSize:13,color:'#4ade80',borderLeft:'3px solid #166534'}}>
+                      <div style={{fontWeight:600,marginBottom:4,fontSize:12,color:'#4ade80'}}>YOUR REPLY</div>
                       {review.reply_text}
                     </div>
                   )}
@@ -6489,7 +6489,7 @@ function GoogleReviewsPage({ activeBusiness }) {
                         <button
                           onClick={() => handleGenerateReply(review)}
                           disabled={generatingFor === review.id}
-                          style={{display:'flex',alignItems:'center',gap:5,padding:'4px 12px',borderRadius:6,border:'1px solid #c7d2fe',background:'#eff6ff',color:'#4338ca',fontSize:12,fontWeight:600,cursor:'pointer',opacity:generatingFor===review.id?0.6:1}}
+                          style={{display:'flex',alignItems:'center',gap:5,padding:'4px 12px',borderRadius:6,border:'1px solid #4f46e5',background:'#1e1040',color:'#c4b5fd',fontSize:12,fontWeight:600,cursor:'pointer',opacity:generatingFor===review.id?0.6:1}}
                         >
                           {generatingFor === review.id ? <Loader size={12}/> : <Bot size={12}/>}
                           {generatingFor === review.id ? 'Generating...' : 'Generate AI Reply'}
