@@ -340,7 +340,7 @@ def _subscribe_to_webhooks(ig_account_id: str, access_token: str) -> dict:
 
 # ─── Re-subscribe endpoint (for existing connected accounts) ─────────────────
 
-@router.post("/resubscribe")
+@router.get("/resubscribe")
 async def resubscribe_webhooks(business_id: str = Query(...)):
     """
     Re-subscribe an already-connected Instagram account to webhook events.
