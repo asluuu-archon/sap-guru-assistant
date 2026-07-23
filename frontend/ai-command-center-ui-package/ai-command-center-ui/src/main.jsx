@@ -5855,7 +5855,7 @@ function LeadImportExport({ activeBusiness }) {
                 <div style={{display:'flex',gap:8}}>
                   {[['csv','📄 CSV'],['excel','📊 Excel (.xlsx)']].map(([k,l]) => (
                     <button key={k} onClick={() => setExpFormat(k)}
-                      style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid',borderColor:expFormat===k?'#3b82f6':'var(--border)',background:expFormat===k?'#eff6ff':'white',color:expFormat===k?'#3b82f6':'#64748b',fontWeight:expFormat===k?700:400,fontSize:13,cursor:'pointer'}}>
+                      style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid',borderColor:expFormat===k?'#3b82f6':'var(--border)',background:expFormat===k?'#1c2d4f':'var(--bg-chip)',color:expFormat===k?'#93c5fd':'var(--text-secondary)',fontWeight:expFormat===k?700:400,fontSize:13,cursor:'pointer'}}>
                       {l}
                     </button>
                   ))}
@@ -6383,7 +6383,7 @@ function GoogleReviewsPage({ activeBusiness }) {
       {/* Top tabs */}
       <div style={{display:'flex',gap:8,marginBottom:20}}>
         {[['reviews','Reviews'], ['settings','Auto-Responder Settings']].map(([k,l]) => (
-          <button key={k} onClick={() => setSettingsTab(k)} style={{padding:'8px 18px',borderRadius:8,border:'1px solid',borderColor:settingsTab===k?'#3b82f6':'var(--border)',background:settingsTab===k?'#eff6ff':'white',color:settingsTab===k?'#3b82f6':'#64748b',fontWeight:settingsTab===k?600:400,fontSize:13,cursor:'pointer'}}>{l}</button>
+          <button key={k} onClick={() => setSettingsTab(k)} style={{padding:'8px 18px',borderRadius:8,border:'1px solid',borderColor:settingsTab===k?'#3b82f6':'var(--border)',background:settingsTab===k?'#1c2d4f':'var(--bg-chip)',color:settingsTab===k?'#93c5fd':'var(--text-secondary)',fontWeight:settingsTab===k?600:400,fontSize:13,cursor:'pointer'}}>{l}</button>
         ))}
       </div>
 
