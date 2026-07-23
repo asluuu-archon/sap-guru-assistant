@@ -67,8 +67,8 @@ def get_instagram_user_info(sender_id: str, token: str) -> dict:
     """Fetch follower's name and username from Instagram Graph API."""
     try:
         r = requests.get(
-            f"https://graph.instagram.com/v23.0/{sender_id}",
-            params={"fields": "id,username,name", "access_token": token},
+            f"https://graph.facebook.com/v23.0/{sender_id}",
+            params={"fields": "id,name", "access_token": token},
             timeout=10,
         )
         if r.status_code == 200:
@@ -82,7 +82,7 @@ def send_instagram_dm(recipient_id: str, message: str, token: str) -> bool:
     """Send a DM via Instagram Graph API."""
     try:
         r = requests.post(
-            "https://graph.instagram.com/v23.0/me/messages",
+            "https://graph.facebook.com/v23.0/me/messages",
             json={
                 "recipient": {"id": recipient_id},
                 "message": {"text": message},
@@ -98,7 +98,7 @@ def send_instagram_dm(recipient_id: str, message: str, token: str) -> bool:
         else:
             # Fallback: try without tag (works for 24h window)
             r2 = requests.post(
-                "https://graph.instagram.com/v23.0/me/messages",
+                "https://graph.facebook.com/v23.0/me/messages",
                 json={
                     "recipient": {"id": recipient_id},
                     "message": {"text": message},

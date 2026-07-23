@@ -95,7 +95,7 @@ app.include_router(campaign_context_router)
 app.include_router(auth_router)
 app.include_router(follower_dm_router)
 
-VERIFY_TOKEN = "sap_guru_2026"
+VERIFY_TOKEN = os.getenv("WEBHOOK_VERIFY_TOKEN", "sap_guru_2026")
 AUTO_REPLY = os.getenv("AUTO_REPLY", "false").lower() == "true"
 
 processed_message_ids = set()
@@ -235,8 +235,6 @@ def should_ignore_manual_reply(manual_reply_text: str) -> bool:
 
     return text in short_replies or any(junk in text for junk in junk_replies)
 
-
-@app.post("/webhook")
 
 def _get_business_id_from_ig(ig_id: str) -> str:
     """Find the business ID associated with this Instagram Page/Account ID."""
