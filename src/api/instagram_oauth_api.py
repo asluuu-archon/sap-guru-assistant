@@ -90,14 +90,11 @@ async def start_instagram_oauth(
 
     callback_url = f"{base_url}/instagram-oauth/callback"
 
-    # Permissions required for Instagram DM automation
+    # Permissions required for Instagram DM automation (Instagram API setup)
     scope = ",".join([
-        "instagram_basic",
-        "instagram_manage_messages",
-        "pages_messaging",
-        "pages_show_list",
-        "pages_read_engagement",
-        "business_management",
+        "instagram_business_basic",
+        "instagram_business_manage_messages",
+        "instagram_business_manage_comments",
     ])
 
     oauth_url = (
@@ -158,11 +155,13 @@ async def instagram_oauth_callback(
 
     try:
         # ── Step A: Exchange code for short-lived user access token ───────────
-        token_res = requests.get(
-            "https://graph.facebook.com/v23.0/oauth/access_token",
-            params={
+        # Using Instagram API token exchange endpoint
+        token_res = requests.post(
+            "https://api.instagram.com/oauth/access_token",
+            data={
                 "client_id": app_id,
                 "client_secret": app_secret,
+                "grant_type": "authorization_code",
                 "redirect_uri": callback_url,
                 "code": code,
             },
@@ -170,23 +169,24 @@ async def instagram_oauth_callback(
         )
         token_data = token_res.json()
 
-        if "error" in token_data:
-            raise Exception(f"Token exchange failed: {token_data['error'].get('message', str(token_data))}")
+        if "error_type" in token_data or "error" in token_data:
+            err_msg = token_data.get("error_message") or token_data.get("error", {}).get("message", str(token_data))
+            raise Exception(f"Token exchange failed: {err_msg}")
 
         short_lived_token = token_data.get("access_token")
+        ig_user_id = str(token_data.get("user_id", ""))
         if not short_lived_token:
             raise Exception("No access_token in token exchange response")
 
-        print(f"INSTAGRAM_OAUTH: Short-lived token obtained for business_id={business_id}", flush=True)
+        print(f"INSTAGRAM_OAUTH: Short-lived token obtained for business_id={business_id}, ig_user_id={ig_user_id}", flush=True)
 
         # ── Step B: Exchange for long-lived token (60-day) ────────────────────
         long_token_res = requests.get(
-            "https://graph.facebook.com/v23.0/oauth/access_token",
+            "https://graph.instagram.com/access_token",
             params={
-                "grant_type": "fb_exchange_token",
-                "client_id": app_id,
+                "grant_type": "ig_exchange_token",
                 "client_secret": app_secret,
-                "fb_exchange_token": short_lived_token,
+                "access_token": short_lived_token,
             },
             timeout=15,
         )
@@ -195,75 +195,33 @@ async def instagram_oauth_callback(
 
         print(f"INSTAGRAM_OAUTH: Long-lived token obtained for business_id={business_id}", flush=True)
 
-        # ── Step C: Get the list of Pages the user manages ────────────────────
-        pages_res = requests.get(
-            "https://graph.facebook.com/v23.0/me/accounts",
-            params={
-                "access_token": long_lived_token,
-                "fields": "id,name,access_token,instagram_business_account",
-            },
-            timeout=15,
-        )
-        pages_data = pages_res.json()
-
-        if "error" in pages_data:
-            raise Exception(f"Pages fetch failed: {pages_data['error'].get('message', str(pages_data))}")
-
-        pages = pages_data.get("data", [])
-        if not pages:
-            return HTMLResponse(content=_error_page(
-                "No Facebook Pages found",
-                "No Facebook Pages were found on this account. Make sure you are logged in with the account that manages your business Facebook Page, and that the Page is connected to an Instagram Business account."
-            ))
-
-        # ── Step D: Find the page with an Instagram Business Account ──────────
-        ig_page = None
-        ig_account_id = None
-        page_access_token = None
-        page_name = None
-
-        for page in pages:
-            ig_biz = page.get("instagram_business_account")
-            if ig_biz:
-                ig_page = page
-                ig_account_id = ig_biz.get("id")
-                page_access_token = page.get("access_token")
-                page_name = page.get("name")
-                break
-
-        if not ig_page or not ig_account_id:
-            # No Instagram Business Account found — list all pages for debugging
-            page_names = [p.get("name", "Unknown") for p in pages]
-            return HTMLResponse(content=_error_page(
-                "No Instagram Business Account found",
-                f"Your Facebook Pages ({', '.join(page_names)}) don't have an Instagram Business Account connected. "
-                f"Please go to Instagram Settings → Switch to Professional Account, then connect it to your Facebook Page in Meta Business Suite."
-            ))
-
-        # ── Step E: Get Instagram username for confirmation ───────────────────
+        # ── Step C: Get Instagram account info ────────────────────────────────
         ig_info_res = requests.get(
-            f"https://graph.facebook.com/v23.0/{ig_account_id}",
+            f"https://graph.instagram.com/v23.0/me",
             params={
                 "fields": "id,username,name",
-                "access_token": page_access_token,
+                "access_token": long_lived_token,
             },
             timeout=15,
         )
         ig_info = ig_info_res.json()
+
+        if "error" in ig_info:
+            raise Exception(f"Instagram info fetch failed: {ig_info['error'].get('message', str(ig_info))}")
+
+        ig_account_id = ig_info.get("id", ig_user_id)
         ig_username = ig_info.get("username", "")
         ig_name = ig_info.get("name", "")
 
         print(f"INSTAGRAM_OAUTH: Found Instagram account @{ig_username} (ID: {ig_account_id}) for business_id={business_id}", flush=True)
 
-        # ── Step F: Save to Supabase business_integrations ────────────────────
+        # ── Step D: Save to Supabase business_integrations ────────────────────
         supabase = _supabase()
         credentials = {
-            "page_access_token": page_access_token,
+            "page_access_token": long_lived_token,
             "instagram_account_id": ig_account_id,
             "instagram_username": ig_username,
             "instagram_name": ig_name,
-            "page_id": ig_page.get("id"),
-            "page_name": page_name,
             "connected_via": "oauth",
             "connected_at": datetime.utcnow().isoformat(),
         }
