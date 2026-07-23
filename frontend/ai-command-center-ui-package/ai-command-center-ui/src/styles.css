@@ -12,6 +12,7 @@
   --bg-search:     #ffffff;
   --bg-tab:        #ffffff;
   --bg-ghost:      #ffffff;
+  --bg-chip:       #f1f5f9;
   --text-primary:  #0f172a;
   --text-secondary:#64748b;
   --text-muted:    #94a3b8;
@@ -41,6 +42,7 @@ html[data-theme="dark"] {
   --bg-search:     #21262d;
   --bg-tab:        #21262d;
   --bg-ghost:      #21262d;
+  --bg-chip:       #21262d;
   --text-primary:  #e6edf3;
   --text-secondary:#8b949e;
   --text-muted:    #6e7681;

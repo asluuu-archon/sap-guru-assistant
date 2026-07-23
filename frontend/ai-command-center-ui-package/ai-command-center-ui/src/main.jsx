@@ -1651,7 +1651,7 @@ function LeadDetailPanel({ lead: initialLead, onClose, getLeadName, bizId }) {
             <div style={{display:'flex', flexDirection:'column', gap:'10px'}}>
 
               {/* One-liner */}
-              <div style={{padding:'10px 12px', background:'#f3f0ff', borderRadius:'8px', borderLeft:'3px solid #8b5cf6', fontSize:'0.88em', color:'#3b0764', fontStyle:'italic', lineHeight:'1.5'}}>
+              <div style={{padding:'10px 12px', background:'#1e1040', borderRadius:'8px', borderLeft:'3px solid #8b5cf6', fontSize:'0.88em', color:'#c4b5fd', fontStyle:'italic', lineHeight:'1.5'}}>
                 "{summary.summary?.one_liner}"
               </div>
 
@@ -3452,8 +3452,8 @@ function Reports({ activeBusiness }) {
                     <td style={{padding:'10px',fontSize:13,color:'var(--text-secondary)'}}>{lead.module || '—'}</td>
                     <td style={{padding:'10px'}}>
                       <span style={{padding:'2px 8px',borderRadius:12,fontSize:11,fontWeight:600,
-                        background: lead.temperature==='hot' ? '#fef2f2' : lead.temperature==='warm' ? '#fffbeb' : '#eff6ff',
-                        color: lead.temperature==='hot' ? '#ef4444' : lead.temperature==='warm' ? '#f59e0b' : '#3b82f6'
+                        background: lead.temperature==='hot' ? '#3f1010' : lead.temperature==='warm' ? '#2e2000' : '#1c2d4f',
+                        color: lead.temperature==='hot' ? '#fca5a5' : lead.temperature==='warm' ? '#fde68a' : '#93c5fd'
                       }}>
                         {lead.temperature==='hot' ? '🔴' : lead.temperature==='warm' ? '🟡' : '🔵'} {lead.temperature}
                       </span>
@@ -3902,7 +3902,7 @@ function FollowerDMPanel({ bizId, bizHeaders }) {
           {id:'conversations', label:`💬 Conversations (${conversations.length})`},
         ].map(t => (
           <button key={t.id} onClick={() => setActiveSubTab(t.id)}
-            style={{padding:'7px 16px',borderRadius:20,border:'1px solid',borderColor: activeSubTab===t.id ? '#2563eb' : 'var(--border)',background: activeSubTab===t.id ? '#1c2d4f' : 'var(--bg-card)',color: activeSubTab===t.id ? '#93c5fd' : 'var(--text-secondary)',fontWeight: activeSubTab===t.id ? 600 : 400,fontSize:13,cursor:'pointer'}}>
+            style={{padding:'7px 16px',borderRadius:20,border:'1px solid',borderColor: activeSubTab===t.id ? '#2563eb' : 'var(--border)',background: activeSubTab===t.id ? '#1c2d4f' : 'var(--bg-chip)',color: activeSubTab===t.id ? '#93c5fd' : 'var(--text-secondary)',fontWeight: activeSubTab===t.id ? 600 : 400,fontSize:13,cursor:'pointer'}}>
             {t.label}
           </button>
         ))}
@@ -4647,7 +4647,7 @@ const INTEGRATIONS_CONFIG = [
     description: 'Receive and reply to Instagram Direct Messages. Required for AI-powered DM automation.',
     icon: '📸',
     color: '#e1306c',
-    bg: '#fdf2f8',
+    bg: '#2d0a1a',
     category: 'Messaging',
     fields: [
       { key: 'page_access_token', label: 'Page Access Token', type: 'password', placeholder: 'EAAxxxxxxx...' },
@@ -4662,7 +4662,7 @@ const INTEGRATIONS_CONFIG = [
     description: 'Send and receive WhatsApp messages via the WhatsApp Business API. Ideal for follow-up sequences.',
     icon: '💬',
     color: '#25d366',
-    bg: '#f0fdf4',
+    bg: '#0d2e1a',
     category: 'Messaging',
     fields: [
       { key: 'phone_number_id', label: 'Phone Number ID', type: 'text', placeholder: '1234567890' },
@@ -4678,7 +4678,7 @@ const INTEGRATIONS_CONFIG = [
     description: 'Automatically export leads and conversations to a Google Sheet. Great for reporting and CRM sync.',
     icon: '📊',
     color: '#34a853',
-    bg: '#f0fdf4',
+    bg: '#0d2e1a',
     category: 'Data',
     fields: [
       { key: 'spreadsheet_id', label: 'Spreadsheet ID', type: 'text', placeholder: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms' },
@@ -4694,7 +4694,7 @@ const INTEGRATIONS_CONFIG = [
     description: 'Connect your Google Business Profile to fetch reviews, auto-respond with AI, and boost your local SEO.',
     icon: '⭐',
     color: '#4285f4',
-    bg: '#eff6ff',
+    bg: '#1c2d4f',
     category: 'Reviews',
     fields: [
       { key: 'account_id', label: 'GMB Account ID', type: 'text', placeholder: 'accounts/1234567890' },
@@ -4710,7 +4710,7 @@ const INTEGRATIONS_CONFIG = [
     description: 'Add an AI-powered chat widget to your company website. Works on any site (WordPress, Wix, Custom HTML).',
     icon: '🌐',
     color: '#3b82f6',
-    bg: '#eff6ff',
+    bg: '#1c2d4f',
     category: 'Channels',
     fields: [
       { key: 'welcome_message', label: 'Welcome Message', type: 'text', placeholder: 'Hi! How can I help you today?' },
@@ -4726,7 +4726,7 @@ const INTEGRATIONS_CONFIG = [
     description: 'Send lead and conversation events to any external URL. Use to connect HubSpot, Zoho, Zapier, or any CRM.',
     icon: '🔗',
     color: '#6366f1',
-    bg: '#f5f3ff',
+    bg: '#1e1040',
     category: 'Developer',
     fields: [
       { key: 'url', label: 'Webhook URL', type: 'text', placeholder: 'https://hooks.zapier.com/hooks/catch/...' },
@@ -4741,7 +4741,7 @@ const INTEGRATIONS_CONFIG = [
     description: 'Power the AI assistant, conversation summaries, and lead scoring with OpenAI GPT models.',
     icon: '🤖',
     color: '#10a37f',
-    bg: '#f0fdf9',
+    bg: '#0d2e1a',
     category: 'AI',
     fields: [
       { key: 'api_key', label: 'API Key', type: 'password', placeholder: 'sk-xxxxxxxxxxxxxxxx' },
@@ -4756,7 +4756,7 @@ const INTEGRATIONS_CONFIG = [
     description: 'Your primary database for leads, conversations, and business rules. Already connected.',
     icon: '🗄️',
     color: '#3ecf8e',
-    bg: '#f0fdf4',
+    bg: '#0d2e1a',
     category: 'Data',
     fields: [
       { key: 'url', label: 'Supabase URL', type: 'text', placeholder: 'https://xxxx.supabase.co' },
@@ -4872,7 +4872,7 @@ function IntegrationsPage({ activeBusiness }) {
           <button
             key={cat}
             onClick={() => setFilter(cat)}
-            style={{padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor: filter===cat ? '#3b82f6' : 'var(--border)',background: filter===cat ? '#1c2d4f' : 'var(--bg-card)',color: filter===cat ? '#93c5fd' : 'var(--text-secondary)',fontSize:12,fontWeight: filter===cat ? 600 : 400,cursor:'pointer',transition:'all 0.15s'}}
+            style={{padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor: filter===cat ? '#3b82f6' : 'var(--border)',background: filter===cat ? '#1c2d4f' : 'var(--bg-chip)',color: filter===cat ? '#93c5fd' : 'var(--text-secondary)',fontSize:12,fontWeight: filter===cat ? 600 : 400,cursor:'pointer',transition:'all 0.15s'}}
           >{cat}</button>
         ))}
       </div>
@@ -5664,7 +5664,7 @@ function LeadImportExport({ activeBusiness }) {
       <div style={{display:'flex',gap:8,marginBottom:24}}>
         {[['import','⬆️ Import Leads'],['export','⬇️ Export Leads']].map(([k,l]) => (
           <button key={k} onClick={() => setTab(k)}
-            style={{padding:'10px 24px',borderRadius:8,border:'1px solid',borderColor:tab===k?'#3b82f6':'var(--border)',background:tab===k?'#1c2d4f':'var(--bg-card)',color:tab===k?'#93c5fd':'var(--text-secondary)',fontWeight:tab===k?700:400,fontSize:14,cursor:'pointer'}}>
+            style={{padding:'10px 24px',borderRadius:8,border:'1px solid',borderColor:tab===k?'#3b82f6':'var(--border)',background:tab===k?'#1c2d4f':'var(--bg-chip)',color:tab===k?'#93c5fd':'var(--text-secondary)',fontWeight:tab===k?700:400,fontSize:14,cursor:'pointer'}}>
             {l}
           </button>
         ))}
@@ -5789,7 +5789,7 @@ function LeadImportExport({ activeBusiness }) {
                         <td style={{padding:'7px 12px',color:'var(--text-secondary)'}}>{row.email||'—'}</td>
                         <td style={{padding:'7px 12px',color:'var(--text-secondary)'}}>{row.interested_module||'—'}</td>
                         <td style={{padding:'7px 12px'}}>
-                          <span style={{padding:'2px 8px',borderRadius:10,fontSize:11,fontWeight:600,background:row.temperature==='hot'?'#fef2f2':row.temperature==='warm'?'#fffbeb':'#f0f9ff',color:row.temperature==='hot'?'#ef4444':row.temperature==='warm'?'#d97706':'#0369a1'}}>
+                          <span style={{padding:'2px 8px',borderRadius:10,fontSize:11,fontWeight:600,background:row.temperature==='hot'?'#3f1010':row.temperature==='warm'?'#2e2000':'#1c2d4f',color:row.temperature==='hot'?'#fca5a5':row.temperature==='warm'?'#fde68a':'#93c5fd'}}>
                             {row.temperature||'cold'}
                           </span>
                         </td>
@@ -5940,10 +5940,10 @@ function LeadImportExport({ activeBusiness }) {
 // ─── HOT LEAD QUEUE ──────────────────────────────────────────────────────────
 
 const URGENCY_CONFIG = {
-  critical: { label: 'CRITICAL', color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
-  high:     { label: 'HIGH',     color: '#f97316', bg: '#fff7ed', border: '#fed7aa' },
-  medium:   { label: 'MEDIUM',   color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
-  low:      { label: 'LOW',      color: '#64748b', bg: '#f8fafc', border: 'var(--border)' },
+  critical: { label: 'CRITICAL', color: '#fca5a5', bg: '#3f1010', border: '#7f1d1d' },
+  high:     { label: 'HIGH',     color: '#fdba74', bg: '#3f2000', border: '#7c2d12' },
+  medium:   { label: 'MEDIUM',   color: '#fde68a', bg: '#2e2000', border: '#78350f' },
+  low:      { label: 'LOW',      color: '#94a3b8', bg: 'var(--bg-input)', border: 'var(--border)' },
 };
 
 const STAGE_OPTIONS = [
@@ -6075,7 +6075,7 @@ function HotLeadQueue({ activeBusiness, setPage }) {
       <div style={{display:'flex',gap:8,marginBottom:16}}>
         {[['all','All'],['critical','Critical'],['high','High'],['medium','Medium']].map(([k,l]) => (
           <button key={k} onClick={() => setFilter(k)}
-            style={{padding:'6px 16px',borderRadius:20,border:'1px solid',borderColor:filter===k?'#ef4444':'var(--border)',background:filter===k?'#3f1010':'var(--bg-card)',color:filter===k?'#fca5a5':'var(--text-secondary)',fontSize:12,fontWeight:filter===k?600:400,cursor:'pointer'}}>
+            style={{padding:'6px 16px',borderRadius:20,border:'1px solid',borderColor:filter===k?'#ef4444':'var(--border)',background:filter===k?'#3f1010':'var(--bg-chip)',color:filter===k?'#fca5a5':'var(--text-secondary)',fontSize:12,fontWeight:filter===k?600:400,cursor:'pointer'}}>
             {l}
           </button>
         ))}
@@ -6411,13 +6411,13 @@ function GoogleReviewsPage({ activeBusiness }) {
           <div style={{display:'flex',gap:8,marginBottom:16,flexWrap:'wrap',alignItems:'center'}}>
             <div style={{display:'flex',gap:6}}>
               {[['all','All'],['pending','Needs Reply'],['replied','Replied']].map(([k,l]) => (
-                <button key={k} onClick={() => setTab(k)} style={{padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor:tab===k?'#3b82f6':'var(--border)',background:tab===k?'#1c2d4f':'var(--bg-card)',color:tab===k?'#93c5fd':'var(--text-secondary)',fontSize:12,fontWeight:tab===k?600:400,cursor:'pointer'}}>{l}</button>
+                <button key={k} onClick={() => setTab(k)} style={{padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor:tab===k?'#3b82f6':'var(--border)',background:tab===k?'#1c2d4f':'var(--bg-chip)',color:tab===k?'#93c5fd':'var(--text-secondary)',fontSize:12,fontWeight:tab===k?600:400,cursor:'pointer'}}>{l}</button>
               ))}
             </div>
             <div style={{marginLeft:'auto',display:'flex',gap:6,alignItems:'center'}}>
               <span style={{fontSize:12,color:'var(--text-muted)'}}>Filter by stars:</span>
               {['all','5','4','3','2','1'].map(s => (
-                <button key={s} onClick={() => setFilter(s)} style={{padding:'4px 10px',borderRadius:20,border:'1px solid',borderColor:filter===s?'#f59e0b':'var(--border)',background:filter===s?'#2e2000':'var(--bg-card)',color:filter===s?'#fde68a':'var(--text-secondary)',fontSize:12,fontWeight:filter===s?600:400,cursor:'pointer'}}>
+                <button key={s} onClick={() => setFilter(s)} style={{padding:'4px 10px',borderRadius:20,border:'1px solid',borderColor:filter===s?'#f59e0b':'var(--border)',background:filter===s?'#2e2000':'var(--bg-chip)',color:filter===s?'#fde68a':'var(--text-secondary)',fontSize:12,fontWeight:filter===s?600:400,cursor:'pointer'}}>
                   {s === 'all' ? 'All' : `${s}★`}
                 </button>
               ))}
