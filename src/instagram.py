@@ -8,7 +8,7 @@ def send_instagram_reply(recipient_id, message, access_token: str = None):
     if not token:
         return {"error": "No access token configured"}
 
-    url = "https://graph.instagram.com/v23.0/me/messages"
+    url = "https://graph.facebook.com/v23.0/me/messages"
 
     payload = {
         "recipient": {"id": recipient_id},

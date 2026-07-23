@@ -5,6 +5,7 @@ def send_channel_reply(
     channel: str,
     recipient_id: str,
     message: str,
+    access_token: str = None,
 ) -> dict:
     """
     Single place to send replies across channels.
@@ -34,7 +35,7 @@ def send_channel_reply(
         }
 
     if clean_channel == "instagram":
-        result = send_instagram_reply(recipient_id, message.strip())
+        result = send_instagram_reply(recipient_id, message.strip(), access_token=access_token)
         
         if result.get("error"):
             return {

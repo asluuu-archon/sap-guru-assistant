@@ -468,10 +468,21 @@ async def receive_webhook(request: Request):
         )
 
         if AUTO_REPLY:
+            # Resolve per-business Instagram token if available
+            ig_access_token = None
+            try:
+                ig_biz_id = _get_business_id_from_ig(recipient_id)
+                if ig_biz_id:
+                    from .api.integrations_api import get_business_credentials
+                    ig_creds = get_business_credentials(ig_biz_id, "instagram")
+                    ig_access_token = ig_creds.get("page_access_token")
+            except Exception as tok_err:
+                print(f"TOKEN_LOOKUP_ERROR: {tok_err}", flush=True)
             result = send_reply(
                  channel="instagram",
                  recipient_id=sender_id,
                  message=reply_text,
+                 access_token=ig_access_token,
             )
 
             print(f"AUTO REPLY SENT: {result}", flush=True)

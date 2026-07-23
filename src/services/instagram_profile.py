@@ -10,7 +10,7 @@ def get_instagram_profile(sender_id: str) -> dict:
 
     try:
         response = requests.get(
-            f"https://graph.instagram.com/v23.0/{sender_id}",
+            f"https://graph.facebook.com/v23.0/{sender_id}",
             params={
                 "fields": "id,username,name",
                 "access_token": token,

@@ -18,6 +18,7 @@ def send_reply(
     channel: str,
     recipient_id: str,
     message: str,
+    access_token: str = None,
 ) -> dict:
     if not recipient_id:
         return {
@@ -35,6 +36,7 @@ def send_reply(
         channel=channel,
         recipient_id=recipient_id,
         message=message.strip(),
+        access_token=access_token,
     )
 
     return {
