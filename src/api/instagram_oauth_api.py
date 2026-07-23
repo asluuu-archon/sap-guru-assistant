@@ -250,12 +250,38 @@ async def instagram_oauth_callback(
 
         print(f"INSTAGRAM_OAUTH: Found Instagram account @{ig_username} (ID: {ig_account_id}) for business_id={business_id}", flush=True)
 
+        # ── Step C2: Fetch the Business Account ID (17841xxx) for webhook matching ──────
+        # Meta sends webhooks with entry.id = 17841xxx (Business Account ID),
+        # which is different from the User ID (27xxx) returned by /me.
+        # We fetch it here so the webhook handler can match tenants without SQL updates.
+        webhook_ig_id = ig_account_id  # default fallback
+        try:
+            biz_acct_res = requests.get(
+                f"https://graph.instagram.com/v23.0/{ig_account_id}",
+                params={
+                    "fields": "id,username",
+                    "access_token": long_lived_token,
+                },
+                timeout=10,
+            )
+            biz_acct_data = biz_acct_res.json()
+            fetched_id = biz_acct_data.get("id", "")
+            # The Business Account ID starts with 17841; use it if returned
+            if fetched_id and fetched_id.startswith("17841"):
+                webhook_ig_id = fetched_id
+                print(f"INSTAGRAM_OAUTH: Got Business Account ID (17841xxx): {webhook_ig_id}", flush=True)
+            else:
+                print(f"INSTAGRAM_OAUTH: /me returned id={fetched_id}, using ig_user_id as webhook_ig_id fallback", flush=True)
+        except Exception as biz_err:
+            print(f"INSTAGRAM_OAUTH: Could not fetch Business Account ID: {biz_err}", flush=True)
+
         # ── Step D: Save to Supabase business_integrations ────────────────────
         supabase = _supabase()
         credentials = {
             "page_access_token": long_lived_token,
             "instagram_account_id": ig_account_id,
             "ig_user_id": ig_account_id,
+            "webhook_ig_id": webhook_ig_id,
             "instagram_username": ig_username,
             "instagram_name": ig_name,
             "connected_via": "oauth",

@@ -297,6 +297,38 @@ async def receive_webhook(request: Request):
         # ── Resolve which business this webhook belongs to ──────────────────
         ig_id = entry.get("id", "")
         business_id = _get_business_id_from_ig(ig_id)
+
+        # ── Fallback: if entry.id didn't match, try recipient_id from messaging ──
+        # Meta sends entry.id as the 17841xxx Business Account ID.
+        # If webhook_ig_id is not yet stored in credentials, entry.id won't match.
+        # The recipient.id in the messaging object is also the 17841xxx format,
+        # so we try it as a fallback and auto-save it to credentials for future lookups.
+        if not business_id and "messaging" in entry:
+            try:
+                fallback_recipient_id = (entry["messaging"][0].get("recipient") or {}).get("id", "")
+                if fallback_recipient_id and fallback_recipient_id != ig_id:
+                    business_id = _get_business_id_from_ig(fallback_recipient_id)
+                    if business_id:
+                        print(f"WEBHOOK_TENANT_FALLBACK: Matched via recipient_id={fallback_recipient_id} → business_id={business_id}", flush=True)
+                        # Auto-save the webhook_ig_id so future lookups use entry.id directly
+                        try:
+                            existing = supabase.table("business_integrations") \
+                                .select("credentials") \
+                                .eq("business_id", business_id) \
+                                .eq("provider", "instagram") \
+                                .limit(1).execute()
+                            if existing.data:
+                                updated_creds = dict(existing.data[0]["credentials"] or {})
+                                updated_creds["webhook_ig_id"] = ig_id
+                                supabase.table("business_integrations").update({
+                                    "credentials": updated_creds
+                                }).eq("business_id", business_id).eq("provider", "instagram").execute()
+                                print(f"WEBHOOK_IG_ID_SAVED: Auto-saved webhook_ig_id={ig_id} for business_id={business_id}", flush=True)
+                        except Exception as save_err:
+                            print(f"WEBHOOK_IG_ID_SAVE_ERROR: {save_err}", flush=True)
+            except Exception as fb_err:
+                print(f"WEBHOOK_TENANT_FALLBACK_ERROR: {fb_err}", flush=True)
+
         organization_id = _get_organization_id_for_business(business_id)
         print(f"WEBHOOK_TENANT: ig_id={ig_id} → business_id={business_id} → org_id={organization_id}", flush=True)
 
