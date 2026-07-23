@@ -35,6 +35,7 @@ from .api.appointment_api import router as appointment_router
 from .api.campaign_context_api import router as campaign_context_router
 from .api.auth_api import router as auth_router
 from .api.follower_dm_api import router as follower_dm_router
+from .api.instagram_oauth_api import router as instagram_oauth_router
 from .services.webhook_service import process_instagram_webhook
 
 
@@ -94,6 +95,7 @@ app.include_router(appointment_router)
 app.include_router(campaign_context_router)
 app.include_router(auth_router)
 app.include_router(follower_dm_router)
+app.include_router(instagram_oauth_router)
 
 VERIFY_TOKEN = os.getenv("WEBHOOK_VERIFY_TOKEN", "sap_guru_2026")
 AUTO_REPLY = os.getenv("AUTO_REPLY", "false").lower() == "true"

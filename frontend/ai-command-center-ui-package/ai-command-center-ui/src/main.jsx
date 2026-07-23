@@ -4919,12 +4919,21 @@ function IntegrationsPage({ activeBusiness }) {
 
                 {/* Actions */}
                 <div style={{display:'flex',gap:8,marginTop:'auto'}}>
+                  {integ.use_oauth && !isConnected ? (
+                    <a
+                      href={`${API_BASE}/instagram-oauth/start?business_id=${bizId}&redirect_after=${encodeURIComponent(window.location.href)}`}
+                      style={{flex:1,padding:'8px',borderRadius:6,background:integ.bg,color:integ.color,border:`1px solid ${integ.color+'40'}`,cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6,textDecoration:'none'}}
+                    >
+                      <Link size={12}/> Connect with Instagram
+                    </a>
+                  ) : (
                   <button
                     onClick={() => openModal(integ)}
                     style={{flex:1,padding:'8px',borderRadius:6,background: isConnected ? 'var(--bg-input)' : integ.bg,color: isConnected ? 'var(--text-secondary)' : integ.color,border:`1px solid ${isConnected ? 'var(--border)' : integ.color+'40'}`,cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}
                   >
                     <Key size={12}/> {isConnected ? 'Update Credentials' : 'Connect'}
                   </button>
+                  )}
                   {isConnected && (
                     <button
                       onClick={() => handleDisconnect(integ.id, integ.name)}
