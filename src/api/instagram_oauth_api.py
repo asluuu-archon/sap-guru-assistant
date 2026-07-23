@@ -321,7 +321,7 @@ def _subscribe_to_webhooks(ig_account_id: str, access_token: str) -> dict:
         res = requests.post(
             f"https://graph.instagram.com/v23.0/{ig_account_id}/subscribed_apps",
             params={
-                "subscribed_fields": "messages,messaging_echoes",
+                "subscribed_fields": "messages",
                 "access_token": access_token,
             },
             timeout=15,
