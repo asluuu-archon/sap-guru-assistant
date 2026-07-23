@@ -24,18 +24,18 @@ async def get_notifications(business_id: Optional[str] = Header(None, alias="X-B
         # Currently the tables might not have business_id populated for existing data
         # We will query all data for now and format it as notifications
 
-        # 1. Hot Leads — query only safe columns, filter in Python
+        # 1. Hot Leads — use real columns: id, name, sender_id, temperature, updated_at
         try:
-            hot_res = supabase.table("leads").select("id, instagram_username, customer_name, created_at, temperature").order("created_at", desc=True).limit(50).execute()
+            hot_res = supabase.table("leads").select("id, name, sender_id, temperature, updated_at").order("updated_at", desc=True).limit(50).execute()
             for row in (hot_res.data or []):
                 if str(row.get("temperature", "")).lower() == "hot":
-                    name = row.get("customer_name") or row.get("instagram_username") or "Unknown"
+                    name = row.get("name") or row.get("sender_id") or "Unknown"
                     notifications.append({
                         "id": f"hot_{row['id']}",
                         "type": "hot_lead",
                         "title": "New Hot Lead",
                         "message": f"{name} was marked as a Hot Lead.",
-                        "time": row.get("created_at"),
+                        "time": row.get("updated_at"),
                         "action": "View Lead",
                         "target_page": "Leads",
                         "is_read": False
@@ -43,32 +43,32 @@ async def get_notifications(business_id: Optional[str] = Header(None, alias="X-B
         except Exception as e:
             print(f"NOTIFICATIONS: hot leads query failed: {e}", flush=True)
 
-        # 2. Needs Human Review — filter in Python to avoid missing-column errors
+        # 2. Needs Human Review — use conversations table (needs_human field lives there)
         try:
-            human_res = supabase.table("leads").select("id, instagram_username, customer_name, created_at, needs_human_review").order("created_at", desc=True).limit(50).execute()
+            human_res = supabase.table("conversations").select("sender_id, needs_human, updated_at, conversation_state").eq("needs_human", True).order("updated_at", desc=True).limit(5).execute()
             for row in (human_res.data or []):
-                if row.get("needs_human_review"):
-                    name = row.get("customer_name") or row.get("instagram_username") or "Unknown"
-                    notifications.append({
-                        "id": f"human_{row['id']}",
-                        "type": "needs_human",
-                        "title": "Human Intervention Required",
-                        "message": f"{name} requires manual review.",
-                        "time": row.get("created_at"),
-                        "action": "Review",
-                        "target_page": "Conversations",
-                        "is_read": False
-                    })
+                sid = row.get("sender_id") or "Unknown"
+                notifications.append({
+                    "id": f"human_{sid}",
+                    "type": "needs_human",
+                    "title": "Human Intervention Required",
+                    "message": f"Conversation with {sid} requires manual review.",
+                    "time": row.get("updated_at"),
+                    "action": "Review",
+                    "target_page": "Conversations",
+                    "is_read": False
+                })
         except Exception as e:
             print(f"NOTIFICATIONS: needs_human query failed: {e}", flush=True)
 
-        # 3. Stale Conversations (no activity in 48h)
+        # 3. Stale Conversations (no activity in 48h) — use sender_id, not id
         try:
             forty_eight_hours_ago = (datetime.now(timezone.utc) - timedelta(hours=48)).isoformat()
-            stale_res = supabase.table("conversations").select("id, updated_at").lt("updated_at", forty_eight_hours_ago).order("updated_at", desc=True).limit(3).execute()
+            stale_res = supabase.table("conversations").select("sender_id, updated_at, conversation_state").lt("updated_at", forty_eight_hours_ago).order("updated_at", desc=True).limit(3).execute()
             for row in (stale_res.data or []):
+                sid = row.get("sender_id") or "unknown"
                 notifications.append({
-                    "id": f"stale_{row['id']}",
+                    "id": f"stale_{sid}",
                     "type": "stale_conversation",
                     "title": "Stale Conversation",
                     "message": "No reply from user in 48 hours.",
