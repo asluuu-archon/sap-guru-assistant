@@ -86,13 +86,18 @@ async def process_pending_replies():
         )
 
         rows = result.data or []
+        print(f"DELAYED_PROCESSOR: Found {len(rows)} pending conversation(s)", flush=True)
         sent_count = 0
         skipped_count = 0
 
         for conversation in rows:
+            sender_id_log = conversation.get("sender_id", "unknown")
+            business_id_log = conversation.get("business_id", "")
             updated_at = conversation.get("updated_at")
+            print(f"DELAYED_PROCESSOR: Checking sender={sender_id_log} business={business_id_log} updated_at={updated_at}", flush=True)
 
             if not updated_at:
+                print(f"DELAYED_PROCESSOR: Skipping {sender_id_log} — no updated_at", flush=True)
                 skipped_count += 1
                 continue
 
@@ -101,6 +106,7 @@ async def process_pending_replies():
 
             # Read the delay setting for this business from the database
             delay_minutes = get_reply_delay_minutes(business_id)
+            print(f"DELAYED_PROCESSOR: delay_minutes={delay_minutes} for business={business_id}", flush=True)
 
             # If auto-reply is disabled for this business, skip silently
             if delay_minutes == -1:
@@ -113,18 +119,40 @@ async def process_pending_replies():
 
             # Not enough time has passed yet — wait
             if updated_dt > cutoff:
+                print(f"DELAYED_PROCESSOR: Too early for {sender_id_log} — updated={updated_at}, cutoff={cutoff.isoformat()}, delay={delay_minutes}min", flush=True)
                 continue
 
             sender_id = conversation.get("sender_id")
-            history = conversation.get("history") or []
 
-            last_user_message = ""
-            for item in reversed(history):
-                if item.get("user"):
-                    last_user_message = item.get("user")
-                    break
+            if not sender_id:
+                skipped_count += 1
+                continue
 
-            if not sender_id or not last_user_message:
+            # Use the pre-generated reply stored in last_reply — avoids re-generation
+            # and prevents the "Last reply sent" context from confusing suggest_reply.
+            reply_text = (conversation.get("last_reply") or "").strip()
+
+            # Fallback: if last_reply is empty, try to re-generate from last user message
+            if not reply_text:
+                history = conversation.get("history") or []
+                last_user_message = ""
+                for item in reversed(history):
+                    if item.get("user"):
+                        last_user_message = item.get("user")
+                        break
+                if last_user_message:
+                    context = build_context(conversation)
+                    reply = await suggest_reply(last_user_message, "instagram", context)
+                    reply_text = (reply.get("suggested_reply") or "").strip()
+                    print(f"DELAYED_PROCESSOR: Re-generated reply for {sender_id}: {reply_text[:80]}", flush=True)
+
+            # Do NOT send a fallback "I will check" reply — skip instead
+            if not reply_text:
+                print(f"DELAYED REPLY SKIPPED: Empty reply for {sender_id}", flush=True)
+                supabase.table("conversations").update({
+                    "pending_reply": False,
+                    "updated_at": datetime.utcnow().isoformat(),
+                }).eq("sender_id", sender_id).execute()
                 skipped_count += 1
                 continue
 
@@ -136,22 +164,7 @@ async def process_pending_replies():
                 skipped_count += 1
                 continue
 
-            context = build_context(conversation)
-            reply = await suggest_reply(last_user_message, "instagram", context)
-
-            reply_text = (reply.get("suggested_reply") or "").strip()
-
-            # Do NOT send a fallback "I will check" reply — skip instead
-            # This prevents sending meaningless replies when AI has no good answer
-            if not reply_text:
-                print(f"DELAYED REPLY SKIPPED EMPTY AI REPLY FOR {sender_id}", flush=True)
-                # Clear the pending flag to prevent the cron job from looping forever
-                supabase.table("conversations").update({
-                    "pending_reply": False,
-                    "updated_at": datetime.utcnow().isoformat(),
-                }).eq("sender_id", sender_id).execute()
-                skipped_count += 1
-                continue
+            print(f"DELAYED_PROCESSOR: Sending reply to {sender_id}: {reply_text[:80]}", flush=True)
 
             send_result = send_reply(
                 channel="instagram",
