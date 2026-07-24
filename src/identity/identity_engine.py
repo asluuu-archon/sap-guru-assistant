@@ -84,7 +84,47 @@ def build_basic_identity(
 
 # ─── INSTAGRAM GRAPH API PROFILE FETCH ───────────────────────────────────────
 
-def _fetch_instagram_profile(sender_id: str) -> dict:
+def _get_best_instagram_token(business_id: str = None) -> str:
+    """
+    Get the best available Instagram token.
+    Priority: per-business token from Supabase > INSTAGRAM_ACCESS_TOKEN env var.
+    This ensures the correct per-business token is always used, not a stale env var.
+    """
+    # Try per-business token from Supabase first
+    if business_id:
+        try:
+            res = supabase.table("business_integrations") \
+                .select("credentials") \
+                .eq("business_id", business_id) \
+                .eq("provider", "instagram") \
+                .eq("is_connected", True) \
+                .limit(1).execute()
+            if res.data:
+                creds = res.data[0].get("credentials") or {}
+                t = creds.get("page_access_token") or creds.get("access_token")
+                if t:
+                    return t
+        except Exception:
+            pass
+    # Fallback: try any connected Instagram account
+    try:
+        res = supabase.table("business_integrations") \
+            .select("credentials") \
+            .eq("provider", "instagram") \
+            .eq("is_connected", True) \
+            .limit(1).execute()
+        if res.data:
+            creds = res.data[0].get("credentials") or {}
+            t = creds.get("page_access_token") or creds.get("access_token")
+            if t:
+                return t
+    except Exception:
+        pass
+    # Last resort: env var
+    return os.getenv("INSTAGRAM_ACCESS_TOKEN") or os.getenv("PAGE_ACCESS_TOKEN") or ""
+
+
+def _fetch_instagram_profile(sender_id: str, business_id: str = None) -> dict:
     """
     Fetch Instagram user profile from Graph API.
     Returns dict with instagram_username, name, profile_pic.
@@ -92,7 +132,7 @@ def _fetch_instagram_profile(sender_id: str) -> dict:
     """
     try:
         import requests
-        token = os.getenv("INSTAGRAM_ACCESS_TOKEN") or os.getenv("PAGE_ACCESS_TOKEN")
+        token = _get_best_instagram_token(business_id)
         if not token or not sender_id:
             return {}
 
@@ -121,7 +161,7 @@ def _fetch_instagram_profile(sender_id: str) -> dict:
         return {}
 
 
-def _enrich_customer_from_instagram(customer_id: int, sender_id: str) -> None:
+def _enrich_customer_from_instagram(customer_id: int, sender_id: str, business_id: str = None) -> None:
     """
     Background task: fetch Instagram profile and update customer record.
     Only runs if customer doesn't already have a real name.
@@ -141,7 +181,7 @@ def _enrich_customer_from_instagram(customer_id: int, sender_id: str) -> None:
             return
 
         # Fetch from Instagram Graph API
-        profile = _fetch_instagram_profile(sender_id)
+        profile = _fetch_instagram_profile(sender_id, business_id=business_id)
         if not profile:
             return
 
@@ -225,6 +265,7 @@ def trigger_background_identity_enrichment(
     customer_id: int,
     channel: str,
     sender_id: str,
+    business_id: str = None,
 ) -> None:
     """
     Fire-and-forget background identity enrichment.
@@ -238,7 +279,7 @@ def trigger_background_identity_enrichment(
     if channel == "instagram":
         thread = threading.Thread(
             target=_enrich_customer_from_instagram,
-            args=(customer_id, sender_id),
+            args=(customer_id, sender_id, business_id),
             daemon=True,
         )
         thread.start()

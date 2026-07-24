@@ -59,6 +59,7 @@ async def run_pipeline(context: MessageContext) -> MessageContext:
         channel=context.channel,
         sender_id=context.sender_id,
         raw_payload=context.raw_payload,
+        business_id=context.business_id,
     )
     context.end_timer("Identity Stage", timer)
 

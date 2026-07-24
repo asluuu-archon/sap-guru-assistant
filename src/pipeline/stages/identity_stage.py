@@ -10,6 +10,7 @@ def run_identity_stage(
     channel: str,
     sender_id: str,
     raw_payload: dict | None = None,
+    business_id: str = None,
 ) -> dict:
     # Step 1: Extract identity from webhook payload (synchronous, instant)
     identity = build_basic_identity(
@@ -31,6 +32,7 @@ def run_identity_stage(
         customer_id=customer_id,
         channel=channel,
         sender_id=sender_id,
+        business_id=business_id,
     )
 
     return {
