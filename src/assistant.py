@@ -7,11 +7,7 @@ from .reply_bank import find_similar_replies
 from .engine.intent import detect_intent
 from .ai_brain.greeting_engine import get_greeting_reply
 from .ai_brain.appointment_engine import detect_appointment_request
-import httpx
-
 load_dotenv()
-
-API_BASE = os.getenv("API_BASE", "http://localhost:8000") # Default to localhost for local development
 
 try:
     from openai import OpenAI
@@ -381,80 +377,24 @@ async def suggest_reply(
     appointment_reply = detect_appointment_request(message)
 
     if appointment_reply:
-        # Attempt to create the appointment via the API
-        try:
-            async with httpx.AsyncClient() as client:
-                # Assuming appointment_reply contains necessary details like summary, start_time, end_time, etc.
-                # For now, we'll use dummy data or extract from appointment_reply if available
-                # In a real scenario, detect_appointment_request would return structured data for the appointment
-                # For this implementation, we'll assume a simple case where we just confirm the request.
-                # The actual booking will be handled by the API endpoint.
-                
-                # Placeholder for actual appointment creation logic
-                # For now, we just confirm the request and let the user know it's being processed.
-                
-                # We need to pass customer_id to the appointment API. Let's assume it's available in the context or derived.
-                # For now, we'll use a placeholder. In a real app, this would come from the conversation context.
-                customer_id = sender_id
-                
-                # The detect_appointment_request should ideally return parsed start_time, end_time, summary etc.
-                # For now, we'll use dummy values for the API call.
-                dummy_start_time = datetime.now(timezone.utc) + timedelta(hours=1)
-                dummy_end_time = dummy_start_time + timedelta(hours=1)
-
-                appointment_data = {
-                    "customer_id": customer_id,
-                    "summary": appointment_reply.get("summary", "New Appointment"),
-                    "description": appointment_reply.get("description", "Customer requested an appointment."),
-                    "start_time": dummy_start_time.isoformat(),
-                    "end_time": dummy_end_time.isoformat(),
-                    "attendees": [],
-                    "location": "Online Meeting",
-                    "reminders": [30]
-                }
-
-                # Make the API call to create the appointment
-                response = await client.post(f"{API_BASE}/appointments", json=appointment_data)
-                response.raise_for_status() # Raise an exception for HTTP errors
-                
-                # If successful, return a confirmation message
-                return {
-                    "category": "appointment_request",
-                    "lead_score": 80,
-                    "priority": "high",
-                    "approval_status": "safe_to_send",
-                    "should_capture_contact": True,
-                    "should_reply": True,
-                    "human_reason": "",
-                    "reason": "Appointment request detected and sent for booking.",
-                    "suggested_reply": "Great! I've noted your request for an appointment. My team will confirm the details and send you a calendar invite shortly.",
-                }
-        except httpx.HTTPStatusError as e:
-            print(f"Error creating appointment via API: {e.response.text}")
-            return {
-                "category": "appointment_request",
-                "lead_score": 50,
-                "priority": "normal",
-                "approval_status": "needs_human",
-                "should_capture_contact": True,
-                "should_reply": False,
-                "human_reason": f"Failed to create appointment: {e.response.text}",
-                "reason": "Appointment request detected but API call failed.",
-                "suggested_reply": "I apologize, but I encountered an issue while trying to schedule your appointment. Please bear with me, and a human agent will assist you shortly.",
-            }
-        except Exception as e:
-            print(f"Unexpected error during appointment creation: {e}")
-            return {
-                "category": "appointment_request",
-                "lead_score": 50,
-                "priority": "normal",
-                "approval_status": "needs_human",
-                "should_capture_contact": True,
-                "should_reply": False,
-                "human_reason": f"Unexpected error: {e}",
-                "reason": "Appointment request detected but an unexpected error occurred.",
-                "suggested_reply": "I apologize, but I encountered an unexpected issue while trying to schedule your appointment. Please bear with me, and a human agent will assist you shortly.",
-            }
+        # Return the appointment reply directly — no API call needed at this stage.
+        # The appointment engine already provides a ready-made reply asking for preferred time and email.
+        # Actual calendar booking integration is a future feature.
+        print(f"APPOINTMENT_REQUEST_DETECTED: Returning direct reply", flush=True)
+        return {
+            "category": appointment_reply.get("category", "appointment_request"),
+            "lead_score": 80,
+            "priority": "high",
+            "approval_status": "safe_to_send",
+            "should_capture_contact": True,
+            "should_reply": True,
+            "human_reason": "",
+            "reason": "Appointment request detected.",
+            "suggested_reply": appointment_reply.get(
+                "suggested_reply",
+                "Sure, we can schedule a call. Please share your preferred day and time, and also your email ID so I can send the meeting confirmation."
+            ),
+        }
 
     intent = detect_intent(message)
     print(f"INTENT: {intent.get('intent')}", flush=True)
