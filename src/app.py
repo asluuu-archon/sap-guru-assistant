@@ -540,7 +540,24 @@ async def follower_polling_task():
         # Sleep for 15 minutes (900 seconds)
         await asyncio.sleep(900)
 
+# Background task for processing delayed replies automatically
+# Runs every 60 seconds so replies are sent as soon as the configured delay elapses.
+async def delayed_reply_task():
+    # Wait 30 seconds after startup before first run (let the server fully initialise)
+    await asyncio.sleep(30)
+    while True:
+        try:
+            result = await process_pending_replies()
+            sent = result.get("sent_count", 0)
+            if sent > 0:
+                print(f"AUTO_DELAYED_REPLIES: Sent {sent} reply(ies)", flush=True)
+        except Exception as e:
+            print(f"AUTO_DELAYED_REPLIES ERROR: {e}", flush=True)
+        await asyncio.sleep(60)
+
 @app.on_event("startup")
 async def startup_event():
-    # Start the background task
+    # Start background tasks
     asyncio.create_task(follower_polling_task())
+    asyncio.create_task(delayed_reply_task())
+    print("STARTUP: Background tasks started (follower polling + delayed reply processor)", flush=True)
