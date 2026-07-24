@@ -175,9 +175,17 @@ async def process_pending_replies():
 
             print(f"DELAYED SEND RESULT: {send_result}", flush=True)
 
-            if send_result.get("status") == "error":
+            # send_reply() always wraps with status="sent" — check the inner result
+            inner_result = send_result.get("result") or {}
+            send_failed = (
+                send_result.get("status") == "error"
+                or inner_result.get("status") == "error"
+                or "API Error" in str(inner_result.get("message", ""))
+            )
+
+            if send_failed:
                 skipped_count += 1
-                print(f"DELAYED REPLY FAILED FOR {sender_id}", flush=True)
+                print(f"DELAYED REPLY FAILED FOR {sender_id}: {inner_result.get('message', '')[:120]}", flush=True)
                 # Mark pending_reply=False so we don't retry forever on a bad token
                 supabase.table("conversations").update({
                     "pending_reply": False,
