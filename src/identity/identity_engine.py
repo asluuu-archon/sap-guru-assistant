@@ -104,8 +104,8 @@ def _get_best_instagram_token(business_id: str = None) -> str:
                 t = creds.get("page_access_token") or creds.get("access_token")
                 if t:
                     return t
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"IDENTITY_ENGINE: Token lookup error (business={business_id}): {e}", flush=True)
     # Fallback: try any connected Instagram account
     try:
         res = supabase.table("business_integrations") \
@@ -118,10 +118,13 @@ def _get_best_instagram_token(business_id: str = None) -> str:
             t = creds.get("page_access_token") or creds.get("access_token")
             if t:
                 return t
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"IDENTITY_ENGINE: Token fallback lookup error: {e}", flush=True)
     # Last resort: env var
-    return os.getenv("INSTAGRAM_ACCESS_TOKEN") or os.getenv("PAGE_ACCESS_TOKEN") or ""
+    env_token = os.getenv("INSTAGRAM_ACCESS_TOKEN") or os.getenv("PAGE_ACCESS_TOKEN") or ""
+    if env_token:
+        print(f"IDENTITY_ENGINE: Using env var token as last resort (business={business_id})", flush=True)
+    return env_token
 
 
 def _fetch_instagram_profile(sender_id: str, business_id: str = None) -> dict:
