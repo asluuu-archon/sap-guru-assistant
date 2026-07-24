@@ -98,6 +98,7 @@ def _get_best_instagram_token(business_id: str = None) -> str:
                 .eq("business_id", business_id) \
                 .eq("provider", "instagram") \
                 .eq("is_connected", True) \
+                .order("updated_at", desc=True) \
                 .limit(1).execute()
             if res.data:
                 creds = res.data[0].get("credentials") or {}
@@ -112,6 +113,7 @@ def _get_best_instagram_token(business_id: str = None) -> str:
             .select("credentials") \
             .eq("provider", "instagram") \
             .eq("is_connected", True) \
+            .order("updated_at", desc=True) \
             .limit(1).execute()
         if res.data:
             creds = res.data[0].get("credentials") or {}

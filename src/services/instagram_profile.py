@@ -11,11 +11,21 @@ def _get_token_from_supabase(business_id: str = None) -> str:
     try:
         from supabase import create_client
         sb = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
-        query = sb.table("business_integrations").select("credentials") \
-            .eq("provider", "instagram").eq("is_connected", True)
+        # Try per-business token first (newest row)
         if business_id:
-            query = query.eq("business_id", business_id)
-        res = query.limit(1).execute()
+            res = sb.table("business_integrations").select("credentials") \
+                .eq("provider", "instagram").eq("is_connected", True) \
+                .eq("business_id", business_id) \
+                .order("updated_at", desc=True).limit(1).execute()
+            if res.data:
+                creds = res.data[0].get("credentials") or {}
+                t = creds.get("page_access_token") or creds.get("access_token")
+                if t:
+                    return t
+        # Fallback: any connected account (newest row)
+        res = sb.table("business_integrations").select("credentials") \
+            .eq("provider", "instagram").eq("is_connected", True) \
+            .order("updated_at", desc=True).limit(1).execute()
         if res.data:
             creds = res.data[0].get("credentials") or {}
             t = creds.get("page_access_token") or creds.get("access_token")

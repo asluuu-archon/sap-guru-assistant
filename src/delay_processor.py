@@ -63,6 +63,8 @@ def get_instagram_token_for_business(business_id: str) -> str | None:
             .select("credentials")
             .eq("business_id", business_id)
             .eq("provider", "instagram")
+            .eq("is_connected", True)
+            .order("updated_at", desc=True)
             .limit(1)
             .execute()
         )
