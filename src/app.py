@@ -555,9 +555,69 @@ async def delayed_reply_task():
             print(f"AUTO_DELAYED_REPLIES ERROR: {e}", flush=True)
         await asyncio.sleep(60)
 
+# Background task for auto-refreshing Instagram long-lived tokens.
+# Instagram long-lived tokens last 60 days. This task refreshes all connected
+# accounts every 45 days so tokens never expire in production.
+# The refresh API: GET https://graph.instagram.com/refresh_access_token
+async def token_refresh_task():
+    import requests as _requests
+    # Wait 2 minutes after startup before first check
+    await asyncio.sleep(120)
+    while True:
+        try:
+            res = supabase.table("business_integrations") \
+                .select("id, business_id, credentials") \
+                .eq("provider", "instagram") \
+                .eq("is_connected", True) \
+                .execute()
+            rows = res.data or []
+            for row in rows:
+                creds = row.get("credentials") or {}
+                token = creds.get("page_access_token") or creds.get("access_token")
+                if not token:
+                    continue
+                connected_at_str = creds.get("connected_at", "")
+                try:
+                    connected_at = datetime.fromisoformat(connected_at_str.replace("Z", ""))
+                    days_old = (datetime.utcnow() - connected_at).days
+                    if days_old < 45:
+                        continue  # Token is fresh enough — skip
+                except Exception:
+                    pass  # If we can't parse the date, refresh anyway
+                # Refresh the token
+                try:
+                    refresh_res = _requests.get(
+                        "https://graph.instagram.com/refresh_access_token",
+                        params={
+                            "grant_type": "ig_refresh_token",
+                            "access_token": token,
+                        },
+                        timeout=15,
+                    )
+                    refresh_data = refresh_res.json()
+                    if "access_token" in refresh_data:
+                        new_token = refresh_data["access_token"]
+                        new_creds = {**creds, "page_access_token": new_token, "connected_at": datetime.utcnow().isoformat()}
+                        supabase.table("business_integrations").update({
+                            "credentials": new_creds,
+                            "updated_at": datetime.utcnow().isoformat(),
+                        }).eq("id", row["id"]).execute()
+                        username = creds.get("instagram_username", "unknown")
+                        print(f"TOKEN_REFRESH: Refreshed token for @{username} (business={row['business_id']})", flush=True)
+                    else:
+                        username = creds.get("instagram_username", "unknown")
+                        print(f"TOKEN_REFRESH_FAILED: @{username} — {refresh_data}", flush=True)
+                except Exception as refresh_err:
+                    print(f"TOKEN_REFRESH_ERROR: {refresh_err}", flush=True)
+        except Exception as e:
+            print(f"TOKEN_REFRESH_TASK_ERROR: {e}", flush=True)
+        # Run every 24 hours
+        await asyncio.sleep(86400)
+
 @app.on_event("startup")
 async def startup_event():
     # Start background tasks
     asyncio.create_task(follower_polling_task())
     asyncio.create_task(delayed_reply_task())
-    print("STARTUP: Background tasks started (follower polling + delayed reply processor)", flush=True)
+    asyncio.create_task(token_refresh_task())
+    print("STARTUP: Background tasks started (follower polling + delayed reply processor + token refresh)", flush=True)
