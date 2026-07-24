@@ -54,7 +54,8 @@ def get_instagram_token_for_business(business_id: str) -> str | None:
     Resolves the Instagram access token for a given business UUID.
     Returns None if not found — the caller should skip sending.
     """
-    if not business_id:
+    NULL_UUID = "00000000-0000-0000-0000-000000000000"
+    if not business_id or str(business_id) == NULL_UUID:
         return None
     try:
         res = (

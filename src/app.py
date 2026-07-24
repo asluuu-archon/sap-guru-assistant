@@ -239,21 +239,44 @@ def should_ignore_manual_reply(manual_reply_text: str) -> bool:
 def _get_business_id_from_ig(ig_id: str) -> str:
     """
     Find the business UUID associated with this Instagram account ID.
-    Looks up business_integrations table by instagram_account_id or page_id.
+    Looks up business_integrations table by any stored ID field in credentials.
+    Also auto-saves the webhook_ig_id if a match is found via another field.
     """
     if not ig_id:
         return ""
+    NULL_UUID = "00000000-0000-0000-0000-000000000000"
     try:
-        res = supabase.table("business_integrations").select("business_id, credentials").eq("provider", "instagram").execute()
+        res = supabase.table("business_integrations") \
+            .select("id, business_id, credentials") \
+            .eq("provider", "instagram") \
+            .eq("is_connected", True) \
+            .execute()
         for row in res.data or []:
+            biz_id = row.get("business_id", "")
+            if not biz_id or str(biz_id) == NULL_UUID:
+                continue
             creds = row.get("credentials") or {}
-            if (
-                str(creds.get("instagram_account_id")) == str(ig_id)
-                or str(creds.get("page_id")) == str(ig_id)
-                or str(creds.get("ig_user_id")) == str(ig_id)
-                or str(creds.get("webhook_ig_id")) == str(ig_id)
-            ):
-                return row["business_id"]
+            matched = (
+                str(creds.get("instagram_account_id", "")) == str(ig_id)
+                or str(creds.get("page_id", "")) == str(ig_id)
+                or str(creds.get("ig_user_id", "")) == str(ig_id)
+                or str(creds.get("webhook_ig_id", "")) == str(ig_id)
+            )
+            if matched:
+                # Auto-save webhook_ig_id if the match was via a different field
+                # and the incoming ig_id looks like a Business Account ID (17841xxx)
+                stored_webhook_id = str(creds.get("webhook_ig_id", ""))
+                if ig_id.startswith("17841") and stored_webhook_id != ig_id:
+                    try:
+                        updated_creds = dict(creds)
+                        updated_creds["webhook_ig_id"] = ig_id
+                        supabase.table("business_integrations").update({
+                            "credentials": updated_creds
+                        }).eq("id", row["id"]).execute()
+                        print(f"WEBHOOK_IG_ID_AUTO_SAVED: {ig_id} for business={biz_id}", flush=True)
+                    except Exception as save_err:
+                        print(f"WEBHOOK_IG_ID_SAVE_ERROR: {save_err}", flush=True)
+                return biz_id
     except Exception as e:
         print(f"BIZ_ID_LOOKUP_ERROR: {e}", flush=True)
     return ""

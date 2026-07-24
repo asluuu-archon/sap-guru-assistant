@@ -126,11 +126,16 @@ def save_conversation(
         "closed_at": None,
     }
 
-    # Store business_id for tenant isolation — only set if provided and not already set
-    if business_id:
+    # Store business_id for tenant isolation.
+    # Treat null UUID as empty — it is the Supabase column default, not a real business.
+    NULL_UUID = "00000000-0000-0000-0000-000000000000"
+    existing_biz_id = str(conversation.get("business_id") or "")
+    if existing_biz_id == NULL_UUID:
+        existing_biz_id = ""
+    if business_id and str(business_id) != NULL_UUID:
         payload["business_id"] = business_id
-    elif conversation.get("business_id"):
-        payload["business_id"] = conversation["business_id"]
+    elif existing_biz_id:
+        payload["business_id"] = existing_biz_id
 
     supabase.table("conversations").upsert(payload).execute()
 
