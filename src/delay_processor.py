@@ -27,10 +27,13 @@ def get_reply_delay_minutes(business_id: str) -> int:
     business UUID. Falls back to DEFAULT_DELAY_MINUTES if not set.
     """
     try:
+        # Sort by updated_at DESC so we always get the most recently updated settings
+        # This handles cases where multiple business_profile rows exist for one business_id
         result = (
             supabase.table("business_profile")
             .select("reply_delay_minutes, auto_reply_enabled")
             .eq("business_id", business_id)
+            .order("updated_at", desc=True)
             .limit(1)
             .execute()
         )

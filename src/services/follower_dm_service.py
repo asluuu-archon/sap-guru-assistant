@@ -139,6 +139,8 @@ def get_follower_dm_settings(business_id: Optional[str]) -> dict:
         res = sb.table("business_profile") \
             .select("follower_dm_settings") \
             .eq("business_id", business_id) \
+            .order("updated_at", desc=True) \
+            .limit(1) \
             .execute()
         if res.data and res.data[0].get("follower_dm_settings"):
             saved = res.data[0]["follower_dm_settings"]

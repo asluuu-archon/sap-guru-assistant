@@ -33,7 +33,7 @@ async def get_settings(business_id: Optional[str] = Header(None, alias="X-Busine
         
         # Check business_profile table
         try:
-            res = supabase.table("business_profile").select("*").eq("business_id", business_id).execute()
+            res = supabase.table("business_profile").select("*").eq("business_id", business_id).order("updated_at", desc=True).limit(1).execute()
             profile = res.data[0] if res.data else {}
         except Exception:
             profile = {}
@@ -90,7 +90,7 @@ async def update_settings(data: SettingsUpdate, business_id: Optional[str] = Hea
 
         try:
             # Check if exists
-            existing = supabase.table("business_profile").select("id").eq("business_id", business_id).execute()
+            existing = supabase.table("business_profile").select("id").eq("business_id", business_id).order("updated_at", desc=True).limit(1).execute()
             if existing.data:
                 supabase.table("business_profile").update(update_data).eq("id", existing.data[0]["id"]).execute()
             else:

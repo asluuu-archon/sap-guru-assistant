@@ -64,9 +64,11 @@ async def save_follower_dm_settings(
         existing = sb.table("business_profile") \
             .select("id") \
             .eq("business_id", business_id) \
+            .order("updated_at", desc=True) \
+            .limit(1) \
             .execute()
         if existing.data:
-            sb.table("business_profile").update(payload).eq("business_id", business_id).execute()
+            sb.table("business_profile").update(payload).eq("id", existing.data[0]["id"]).execute()
         else:
             sb.table("business_profile").insert({
                 "business_id": business_id,
