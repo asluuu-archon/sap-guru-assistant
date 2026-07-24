@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, Query
 from .services.follower_polling_service import poll_new_followers
 import asyncio
+from datetime import datetime
 
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
