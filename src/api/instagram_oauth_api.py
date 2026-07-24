@@ -289,10 +289,22 @@ async def instagram_oauth_callback(
         }
 
         existing = supabase.table("business_integrations") \
-            .select("id") \
+            .select("id, credentials") \
             .eq("business_id", business_id) \
             .eq("provider", "instagram") \
             .execute()
+
+        # Preserve existing webhook_ig_id if it's already a valid 17841xxx ID.
+        # The Instagram API /me endpoint returns the 27xxx User ID, not the 17841xxx
+        # Business Account ID that Meta uses in webhooks. Once the 17841xxx ID is
+        # known (set via SQL or auto-saved from a webhook), we must not overwrite it
+        # with the 27xxx fallback during reconnect.
+        if existing.data:
+            existing_creds = existing.data[0].get("credentials") or {}
+            existing_webhook_id = str(existing_creds.get("webhook_ig_id", ""))
+            if existing_webhook_id.startswith("17841") and not str(webhook_ig_id).startswith("17841"):
+                credentials["webhook_ig_id"] = existing_webhook_id
+                print(f"INSTAGRAM_OAUTH: Preserved existing webhook_ig_id={existing_webhook_id} (API returned non-17841 id={webhook_ig_id})", flush=True)
 
         payload = {
             "business_id": business_id,
