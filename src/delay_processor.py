@@ -108,7 +108,7 @@ async def process_pending_replies():
             delay_minutes = get_reply_delay_minutes(business_id)
             print(f"DELAYED_PROCESSOR: delay_minutes={delay_minutes} for business={business_id}", flush=True)
 
-            # If auto-reply is disabled for this business, skip silently
+            # If auto-reply is disabled for this business, skip
             if delay_minutes == -1:
                 print(f"DELAYED REPLY SKIPPED: auto_reply_enabled=False for business {business_id}", flush=True)
                 skipped_count += 1
@@ -132,18 +132,18 @@ async def process_pending_replies():
             # and prevents the "Last reply sent" context from confusing suggest_reply.
             reply_text = (conversation.get("last_reply") or "").strip()
 
-            # Fallback: if last_reply is empty, try to re-generate from last user message
+            # Fallback: if last_reply is empty, re-generate from last user message
             if not reply_text:
-                history = conversation.get("history") or []
+                history_fb = conversation.get("history") or []
                 last_user_message = ""
-                for item in reversed(history):
+                for item in reversed(history_fb):
                     if item.get("user"):
                         last_user_message = item.get("user")
                         break
                 if last_user_message:
                     context = build_context(conversation)
-                    reply = await suggest_reply(last_user_message, "instagram", context)
-                    reply_text = (reply.get("suggested_reply") or "").strip()
+                    reply_gen = await suggest_reply(last_user_message, "instagram", context)
+                    reply_text = (reply_gen.get("suggested_reply") or "").strip()
                     print(f"DELAYED_PROCESSOR: Re-generated reply for {sender_id}: {reply_text[:80]}", flush=True)
 
             # Do NOT send a fallback "I will check" reply — skip instead
@@ -178,19 +178,25 @@ async def process_pending_replies():
             if send_result.get("status") == "error":
                 skipped_count += 1
                 print(f"DELAYED REPLY FAILED FOR {sender_id}", flush=True)
+                # Mark pending_reply=False so we don't retry forever on a bad token
+                supabase.table("conversations").update({
+                    "pending_reply": False,
+                    "updated_at": datetime.utcnow().isoformat(),
+                }).eq("sender_id", sender_id).execute()
                 continue
 
-            history.append({
+            # Update conversation history — use the history already in the conversation
+            conv_history = conversation.get("history") or []
+            conv_history.append({
                 "time": datetime.utcnow().isoformat(),
                 "user": "",
                 "assistant": reply_text,
-                "category": reply.get("category", "general"),
+                "category": "general",
             })
-
-            history = history[-30:]
+            conv_history = conv_history[-30:]
 
             supabase.table("conversations").update({
-                "history": history,
+                "history": conv_history,
                 "last_reply": reply_text,
                 "ai_replied": True,
                 "pending_reply": False,
